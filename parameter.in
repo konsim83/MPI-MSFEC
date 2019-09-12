@@ -1,11 +1,11 @@
 subsection Standard method parameters
 	subsection Mesh
-  		set refinements = 4
+  		set refinements = 5
 	end
   
 	subsection Control flow
 		# compute flag
-	  	set compute solution = true
+	  	set compute solution = false
 	  
 	  	# verbose
 	  	set verbose = true
@@ -20,6 +20,33 @@ subsection Standard method parameters
   	# name of outputfile without ending
   	set filename output = NED_RT_Std
 end
+
+
+subsection Multiscale method parameters
+	subsection Mesh
+  		set global refinements = 2
+  		set local refinements = 2
+	end
+  
+	subsection Control flow
+		# compute flag
+	  	set compute solution = true
+	  
+	  	# verbose
+	  	set verbose = true
+	  	set verbose basis = true
+	  
+	  	# what solver to use
+	  	set use direct solver = false
+	  
+	  	# renumbering to reduce bandwidth
+	  	set dof renumbering = true
+  	end
+  	
+  	# name of outputfile without ending
+  	set filename output = NED_RT_Ms
+end
+
 
 subsection Equation parameters
 	subsection Right-hand side

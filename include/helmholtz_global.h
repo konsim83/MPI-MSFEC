@@ -1,5 +1,5 @@
-#ifndef HELMHOLTZ_REF_H_
-#define HELMHOLTZ_REF_H_
+#ifndef HELMHOLTZ_GLOBAL_H_
+#define HELMHOLTZ_GLOBAL_H_
 
 // Deal.ii MPI
 #include <deal.II/base/conditional_ostream.h>
@@ -75,12 +75,15 @@
 #include "schur_complement.tpp"
 #include "approximate_schur_complement.tpp"
 #include "preconditioner.h"
+#include "helmholtz_basis.h"
+
 
 namespace HelmholtzProblem
 {
 using namespace dealii;
 
-class NedRTStd
+
+class NedRTMultiscale
 {
 public:
 	struct Parameters
@@ -95,24 +98,30 @@ public:
 		bool use_direct_solver; /* This is often better for 2D problems. */
 		bool renumber_dofs; /* Reduce bandwidth in either system component */
 
-		unsigned int n_refine;
+		unsigned int n_refine_global;
+		unsigned int n_refine_local;
 
 		std::string filename_output;
 	};
-	NedRTStd () = delete;
-	NedRTStd (Parameters &parameters);
-	~NedRTStd ();
+	NedRTMultiscale (Parameters &parameters_);
+	~NedRTMultiscale ();
 
 	void run ();
 
 private:
 	void setup_grid ();
+	void initialize_and_compute_basis ();
 	void setup_system_matrix ();
 	void setup_constraints ();
 	void assemble_system ();
 	void solve_direct ();
 	void solve_iterative ();
-	void output_results () const;
+	void send_global_weights_to_cell ();
+
+	void output_results_coarse () const;
+	void output_results_fine ();
+
+	std::vector<std::string> collect_filenames_on_mpi_process ();
 
 	MPI_Comm mpi_communicator;
 
@@ -153,8 +162,15 @@ private:
 	TimerOutput        		computing_timer;
 
 	std::shared_ptr<typename LinearSolvers::InnerPreconditioner<3>::type> 	inner_schur_preconditioner;
+
+	/*!
+	 * STL Vector holding basis functions for each coarse cell.
+	 */
+	using BasisMap = std::map<CellId, NedRTBasis>;
+	BasisMap cell_basis_map;
 };
 
 } // end namespace HelmholtzProblem
 
-#endif /* HELMHOLTZ_REF_H_ */
+
+#endif /* HELMHOLTZ_GLOBAL_H_ */

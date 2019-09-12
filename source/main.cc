@@ -12,7 +12,7 @@
 
 // My own headers
 #include "helmholtz_ref.h"
-//#include "helmholtz_global.h"
+#include "helmholtz_global.h"
 
 
 /**
@@ -79,8 +79,9 @@ int main (int argc, char* argv[]){
 		}
 
 		{
-//			MixedHelmholtzGlobal mixed_helmholtz_global (input_file);
-//			mixed_helmholtz_global.run ();
+			HelmholtzProblem::NedRTMultiscale::Parameters parameters(input_file);
+			HelmholtzProblem::NedRTMultiscale mixed_helmholtz_global (parameters);
+			mixed_helmholtz_global.run ();
 		}
     } /* try */
 

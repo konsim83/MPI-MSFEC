@@ -1,23 +1,24 @@
-#include "helmholtz_ref.h"
+#include "helmholtz_global.h"
 
 namespace HelmholtzProblem
 {
 
 using namespace dealii;
 
-NedRTStd::Parameters::Parameters(
+NedRTMultiscale::Parameters::Parameters(
 		const std::string &parameter_filename)
 :
 compute_solution (true),
 verbose (true),
 use_direct_solver (false),
 renumber_dofs (true),
-n_refine (3),
-filename_output ("NED_RT_Std")
+n_refine_global (2),
+n_refine_local (2),
+filename_output ("NED_RT_Ms")
 {
 	ParameterHandler prm;
 
-	NedRTStd::Parameters::declare_parameters(prm);
+	NedRTMultiscale::Parameters::declare_parameters(prm);
 
 	std::ifstream parameter_file(parameter_filename);
 	if (!parameter_file)
@@ -38,19 +39,26 @@ filename_output ("NED_RT_Std")
 	parse_parameters(prm);
 }
 
+
+
 void
-NedRTStd::Parameters::declare_parameters(
+NedRTMultiscale::Parameters::declare_parameters(
 		ParameterHandler &prm)
 {
-	prm.enter_subsection("Standard method parameters");
+	prm.enter_subsection("Multiscale method parameters");
 	{
 		prm.enter_subsection("Mesh");
 		{
 			prm.declare_entry(
-				"refinements",
-				"3",
+				"global refinements",
+				"2",
 				Patterns::Integer(1,10),
-				"Number of initial mesh refinements.");
+				"Number of initial coarse mesh refinements.");
+			prm.declare_entry(
+				"local refinements",
+				"2",
+				Patterns::Integer(1,10),
+				"Number of initial coarse mesh refinements.");
 		}
 		prm.leave_subsection();
 
@@ -68,7 +76,7 @@ NedRTStd::Parameters::declare_parameters(
 				"Set runtime output true or false.");
 			prm.declare_entry(
 				"use direct solver",
-				"true",
+				"false",
 				Patterns::Bool(),
 				"Use direct solvers true or false.");
 			prm.declare_entry(
@@ -81,7 +89,7 @@ NedRTStd::Parameters::declare_parameters(
 
 		prm.declare_entry(
 			"filename output",
-			"NED_RT_Std",
+			"NED_RT_Ms",
 			Patterns::FileName(),
 			".");
 	}
@@ -89,15 +97,17 @@ NedRTStd::Parameters::declare_parameters(
 }
 
 
+
 void
-NedRTStd::Parameters::parse_parameters(
+NedRTMultiscale::Parameters::parse_parameters(
 		ParameterHandler &prm)
 {
-	prm.enter_subsection("Standard method parameters");
+	prm.enter_subsection("Multiscale method parameters");
 	{
 		prm.enter_subsection("Mesh");
 		{
-			n_refine = prm.get_integer("refinements");
+			n_refine_global = prm.get_integer("global refinements");
+			n_refine_local = prm.get_integer("local refinements");
 		}
 		prm.leave_subsection();
 
@@ -116,7 +126,8 @@ NedRTStd::Parameters::parse_parameters(
 }
 
 
-NedRTStd::NedRTStd (Parameters &parameters_)
+
+NedRTMultiscale::NedRTMultiscale (Parameters &parameters_)
 :
 mpi_communicator(MPI_COMM_WORLD),
 parameters(parameters_),
@@ -129,14 +140,16 @@ fe (FE_Nedelec<3>(0), 1,
 dof_handler (triangulation),
 pcout(std::cout, (Utilities::MPI::this_mpi_process(MPI_COMM_WORLD) == 0)),
 computing_timer(mpi_communicator,
-                    pcout,
-                    TimerOutput::summary,
-                    TimerOutput::wall_times)
+				pcout,
+				TimerOutput::summary,
+				TimerOutput::wall_times),
+cell_basis_map()
 {
 }
 
 
-NedRTStd::~NedRTStd ()
+
+NedRTMultiscale::~NedRTMultiscale ()
 {
 	system_matrix.clear();
 	constraints.clear();
@@ -145,18 +158,60 @@ NedRTStd::~NedRTStd ()
 
 
 
-void NedRTStd::setup_grid ()
+void NedRTMultiscale::setup_grid ()
 {
-	TimerOutput::Scope t(computing_timer, "mesh generation");
+	TimerOutput::Scope t(computing_timer, "coarse mesh generation");
 
 	GridGenerator::hyper_cube (triangulation, 0.0, 1.0, true);
 
-	triangulation.refine_global (parameters.n_refine);
+	triangulation.refine_global (parameters.n_refine_global);
 }
 
 
 
-void NedRTStd::setup_system_matrix ()
+void NedRTMultiscale::initialize_and_compute_basis ()
+{
+	TimerOutput::Scope t(computing_timer, "Nedelec-Raviart-Thomas basis initialization and computation");
+
+	typename Triangulation<3>::active_cell_iterator
+									cell = dof_handler.begin_active(),
+									endc = dof_handler.end();
+	for (; cell!=endc; ++cell)
+	{
+		if (cell->is_locally_owned())
+		{
+			NedRTBasis current_cell_problem(parameters.n_refine_local,
+					cell,
+					triangulation.locally_owned_subdomain(),
+					mpi_communicator);
+			CellId current_cell_id(cell->id());
+
+			std::pair<typename std::map<CellId, NedRTBasis>::iterator, bool > result;
+			result = cell_basis_map.insert(std::make_pair(cell->id(), current_cell_problem));
+
+			Assert(result.second,
+					ExcMessage ("Insertion of local basis problem into std::map failed. "
+							"Problem with copy constructor?"));
+		}
+	} // end ++cell
+
+
+	/*
+	 * Now each node possesses a set of basis objects.
+	 * We need to compute them on each node and do so in
+	 * a locally threaded way.
+	 */
+	typename std::map<CellId, NedRTBasis>::iterator
+												it_basis = cell_basis_map.begin(),
+												it_endbasis = cell_basis_map.end();
+	for (; it_basis != it_endbasis; ++it_basis)
+	{
+		(it_basis->second).run();
+	}
+}
+
+
+void NedRTMultiscale::setup_system_matrix ()
 {
 	TimerOutput::Scope t(computing_timer, "system and constraint setup");
 
@@ -222,8 +277,7 @@ void NedRTStd::setup_system_matrix ()
 }
 
 
-
-void NedRTStd::setup_constraints ()
+void NedRTMultiscale::setup_constraints ()
 {
 	// set constraints (first hanging nodes, then flux)
 	constraints.clear ();
@@ -251,29 +305,22 @@ void NedRTStd::setup_constraints ()
 }
 
 
-
-void NedRTStd::assemble_system ()
+void NedRTMultiscale::assemble_system ()
 {
-	TimerOutput::Scope t(computing_timer, "assembly");
+	TimerOutput::Scope t(computing_timer, "multiscale assembly");
 
 	system_matrix         = 0;
 	system_rhs            = 0;
 
-	QGauss<3>   quadrature_formula(3);
 	QGauss<2> 	face_quadrature_formula(3);
 
 	// Get relevant quantities to be updated from finite element
-	FEValues<3> fe_values (fe, quadrature_formula,
-							 update_values    | update_gradients |
-							 update_quadrature_points  | update_JxW_values);
-
 	FEFaceValues<3> fe_face_values (fe, face_quadrature_formula,
 									  update_values    | update_normal_vectors |
 									  update_quadrature_points  | update_JxW_values);
 
 	// Define some abbreviations
 	const unsigned int   dofs_per_cell   = fe.dofs_per_cell;
-	const unsigned int   n_q_points      = quadrature_formula.size();
 	const unsigned int   n_face_q_points = face_quadrature_formula.size();
 
 
@@ -284,27 +331,6 @@ void NedRTStd::assemble_system ()
 
 	std::vector<types::global_dof_index> local_dof_indices (dofs_per_cell);
 
-
-	// equation data
-	const RightHandSide          		right_hand_side;
-	const BoundaryDivergenceValues_u	boundary_divergence_values_u;
-	const DiffusionInverse_A     		a_inverse;
-	const Diffusion_B     				b;
-	const ReactionRate           		reaction_rate;
-
-
-	// allocate
-	std::vector<Tensor<1,3>> 	rhs_values (n_q_points);
-	std::vector<double> 		reaction_rate_values (n_q_points);
-	std::vector<double> 		boundary_divergence_values_u_values (n_face_q_points);
-	std::vector<Tensor<2,3>> 	a_inverse_values (n_q_points);
-	std::vector<double>		 	b_values (n_q_points);
-
-	// define extractors
-	const FEValuesExtractors::Vector curl (/* first_vector_component */ 0);
-	const FEValuesExtractors::Vector flux (/* first_vector_component */ 3);
-
-
 	// ------------------------------------------------------------------
 	// loop over cells
 	typename DoFHandler<3>::active_cell_iterator
@@ -314,83 +340,39 @@ void NedRTStd::assemble_system ()
 	{
 		if (cell->is_locally_owned())
 		{
-			fe_values.reinit (cell);
+			typename std::map<CellId, NedRTBasis>::iterator it_basis =
+					cell_basis_map.find(cell->id());
+
 			local_matrix = 0;
 			local_rhs = 0;
 
-			right_hand_side.value_list (fe_values.get_quadrature_points(),
-										rhs_values);
-			reaction_rate.value_list(fe_values.get_quadrature_points(),
-												reaction_rate_values);
-			a_inverse.value_list (fe_values.get_quadrature_points(),
-								  a_inverse_values);
-			b.value_list(fe_values.get_quadrature_points(),
-												b_values);
-
-			// loop over quad points
-			for (unsigned int q=0; q<n_q_points; ++q)
-			{
-				// loop over rows
-				for (unsigned int i=0; i<dofs_per_cell; ++i)
-				{
-					// test functions
-					const Tensor<1,3> 		tau_i = fe_values[curl].value (i, q);
-					const Tensor<1,3>      	curl_tau_i = fe_values[curl].curl (i, q);
-					const double 	     	div_v_i = fe_values[flux].divergence (i, q);
-					const Tensor<1,3>      	v_i = fe_values[flux].value (i, q);
-
-					// loop over columns
-					for (unsigned int j=0; j<dofs_per_cell; ++j)
-					{
-						// trial functions
-						const Tensor<1,3> 		sigma_j = fe_values[curl].value (j, q);
-						const Tensor<1,3>      	curl_sigma_j = fe_values[curl].curl (j, q);
-						const double 	     	div_u_j = fe_values[flux].divergence (j, q);
-						const Tensor<1,3>      	u_j = fe_values[flux].value (j, q);
-
-						/*
-						 * Discretize
-						 * A^{-1}sigma - curl(u) = 0
-						 * curl(sigma) - grad(B*div(u)) + alpha u = f , where alpha>0.
-						 */
-						local_matrix(i,j) += (tau_i * a_inverse_values[q] * sigma_j /* block (0,0) */
-																- curl_tau_i * u_j /* block (0,1) */
-																+ v_i * curl_sigma_j /* block (1,0) */
-																+ div_v_i * b_values[q] * div_u_j /* block (1,1) */
-																+ v_i * reaction_rate_values[q] * u_j) /* block (1,1) */
-																* fe_values.JxW(q);
-					} // end for ++j
-
-					local_rhs(i) += v_i *
-									rhs_values[q] *
-									fe_values.JxW(q);
-				} // end for ++i
-			} // end for ++q
+			local_matrix = (it_basis->second).get_global_element_matrix ();
+			local_rhs = (it_basis->second).get_global_element_rhs ();
 
 
 			// line integral over boundary faces for for natural conditions on u
-	//		for (unsigned int face_n=0;
-	//					 face_n<GeometryInfo<3>::faces_per_cell;
-	//					 ++face_n)
-	//		{
-	//			if (cell->at_boundary(face_n)
-	//		//					&& cell->face(face_n)->boundary_id()!=0 /* Select only certain faces. */
-	//		//					&& cell->face(face_n)->boundary_id()!=2 /* Select only certain faces. */
-	//					)
-	//			{
-	//				fe_face_values.reinit (cell, face_n);
-	//
-	//				boundary_values_u.value_list (fe_face_values.get_quadrature_points(),
-	//					  boundary_values_u_values);
-	//
-	//				for (unsigned int q=0; q<n_face_q_points; ++q)
-	//					for (unsigned int i=0; i<dofs_per_cell; ++i)
-	//						local_rhs(i) += -(fe_face_values[flux].value (i, q) *
-	//										fe_face_values.normal_vector(q) *
-	//										boundary_values_u_values[q] *
-	//										fe_face_values.JxW(q));
-	//			}
-	//		}
+//			for (unsigned int face_n=0;
+//						 face_n<GeometryInfo<3>::faces_per_cell;
+//						 ++face_n)
+//			{
+//				if (cell->at_boundary(face_n)
+//			//					&& cell->face(face_n)->boundary_id()!=0 /* Select only certain faces. */
+//			//					&& cell->face(face_n)->boundary_id()!=2 /* Select only certain faces. */
+//						)
+//				{
+//					fe_face_values.reinit (cell, face_n);
+//
+//					boundary_values_u.value_list (fe_face_values.get_quadrature_points(),
+//						  boundary_values_u_values);
+//
+//					for (unsigned int q=0; q<n_face_q_points; ++q)
+//						for (unsigned int i=0; i<dofs_per_cell; ++i)
+//							local_rhs(i) += -(fe_face_values[flux].value (i, q) *
+//											fe_face_values.normal_vector(q) *
+//											boundary_values_u_values[q] *
+//											fe_face_values.JxW(q));
+//				}
+//			}
 
 			// Add to global matrix, include constraints
 			cell->get_dof_indices(local_dof_indices);
@@ -408,35 +390,19 @@ void NedRTStd::assemble_system ()
 }
 
 
-void NedRTStd::solve_direct ()
+void NedRTMultiscale::solve_direct ()
 {
-	TimerOutput::Scope              t(computing_timer, " direct solver (MUMPS)");
+	TimerOutput::Scope t(computing_timer, " direct solver (MUMPS)");
 
 #ifndef USE_PETSC_LA
 	throw std::runtime_error("You must use deal.ii with PetSc to use MUMPS.");
 #endif
 
 	throw std::runtime_error("Solver not implemented: MUMPS does not work on xyzWrapper::MPI::BlockSparseMatrix classes.");
-
-//	LA::MPI::BlockVector completely_distributed_solution(owned_partitioning, mpi_communicator);
-//
-//	SolverControl                    solver_control;
-//	PETScWrappers::SparseDirectMUMPS solver(solver_control, mpi_communicator);
-//	solver.set_symmetric_mode(true);
-//	solver.solve(system_matrix, completely_distributed_solution, system_rhs);
-//
-//	pcout << "   Solved in "
-//			<< solver_control.last_step()
-//			<< " iterations."
-//			<< std::endl;
-//
-//	constraints.distribute(completely_distributed_solution);
-//	locally_relevant_solution = completely_distributed_solution;
 }
 
 
-void
-NedRTStd::solve_iterative ()
+void NedRTMultiscale::solve_iterative ()
 {
 	inner_schur_preconditioner = std::make_shared<typename LinearSolvers::InnerPreconditioner<3>::type>();
 
@@ -530,31 +496,37 @@ NedRTStd::solve_iterative ()
 }
 
 
-void NedRTStd::output_results () const
+
+
+void
+NedRTMultiscale::send_global_weights_to_cell ()
 {
-//
-//	{
-//		const ComponentSelectFunction<3> u_mask(std::make_pair(3, 6), 3 + 3);
-//		const ComponentSelectFunction<3> sigma_mask(std::make_pair(0, 3), 3 + 3);
-//	}
+	// For each cell we get dofs_per_cell values
+	const unsigned int   dofs_per_cell   = fe.dofs_per_cell;
+	std::vector<types::global_dof_index> 	local_dof_indices (dofs_per_cell);
 
-//		LA::MPI::BlockVector interpolated;
-//		interpolated.reinit(owned_partitioning, MPI_COMM_WORLD);
-//		VectorTools::interpolate(dof_handler, ExactSolution<3>(), interpolated);
-//
-//		LA::MPI::BlockVector interpolated_relevant(owned_partitioning,
-//											   relevant_partitioning,
-//											   MPI_COMM_WORLD);
-//		interpolated_relevant = interpolated;
-//		{
-//			std::vector<std::string> solution_names(dim, "ref_u");
-//			solution_names.emplace_back("ref_p");
-//			data_out.add_data_vector(interpolated_relevant,
-//								   solution_names,
-//								   DataOut<dim>::type_dof_data,
-//								   data_component_interpretation);
-//		}
+	// active cell iterator
+	typename DoFHandler<3>::active_cell_iterator
+								cell = dof_handler.begin_active (),
+								endc = dof_handler.end ();
+	for (; cell!=endc; ++cell)
+	{
+		if (cell->is_locally_owned())
+		{
+			cell->get_dof_indices (local_dof_indices);
+			std::vector<double> extracted_weights (dofs_per_cell, 0);
+			locally_relevant_solution.extract_subvector_to (local_dof_indices, extracted_weights);
 
+			typename std::map<CellId, NedRTBasis>::iterator it_basis = cell_basis_map.find(cell->id());
+			(it_basis->second).set_global_weights (extracted_weights);
+		}
+	} // end ++cell
+}
+
+
+void
+NedRTMultiscale::output_results_coarse () const
+{
 	std::vector<std::string> solution_names(3, "sigma");
 	solution_names.emplace_back("u");
 	solution_names.emplace_back("u");
@@ -578,7 +550,7 @@ void NedRTStd::output_results () const
 	data_out.build_patches();
 
 	std::string filename(parameters.filename_output);
-	filename += "_n_refine-" + Utilities::int_to_string(parameters.n_refine,2);
+	filename += "_n_refine-" + Utilities::int_to_string(parameters.n_refine_global,2);
 	filename += "." + Utilities::int_to_string(triangulation.locally_owned_subdomain(), 4);
 	filename += ".vtu";
 
@@ -594,13 +566,13 @@ void NedRTStd::output_results () const
 			 i < Utilities::MPI::n_mpi_processes(mpi_communicator);
 			 ++i)
 		{
-			local_filenames[i] += "_n_refine-" + Utilities::int_to_string(parameters.n_refine, 2)
+			local_filenames[i] += "_n_refine-" + Utilities::int_to_string(parameters.n_refine_global, 2)
 									+ "." + Utilities::int_to_string(i, 4)
 									+ ".vtu";
 		}
 
 		std::string master_file = parameters.filename_output
-								+ "_n_refine-" + Utilities::int_to_string(parameters.n_refine,2)
+								+ "_n_refine-" + Utilities::int_to_string(parameters.n_refine_global,2)
 								+ ".pvtu";
 		std::ofstream master_output(master_file.c_str());
 		data_out.write_pvtu_record(master_output, local_filenames);
@@ -608,27 +580,36 @@ void NedRTStd::output_results () const
 }
 
 
-/*!
- * Solve standard mixed problem with Nedelec-Raviart-Thomas element pairing.
- */
-void NedRTStd::run (){
+void
+NedRTMultiscale::output_results_fine ()
+{
+
+}
+
+
+void
+NedRTMultiscale::run ()
+{
 
 	if (parameters.compute_solution == false)
 	{
-		deallog << "Run of standard problem is explicitly disabled in parameter file. " << std::endl;
+		deallog << "Run of multiscale problem is explicitly disabled in parameter file. " << std::endl;
 		return;
 	}
 
 #ifdef USE_PETSC_LA
-    pcout << "Running using PETSc." << std::endl;
+	pcout << "Running multiscale algorithm using PETSc." << std::endl;
 #else
-    pcout << "Running using Trilinos." << std::endl;
+	pcout << "Running multiscale algorithm using Trilinos." << std::endl;
 #endif
 
+	setup_grid ();
 
-	setup_grid();
+	setup_system_matrix();
 
-	setup_system_matrix ();
+	initialize_and_compute_basis();
+
+	setup_constraints();
 
 	assemble_system ();
 
@@ -639,11 +620,17 @@ void NedRTStd::run (){
 		solve_iterative (); // Schur complement for A
 	}
 
+	send_global_weights_to_cell ();
+
 	{
-		TimerOutput::Scope t(computing_timer, "vtu output");
-		output_results ();
+		TimerOutput::Scope t(computing_timer, "vtu output coarse");
+		output_results_coarse ();
 	}
 
+	{
+		TimerOutput::Scope t(computing_timer, "vtu output fine");
+		output_results_fine ();
+	}
 
 	if (parameters.verbose)
 	{
