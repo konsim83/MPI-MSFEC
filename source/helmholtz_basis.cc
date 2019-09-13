@@ -2,65 +2,141 @@
 
 namespace HelmholtzProblem
 {
+
 using namespace dealii;
 
-NedRTBasis::NedRTBasis ()
+NedRTBasis::Parameters::Parameters(const NedRTMultiscale::Parameters &parameters)
 :
-degree(0),
-n_refine_global(1),
-n_refine(1),
-cell_number(0),
-length_system_basis(GeometryInfo<3>::lines_per_cell
-		+ GeometryInfo<3>::faces_per_cell),
+verbose (parameters.verbose_basis),
+use_direct_solver (parameters.use_direct_solver_basis),
+renumber_dofs (parameters.renumber_dofs),
 output_flag(false),
-is_built_global_element_matrix(false),
-is_set_global_weights(false),
-is_set_cell_data(false),
-filename_global_solution(""),
-fe (FE_Nedelec<3>(degree), 1,
-		FE_RaviartThomas<3>(degree), 1),
+n_refine_global (parameters.n_refine_global),
+n_refine_local (parameters.n_refine_local),
+filename_global (parameters.filename_output)
+{
+}
+
+
+
+NedRTBasis::Parameters::Parameters(const Parameters &other)
+:
+verbose (other.verbose),
+use_direct_solver (other.use_direct_solver),
+renumber_dofs (other.renumber_dofs),
+output_flag(other.output_flag),
+n_refine_global (other.n_refine_global),
+n_refine_local (other.n_refine_local),
+filename_global (other.filename_global)
+{
+}
+
+
+
+NedRTBasis::NedRTBasis (const NedRTMultiscale::Parameters &parameters_,
+		typename Triangulation<3>::active_cell_iterator& global_cell,
+		unsigned int local_subdomain,
+		MPI_Comm mpi_communicator)
+:
+mpi_communicator(mpi_communicator),
+parameters(parameters_),
+triangulation(),
+fe (FE_Nedelec<3>(parameters.degree), 1,
+		FE_RaviartThomas<3>(parameters.degree), 1),
 dof_handler (triangulation),
+constraints_curl_v(GeometryInfo<3>::lines_per_cell),
+constraints_div_v(GeometryInfo<3>::faces_per_cell),
+sparsity_pattern_curl(),
+sparsity_pattern_div(),
+basis_curl_v(GeometryInfo<3>::lines_per_cell),
+basis_div_v(GeometryInfo<3>::faces_per_cell),
+system_rhs_curl_v(GeometryInfo<3>::lines_per_cell),
+system_rhs_div_v(GeometryInfo<3>::faces_per_cell),
+global_element_matrix(fe.dofs_per_cell,
+		fe.dofs_per_cell),
+global_element_rhs(fe.dofs_per_cell),
+global_weights(fe.dofs_per_cell, 0),
+global_cell_id (global_cell->id()),
+local_subdomain(local_subdomain),
 volume_measure(0),
 face_measure(GeometryInfo<3>::faces_per_cell, 0),
 edge_measure(GeometryInfo<3>::lines_per_cell, 0),
 corner_points(GeometryInfo<3>::vertices_per_cell,
 		Point<3>()),
-constraints_curl_v(GeometryInfo<3>::lines_per_cell),
-constraints_div_v(GeometryInfo<3>::faces_per_cell),
-sparsity_pattern_curl_v(GeometryInfo<3>::lines_per_cell),
-sparsity_pattern_div_v(GeometryInfo<3>::faces_per_cell),
-system_matrix_curl_v(GeometryInfo<3>::lines_per_cell),
-system_matrix_div_v(GeometryInfo<3>::faces_per_cell),
-system_rhs_curl_v(GeometryInfo<3>::lines_per_cell),
-system_rhs_div_v(GeometryInfo<3>::faces_per_cell),
-basis_curl_v(GeometryInfo<3>::lines_per_cell),
-basis_div_v(GeometryInfo<3>::faces_per_cell),
-global_element_matrix(fe.dofs_per_cell,
-		fe.dofs_per_cell),
-global_element_rhs(fe.dofs_per_cell),
-global_weights(fe.dofs_per_cell, 0),
-Preconditioner_v(GeometryInfo<3>::lines_per_cell
-		+ GeometryInfo<3>::faces_per_cell)
+length_system_basis(GeometryInfo<3>::lines_per_cell
+		+ GeometryInfo<3>::faces_per_cell),
+is_built_global_element_matrix(false),
+is_set_global_weights(false),
+is_set_cell_data(false),
+is_copyable (true)
 {
+	global_cell_ptr = std::make_shared<typename Triangulation<3>::active_cell_iterator> (&global_cell);
+	set_cell_data ();
 }
+
+
+
+NedRTBasis::NedRTBasis(const NedRTBasis &other)
+:
+// guard against copying non copyable objects
+//Assert (is_copyable,
+//		ExcMessage ("Object can not be copied after triangulation and other parts are initialized.")),
+mpi_communicator (other.mpi_communicator),
+parameters (other.parameters),
+triangulation (), // must be constructed deliberately, but is empty on copying anyway
+fe (other.fe),
+dof_handler (triangulation),
+constraints_curl_v (other.constraints_curl_v),
+constraints_div_v (other.constraints_div_v),
+sparsity_pattern_curl (other.sparsity_pattern_curl), // only possible if object is empty
+sparsity_pattern_div (other.sparsity_pattern_div), // only possible if object is empty
+assembled_matrix (other.assembled_matrix), // only possible if object is empty
+system_matrix (other.system_matrix), // only possible if object is empty
+basis_curl_v (other.basis_curl_v),
+basis_div_v (other.basis_div_v),
+system_rhs_curl_v (other.system_rhs_curl_v),
+system_rhs_div_v (other.system_rhs_div_v),
+global_rhs (other.global_rhs),
+global_element_matrix (other.global_element_matrix),
+global_element_rhs (other.global_element_rhs),
+global_weights (other.global_weights),
+global_solution (other.global_solution),
+inner_schur_preconditioner (other.inner_schur_preconditioner),
+global_cell_id (other.global_cell_id),
+global_cell_ptr(other.global_cell_ptr),
+local_subdomain (other.local_subdomain),
+volume_measure (other.volume_measure),
+face_measure (other.face_measure),
+edge_measure (other.edge_measure),
+corner_points (other.corner_points),
+length_system_basis (other.length_system_basis),
+is_built_global_element_matrix (other.is_built_global_element_matrix),
+is_set_global_weights (other.is_set_global_weights),
+is_set_cell_data (other.is_set_cell_data),
+is_copyable (other.is_copyable)
+{
+	set_cell_data ();
+}
+
 
 
 NedRTBasis::~NedRTBasis ()
 {
+	system_matrix.clear();
+
 	for (unsigned int n_basis=0; n_basis<basis_curl_v.size(); ++n_basis)
 	{
-		system_matrix_curl_v.at(n_basis).clear();
-		constraints_curl_v.at(n_basis).clear();
+		constraints_curl_v[n_basis].clear();
 	}
 
 	for (unsigned int n_basis=0; n_basis<basis_div_v.size(); ++n_basis)
 	{
-		system_matrix_div_v.at(n_basis).clear();
-		constraints_div_v.at(n_basis).clear();
+		constraints_div_v[n_basis].clear();
 	}
 
 	dof_handler.clear ();
 }
+
 
 
 void
@@ -69,13 +145,13 @@ NedRTBasis::setup_grid ()
 	Assert (is_set_cell_data,
 			ExcMessage ("Cell data must be set first."));
 
-	for (unsigned int i=0; i<length_system_basis; ++i)
-		Preconditioner_v.at(i).reset();
+	GridGenerator::general_cell(triangulation, corner_points, /* colorize faces */false);
 
-	GridGenerator::general_cell(triangulation, corner_points, /* colorize faces */true);
+	triangulation.refine_global (parameters.n_refine_local);
 
-	triangulation.refine_global (n_refine);
+	is_copyable = false;
 }
+
 
 
 void
@@ -83,27 +159,19 @@ NedRTBasis::setup_system_matrix ()
 {
 	dof_handler.distribute_dofs (fe);
 
-	if (renumber_dofs)
+	if (parameters.renumber_dofs)
 	{
 		DoFRenumbering::Cuthill_McKee (dof_handler);
-		std::vector<unsigned int> block_component (3+3,0);
-		block_component[3] = 1;
-		block_component[4] = 1;
-		block_component[5] = 1;
-
-		// Make 2x2 blocks (first fluxes, then concentration)
-		DoFRenumbering::component_wise (dof_handler, block_component);
-	}
-	else
-	{
-		DoFRenumbering::component_wise (dof_handler);
 	}
 
-	std::vector<types::global_dof_index> dofs_per_component (3+3);
-	DoFTools::count_dofs_per_component (dof_handler, dofs_per_component);
-	const unsigned int n_sigma = dofs_per_component[0],
-					   n_u = dofs_per_component[3];
-	if (verbose)
+	DoFRenumbering::block_wise (dof_handler);
+
+	std::vector<types::global_dof_index> dofs_per_block (2);
+	DoFTools::count_dofs_per_block (dof_handler, dofs_per_block);
+	const unsigned int n_sigma = dofs_per_block[0],
+					   n_u = dofs_per_block[1];
+
+	if (parameters.verbose)
 	{
 	  std::cout << "Number of active cells: "
 				  << triangulation.n_active_cells()
@@ -117,238 +185,195 @@ NedRTBasis::setup_system_matrix ()
 				  << std::endl;
 	}
 
+	BlockSparsityPattern     sparsity_pattern;
+
 	{
 		// Allocate memory
-		BlockDynamicSparsityPattern dsp(2, 2);
-		dsp.block(0, 0).reinit (n_sigma, n_sigma);
-		dsp.block(1, 0).reinit (n_u, n_sigma);
-		dsp.block(0, 1).reinit (n_sigma, n_u);
-		dsp.block(1, 1).reinit (n_u, n_u);
-		dsp.collect_sizes ();
-
-		DoFTools::setup_sparsity_pattern (dof_handler, dsp);
+		BlockDynamicSparsityPattern dsp(dofs_per_block, dofs_per_block);
 
 		// Initialize the system matrix for global assembly
 		sparsity_pattern.copy_from(dsp);
 	}
 
-	system_matrix.reinit (sparsity_pattern);
+	assembled_matrix.reinit (sparsity_pattern);
 
-	// Initialize the rhs for global assembly
-	system_rhs.reinit (2);
-	system_rhs.block(0).reinit (n_sigma);
-	system_rhs.block(1).reinit (n_u);
-	system_rhs.collect_sizes ();
-
-	// Initialize global solution
-	global_solution.reinit (2);
-	global_solution.block(0).reinit (n_sigma);
-	global_solution.block(1).reinit (n_u);
-	global_solution.collect_sizes ();
+	global_solution.reinit (dofs_per_block);
 }
+
 
 
 void
 NedRTBasis::setup_basis_dofs_curl ()
 {
 	Assert (is_set_cell_data,
-					ExcMessage ("Cell number must be set first."));
+					ExcMessage ("Cell data must be set first."));
+
+	Timer timer;
+
+	if (parameters.verbose)
+	{
+		std::cout << "Setting up dofs for H(curl) part....." << std::endl;
+
+		timer.start ();
+	}
 
 	ShapeFun::ShapeFunctionVector<3>
 			std_shape_function (fe.base_element(0),
-					global_cell,
+					*global_cell_ptr,
 					/*verbose =*/ false);
 	ShapeFun::ShapeFunctionVectorCurl<3>
 			std_shape_function_curl (fe.base_element(0),
-					global_cell,
+					*global_cell_ptr,
 					/*verbose =*/ false);
 
-	// Some size info.
-	std::vector<types::global_dof_index> dofs_per_component (3+3);
-	DoFTools::count_dofs_per_component (dof_handler, dofs_per_component);
-	const unsigned int n_sigma = dofs_per_component[0],
-					   n_u = dofs_per_component[3];
+	std::vector<types::global_dof_index> dofs_per_block (2);
+	DoFTools::count_dofs_per_block (dof_handler, dofs_per_block);
+	const unsigned int n_sigma = dofs_per_block[0],
+					   n_u = dofs_per_block[1];
 
 	// Allocate memory
-	BlockDynamicSparsityPattern dsp(2, 2);
-	dsp.block(0, 0).reinit (n_sigma, n_sigma);
-	dsp.block(1, 0).reinit (n_u, n_sigma);
-	dsp.block(0, 1).reinit (n_sigma, n_u);
-	dsp.block(1, 1).reinit (n_u, n_u);
-	dsp.collect_sizes ();
+	BlockDynamicSparsityPattern dsp(dofs_per_block, dofs_per_block);
 
-	////////////////////////////////////////////////////
-	// set constraints (first hanging nodes, then curl)
+	// set constraints (first hanging nodes, then boundary conditions)
 	for (unsigned int n_basis=0; n_basis<basis_curl_v.size(); ++n_basis)
 	{
-		constraints_curl_v.at(n_basis).clear ();
-
-		DoFTools::setup_hanging_node_constraints (dof_handler, constraints_curl_v.at(n_basis));
-
 		std_shape_function.set_shape_fun_index(n_basis);
 		std_shape_function_curl.set_shape_fun_index(n_basis);
 
-		for (unsigned int i=0;
-				i<GeometryInfo<3>::faces_per_cell;
-				++i)
-		{
-			VectorTools::project_boundary_values_curl_conforming(dof_handler,
-						/*first vector component */ 0,
-						std_shape_function,
-						/*boundary id*/ i,
-						constraints_curl_v.at(n_basis));
-			VectorTools::project_boundary_values_div_conforming(dof_handler,
-								/*first vector component */ 3,
+		constraints_curl_v[n_basis].clear ();
+
+		DoFTools::make_hanging_node_constraints (dof_handler, constraints_curl_v[n_basis]);
+
+		VectorTools::project_boundary_values_curl_conforming(dof_handler,
+					/*first vector component */ 0,
+					std_shape_function,
+					/*boundary id*/ 0,
+					constraints_curl_v[n_basis]);
+		VectorTools::project_boundary_values_div_conforming(dof_handler,
+					/*first vector component */ 3,
 //								ZeroFunction<3>(3),
-								std_shape_function_curl,
-								/*boundary id*/ i,
-								constraints_curl_v.at(n_basis));
-		}
+					std_shape_function_curl,
+					/*boundary id*/ 0,
+					constraints_curl_v[n_basis]);
 
-		constraints_curl_v.at(n_basis).close ();
-
-		// Initialize sizes
-		basis_curl_v.at(n_basis).reinit (2);
-		basis_curl_v.at(n_basis).block(0).reinit (n_sigma);
-		basis_curl_v.at(n_basis).block(1).reinit (n_u);
-		basis_curl_v.at(n_basis).collect_sizes ();
-
-		system_rhs_curl_v.at(n_basis).reinit (2);
-		system_rhs_curl_v.at(n_basis).block(0).reinit (n_sigma);
-		system_rhs_curl_v.at(n_basis).block(1).reinit (n_u);
-		system_rhs_curl_v.at(n_basis).collect_sizes ();
-
-		DoFTools::setup_sparsity_pattern(dof_handler,
-										  dsp,
-										  constraints_curl_v.at(n_basis),
-										  /*keep_constrained_dofs = */ false);
-
-		constraints_curl_v.at(n_basis).condense (dsp);
-
-		sparsity_pattern_curl_v.at(n_basis).copy_from(dsp);
-
-		system_matrix_curl_v.at(n_basis).reinit (sparsity_pattern_curl_v.at(n_basis));
+		constraints_curl_v[n_basis].close ();
 	}
-	////////////////////////////////////////////////////
 
-	if (plot_sparsity_pattern)
+	DoFTools::make_sparsity_pattern(dof_handler,
+									  dsp,
+									  constraints_curl_v[0], // do not write into constraint dofs (same dofs for all problems)
+									  /*keep_constrained_dofs = */ true); // must condense constraints later
+
+	sparsity_pattern_curl.copy_from(dsp);
+
+	for (unsigned int n_basis=0; n_basis<basis_curl_v.size(); ++n_basis)
 	{
-		std::cout
-			<< std::endl
-			<< "   Plotting sparsity pattern for first basis..."
-			<< std::endl;
-		std::ofstream out ("sparsity_pattern.gpl");
-		sparsity_pattern_curl_v.at(/*n_basis */ 0).print_gnuplot(out);
+		basis_curl_v[n_basis].reinit (dofs_per_block);
+		system_rhs_curl_v[n_basis].reinit (dofs_per_block);
+	}
+
+	if (parameters.verbose)
+	{
+		timer.stop ();
+		printf("done (%gs)\n",timer());
 	}
 }
+
 
 
 void
 NedRTBasis::setup_basis_dofs_div ()
 {
 	Assert (is_set_cell_data,
-					ExcMessage ("Cell number must be set first."));
+					ExcMessage ("Cell data must be set first."));
+
+	Timer timer;
+
+	if (parameters.verbose)
+	{
+		std::cout << "Setting up dofs for H(div) part....." << std::endl;
+
+		timer.start ();
+	}
 
 	ShapeFun::ShapeFunctionVector<3>
 			std_shape_function (fe.base_element(1),
-					global_cell,
+					*global_cell_ptr,
 					/*verbose =*/ false);
 //	ShapeFun::ShapeFunctionVectorCurl<3>
 //			std_shape_function_curl (fe.base_element(1),
-//					global_cell,
+//					*global_cell_ptr,
 //					/*verbose =*/ false);
 
-	// Some size info
-	std::vector<types::global_dof_index> dofs_per_component (3+3);
-		DoFTools::count_dofs_per_component (dof_handler, dofs_per_component);
-		const unsigned int n_sigma = dofs_per_component[0],
-						   n_u = dofs_per_component[3];
+	std::vector<types::global_dof_index> dofs_per_block (2);
+	DoFTools::count_dofs_per_block (dof_handler, dofs_per_block);
+	const unsigned int n_sigma = dofs_per_block[0],
+					   n_u = dofs_per_block[1];
 
 	// Allocate memory
-	BlockDynamicSparsityPattern dsp(2, 2);
-	dsp.block(0, 0).reinit (n_sigma, n_sigma);
-	dsp.block(1, 0).reinit (n_u, n_sigma);
-	dsp.block(0, 1).reinit (n_sigma, n_u);
-	dsp.block(1, 1).reinit (n_u, n_u);
-	dsp.collect_sizes ();
+	BlockDynamicSparsityPattern dsp(dofs_per_block, dofs_per_block);
 
-	////////////////////////////////////////////////////
 	for (unsigned int n_basis=0; n_basis<basis_div_v.size(); ++n_basis)
 	{
-		// set constraints (first hanging nodes, then flux)
-		constraints_div_v.at(n_basis).clear ();
-
-		DoFTools::setup_hanging_node_constraints (dof_handler, constraints_div_v.at(n_basis));
-
 		std_shape_function.set_shape_fun_index(n_basis);
 //		std_shape_function_curl.set_shape_fun_index(n_basis);
 
-		for (unsigned int i=0;
-				i<GeometryInfo<3>::faces_per_cell;
-				++i)
-		{
-//			VectorTools::project_boundary_values_curl_conforming(dof_handler,
-//						/*first vector component */ 0,
-//						std_shape_function_curl,
-//						/*boundary id*/ i,
-//						constraints_div_v.at(n_basis));
-			VectorTools::project_boundary_values_div_conforming(dof_handler,
-						/*first vector component */ 3,
-						std_shape_function,
-						/*boundary id*/ i,
-						constraints_div_v.at(n_basis));
-		}
+		// set constraints (first hanging nodes, then flux)
+		constraints_div_v[n_basis].clear ();
 
-		constraints_div_v.at(n_basis).close ();
+		DoFTools::make_hanging_node_constraints (dof_handler, constraints_div_v[n_basis]);
 
-		basis_div_v.at(n_basis).reinit (2);
-		basis_div_v.at(n_basis).block(0).reinit (n_sigma);
-		basis_div_v.at(n_basis).block(1).reinit (n_u);
-		basis_div_v.at(n_basis).collect_sizes ();
+//		VectorTools::project_boundary_values_curl_conforming(dof_handler,
+//					/*first vector component */ 0,
+//					std_shape_function_curl,
+//					/*boundary id*/ 0,
+//					constraints_div_v[n_basis]);
+		VectorTools::project_boundary_values_div_conforming(dof_handler,
+					/*first vector component */ 3,
+					std_shape_function,
+					/*boundary id*/ 0,
+					constraints_div_v[n_basis]);
 
-		system_rhs_div_v.at(n_basis).reinit (2);
-		system_rhs_div_v.at(n_basis).block(0).reinit (n_sigma);
-		system_rhs_div_v.at(n_basis).block(1).reinit (n_u);
-		system_rhs_div_v.at(n_basis).collect_sizes ();
-
-		DoFTools::setup_sparsity_pattern(dof_handler,
-										  dsp,
-										  constraints_div_v.at(n_basis),
-										  /*keep_constrained_dofs = */ false);
-
-		constraints_div_v.at(n_basis).condense (dsp);
-
-		sparsity_pattern_div_v.at(n_basis).copy_from(dsp);
-
-		system_matrix_div_v.at(n_basis).reinit (sparsity_pattern_div_v.at(n_basis));
+		constraints_div_v[n_basis].close ();
 	}
-	////////////////////////////////////////////////////
 
-	if (plot_sparsity_pattern)
+	DoFTools::make_sparsity_pattern(dof_handler,
+									  dsp,
+									  constraints_div_v[0], // do not write into constraint dofs (same dofs for all problems)
+									  /*keep_constrained_dofs = */ true); // must condense constraints later
+
+	sparsity_pattern_div.copy_from(dsp);
+
+	for (unsigned int n_basis=0; n_basis<basis_div_v.size(); ++n_basis)
 	{
-		std::cout
-			<< std::endl
-			<< "   Plotting sparsity pattern for first basis..."
-			<< std::endl;
-		std::ofstream out ("sparsity_pattern.gpl");
-		sparsity_pattern_div_v.at(/* n_basis */ 0).print_gnuplot(out);
+		basis_div_v[n_basis].reinit (dofs_per_block);
+		system_rhs_div_v[n_basis].reinit (dofs_per_block);
+	}
+
+	if (parameters.verbose)
+	{
+		timer.stop ();
+		printf("done (%gs)\n",timer());
 	}
 }
+
 
 
 void
 NedRTBasis::assemble_system ()
 {
 	Timer timer;
-	if (verbose)
+	if (parameters.verbose)
 	{
-		printf("Assembling local linear system in   cell %6d .......", cell_number);
+		std::cout << "Assembling local linear system in cell   "
+			<< global_cell_id.to_string()
+			<< "....." << std::endl;
 
 		timer.start ();
 	}
 	// Choose appropriate quadrature rules
-	QGauss<3>   quadrature_formula(degree+2);
-    QGauss<2> face_quadrature_formula(degree+2);
+	QGauss<3>   quadrature_formula(parameters.degree + 2);
+    QGauss<2> face_quadrature_formula(parameters.degree + 2);
 
 	// Get relevant quantities to be updated from finite element
 	FEValues<3> fe_values (fe, quadrature_formula,
@@ -382,11 +407,11 @@ NedRTBasis::assemble_system ()
 	// Equation data for right-hand side
 //	ShapeFun::ShapeFunctionVectorCurl<3>
 //				std_shape_function_sigma_curl (fe.base_element(0),
-//						global_cell,
+//						*global_cell_ptr,
 //						/*verbose =*/ false);
 	ShapeFun::ShapeFunctionVectorDiv<3>
 				std_shape_function_u_div (fe.base_element(1),
-						global_cell,
+						*global_cell_ptr,
 						/*verbose =*/ false);
 
 	// allocate
@@ -401,21 +426,6 @@ NedRTBasis::assemble_system ()
 	const FEValuesExtractors::Vector curl (/* first_vector_component */ 0);
 	const FEValuesExtractors::Vector flux (/* first_vector_component */ 3);
 
-	// -----------------------------------------
-	// need this to keep dofs apart from each other
-	std::vector<typename DoFHandler<3>::active_cell_iterator>
-		cell_v = std::vector<typename DoFHandler<3>::active_cell_iterator>(length_system_basis,
-																			dof_handler.begin_active()),
-		endc_v = std::vector<typename DoFHandler<3>::active_cell_iterator>(length_system_basis,
-																			dof_handler.end());
-
-	std::vector<std::vector<types::global_dof_index>>
-		local_dof_indices_v
-			= std::vector<std::vector<types::global_dof_index>>(length_system_basis,
-																std::vector<types::global_dof_index>(dofs_per_cell));
-	// -----------------------------------------
-
-
 	// ------------------------------------------------------------------
 	// loop over cells
 	typename DoFHandler<3>::active_cell_iterator
@@ -424,13 +434,15 @@ NedRTBasis::assemble_system ()
 	for (; cell!=endc; ++cell)
 	{
 		fe_values.reinit (cell);
+
 		local_matrix = 0;
 		local_rhs = 0;
+
 		for (unsigned int n_basis=0;
 				n_basis<length_system_basis;
 				++n_basis)
 		{
-			local_rhs_v.at(n_basis) = 0;
+			local_rhs_v[n_basis] = 0;
 		}
 
 		right_hand_side.value_list (fe_values.get_quadrature_points(),
@@ -441,8 +453,6 @@ NedRTBasis::assemble_system ()
 							  diffusion_inverse_a_values);
 		diffusion_b.value_list (fe_values.get_quadrature_points(),
 									  diffusion_b_values);
-
-
 
 		// loop over quad points
 		for (unsigned int q=0; q<n_q_points; ++q)
@@ -487,18 +497,19 @@ NedRTBasis::assemble_system ()
 					if (n_basis<GeometryInfo<3>::lines_per_cell)
 					{
 						// This is rhs for curl.
-						local_rhs_v.at(n_basis)(i) += 0;
+						local_rhs_v[n_basis](i) += 0;
 					}
 					else
 						// This is rhs for div.
-						local_rhs_v.at(n_basis)(i) += 0;
+						local_rhs_v[n_basis](i) += 0;
 				}
 			} // end for ++i
 		} // end for ++q
 
-
-		// Boundary integrals
-		for (unsigned int face_number=0; face_number<GeometryInfo<3>::faces_per_cell; ++face_number)
+		for (unsigned int face_number=0;
+				face_number<GeometryInfo<3>::faces_per_cell;
+				++face_number)
+		{
 			if (cell->face(face_number)->at_boundary()
 //				&&
 //				(cell->face(face_number)->boundary_id() == 1)
@@ -527,10 +538,10 @@ NedRTBasis::assemble_system ()
 //							for (unsigned int i=0; i<dofs_per_cell; ++i)
 //							{
 //								// Note the minus.
-//								local_rhs_v.at(n_basis)(i) -= ( sigma_curl_cross_n *
+//								local_rhs_v[n_basis](i) -= ( sigma_curl_cross_n *
 //																fe_face_values[curl].value (i, q_point) *
 //																fe_face_values.JxW(q_point));
-//								std::cout << local_rhs_v.at(n_basis)(i) << std::endl;
+//								std::cout << local_rhs_v[n_basis](i) << std::endl;
 //							}
 //						}
 					}
@@ -547,76 +558,56 @@ NedRTBasis::assemble_system ()
 							for (unsigned int i=0; i<dofs_per_cell; ++i)
 							{
 								// Note the minus.
-								local_rhs_v.at(n_basis)(i) += ( fe_face_values.normal_vector(q_point) *
+								local_rhs_v[n_basis](i) += ( fe_face_values.normal_vector(q_point) *
 																fe_face_values[flux].value (i, q_point) *
 																diffusion_b_face_values[q_point] *
 																std_shape_function_u_div_values[q_point] *
 																fe_face_values.JxW(q_point));
-//								std::cout << local_rhs_v.at(n_basis)(i) << std::endl;
 							}
 						}
 					}
 				} // end n_basis++
-			} // end face_number++
+			} // end if cell->at_boundary()
+		} // end face_number++
 
-
-		// ------------------------------------------
 		// Only for use in global assembly
 		cell->get_dof_indices(local_dof_indices);
 		for (unsigned int i=0; i<dofs_per_cell; ++i)
 		{
-			system_rhs(local_dof_indices[i]) += local_rhs(i);
+			global_rhs(local_dof_indices[i]) += local_rhs(i);
 		}
 
 		// Add to global matrix
 		for (unsigned int i=0; i<dofs_per_cell; ++i)
 		{
 			for (unsigned int j=0; j<dofs_per_cell; ++j)
-				system_matrix.add (local_dof_indices[i],
+			{
+				assembled_matrix.add (local_dof_indices[i],
 								   local_dof_indices[j],
 								   local_matrix(i,j));
+			}
+
+			for (unsigned int n_basis=0;
+							n_basis<length_system_basis;
+							++n_basis)
+			{
+				if (n_basis<GeometryInfo<3>::lines_per_cell)
+				{
+					// This is for curl.
+					system_rhs_curl_v[n_basis](local_dof_indices[i]) += local_rhs_v[n_basis];
+				}
+				else
+				{
+					// This is for curl.
+					const unsigned int offset_index = n_basis - GeometryInfo<3>::lines_per_cell;
+					system_rhs_div_v[offset_index](local_dof_indices[i]) += local_rhs_v[n_basis];
+				}
+			}
 		}
 		// ------------------------------------------
-
-
-		// ------------------------------------------
-		// Only for use in local solving
-		for (unsigned int n_basis=0;
-				n_basis<length_system_basis;
-				++n_basis)
-		{
-			cell_v.at(n_basis)->get_dof_indices(local_dof_indices_v.at(n_basis));
-
-			if (n_basis<GeometryInfo<3>::lines_per_cell)
-			{
-				// This is for curl.
-				constraints_curl_v.at(n_basis).distribute_local_to_global(local_matrix,
-																local_rhs_v.at(n_basis),
-																local_dof_indices_v.at(n_basis),
-																system_matrix_curl_v.at(n_basis),
-																system_rhs_curl_v.at(n_basis),
-																/* use inhomogeneities for rhs */ true);
-			}
-			else
-			{
-				// This is for curl.
-				const unsigned int offset_index = n_basis - GeometryInfo<3>::lines_per_cell;
-				constraints_div_v.at(offset_index).distribute_local_to_global(local_matrix,
-																local_rhs_v.at(n_basis),
-																local_dof_indices_v.at(n_basis),
-																system_matrix_div_v.at(offset_index),
-																system_rhs_div_v.at(offset_index),
-																/* use inhomogeneities for rhs */ true);
-			}
-			++cell_v.at(n_basis);
-		}
-		// ------------------------------------------
-
-
 	}// end for ++cell
-	// ------------------------------------------------------------------
 
-	if (verbose)
+	if (parameters.verbose)
 	{
 		timer.stop ();
 		printf("done (%gs)\n",timer());
@@ -629,45 +620,53 @@ void
 NedRTBasis::solve_direct (unsigned int n_basis)
 {
 	Timer timer;
-	if (verbose)
+	if (parameters.verbose)
 	{
-		printf("Solving linear system (directly) in   cell %6d   for basis   %d .......", cell_number, n_basis);
+		std::cout << "Solving linear system (directly) in cell   "
+					<< global_cell_id.to_string()
+					<< "for basis   "
+					<< n_basis
+					<< "....." << std::endl;
 
 		timer.start ();
 	}
 
-	// Better work with references here but this should also be ok.
-	ConstraintMatrix *constraints_ptr = NULL;
-	BlockVector<double> *basis_ptr = NULL;
-	BlockSparseMatrix<double> *system_matrix_ptr = NULL;
 	BlockVector<double> *system_rhs_ptr = NULL;
-
+	BlockVector<double> *solution_ptr = NULL;
 	if (n_basis < GeometryInfo<3>::lines_per_cell)
 	{
-		constraints_ptr = &(constraints_curl_v.at(n_basis));
-		basis_ptr = &(basis_curl_v.at(n_basis));
-		system_matrix_ptr = &(system_matrix_curl_v.at(n_basis));
-		system_rhs_ptr = &(system_rhs_curl_v.at(n_basis));
+		system_rhs_ptr = &(system_rhs_curl_v[n_basis]);
+		solution_ptr = &(basis_curl_v[n_basis]);
 	}
 	else
 	{
 		const unsigned int offset_index = n_basis - GeometryInfo<3>::lines_per_cell;
-		constraints_ptr = &(constraints_div_v.at(offset_index));
-		basis_ptr = &(basis_div_v.at(offset_index));
-		system_matrix_ptr = &(system_matrix_div_v.at(offset_index));
-		system_rhs_ptr = &(system_rhs_div_v.at(offset_index));
+		system_rhs_ptr = &(system_rhs_div_v[offset_index]);
+		solution_ptr = &(basis_div_v[offset_index]);
 	}
 
-	constraints_ptr->distribute(*basis_ptr);
+	// for convenience
+	const BlockVector<double> &system_rhs = *system_rhs_ptr;
+	BlockVector<double> &solution = *solution_ptr;
 
 	//use direct solver
-	SparseDirectUMFPACK A_direct;
-	A_direct.initialize(*system_matrix_ptr);
+	SparseDirectUMFPACK A_inv;
+	A_inv.initialize(system_matrix);
 
-	A_direct.vmult(*basis_ptr, *system_rhs_ptr);
-	constraints_ptr->distribute(*basis_ptr);
+	A_inv.vmult(solution, system_rhs);
 
-	if (verbose)
+	if (n_basis < GeometryInfo<3>::lines_per_cell)
+	{
+		constraints_curl_v[n_basis].distribute(solution);
+	}
+	else
+	{
+		const unsigned int offset_index = n_basis - GeometryInfo<3>::lines_per_cell;
+
+		constraints_div_v[offset_index].distribute(solution);
+	}
+
+	if (parameters.verbose)
 	{
 		timer.stop ();
 		printf("done (%gs)\n",timer());
@@ -675,51 +674,49 @@ NedRTBasis::solve_direct (unsigned int n_basis)
 }
 
 
+
 void
-NedRTBasis::solve_iterative_preconditioned (unsigned int n_basis)
+NedRTBasis::solve_iterative (unsigned int n_basis)
 {
 	Timer timer;
 
 	// ------------------------------------------
 	// Make a preconditioner for each system matrix
-	if (verbose)
+	if (parameters.verbose)
 	{
-		printf("Computing preconditioner in   cell %6d   for basis %6d.......", cell_number, n_basis);
+		std::cout << "Computing preconditioner in cell   "
+			<< global_cell_id.to_string()
+			<< "for basis   "
+			<< n_basis
+			<< "....." << std::endl;
 
 		timer.start ();
 	}
 
-	// Better work with references here but this should also be ok.
-	ConstraintMatrix *constraints_ptr = NULL;
-	BlockVector<double> *basis_ptr = NULL;
-	BlockSparseMatrix<double> *system_matrix_ptr = NULL;
 	BlockVector<double> *system_rhs_ptr = NULL;
-
+	BlockVector<double> *solution_ptr = NULL;
 	if (n_basis < GeometryInfo<3>::lines_per_cell)
 	{
-		constraints_ptr = &(constraints_curl_v.at(n_basis));
-		basis_ptr = &(basis_curl_v.at(n_basis));
-		system_matrix_ptr = &(system_matrix_curl_v.at(n_basis));
-		system_rhs_ptr = &(system_rhs_curl_v.at(n_basis));
+		system_rhs_ptr = &(system_rhs_curl_v[n_basis]);
+		solution_ptr = &(basis_curl_v[n_basis]);
 	}
 	else
 	{
 		const unsigned int offset_index = n_basis - GeometryInfo<3>::lines_per_cell;
-		constraints_ptr = &(constraints_div_v.at(offset_index));
-		basis_ptr = &(basis_div_v.at(offset_index));
-		system_matrix_ptr = &(system_matrix_div_v.at(offset_index));
-		system_rhs_ptr = &(system_rhs_div_v.at(offset_index));
+		system_rhs_ptr = &(system_rhs_div_v[offset_index]);
+		solution_ptr = &(basis_div_v[offset_index]);
 	}
 
-	constraints_ptr->distribute(*basis_ptr);
+	// for convenience
+	const BlockVector<double> &system_rhs = *system_rhs_ptr;
+	BlockVector<double> &solution = *solution_ptr;
 
-	Preconditioner_v.at(n_basis)
-				= std_cxx11::shared_ptr<typename InnerPreconditioner<3>::type>
-															( new typename InnerPreconditioner<3>::type() );
-	Preconditioner_v.at(n_basis)->initialize (system_matrix_ptr->block(0,0),
-								typename InnerPreconditioner<3>::type::AdditionalData());
+	inner_schur_preconditioner = std::make_shared<typename LinearSolvers::LocalInnerPreconditioner<3>::type>();
 
-	if (verbose)
+	typename LinearSolvers::InnerPreconditioner<3>::type::AdditionalData data;
+	inner_schur_preconditioner->initialize (system_matrix.block(0,0), data);
+
+	if (parameters.verbose)
 	{
 		timer.stop ();
 		printf("done (%gs)\n",timer());
@@ -727,176 +724,89 @@ NedRTBasis::solve_iterative_preconditioned (unsigned int n_basis)
 	// ------------------------------------------
 
 	// Now solve.
-	if (verbose)
+	if (parameters.verbose)
 	{
-		printf("Solving linear system (iteratively, with preconditioner) in   cell %6d   for basis   %d .......", cell_number, n_basis);
+		std::cout << "Solving linear system (iteratively, with preconditioner) in cell   "
+					<< global_cell_id.to_string()
+					<< "for basis   "
+					<< n_basis
+					<< "....." << std::endl;
 
 		timer.start ();
 	}
 
 	// Construct inverse of upper left block
-	const InverseMatrixPrecon<
-						SparseMatrix<double>,
-						typename InnerPreconditioner<3>::type
-						>
-						A_inverse ( system_matrix_ptr->block(0,0), *(Preconditioner_v.at(n_basis)) );
+	const LinearSolvers::InverseMatrix<SparseMatrix<double>, typename LinearSolvers::LocalInnerPreconditioner<3>::type>
+						block_inverse ( system_matrix.block(0,0), *inner_schur_preconditioner );
 
-	Vector<double> tmp (basis_ptr->block(0).size());
+	Vector<double> tmp (system_rhs.block(0).size());
 	{
 		// Set up Schur complement
-		SchurComplementPrecon<typename InnerPreconditioner<3>::type>
-			schur_complement (*system_matrix_ptr, A_inverse);
+		LinearSolvers::SchurComplement<BlockSparseMatrix<double>,
+						BlockVector<double>,
+						typename LinearSolvers::InnerPreconditioner<3>::type>
+				schur_complement (system_matrix, block_inverse);
 
 		// Compute schur_rhs = -g + C*A^{-1}*f
-		Vector<double> schur_rhs (basis_ptr->block(1).size());
-		A_inverse.vmult (tmp, system_rhs_ptr->block(0));
-		system_matrix_ptr->block(1,0).vmult (schur_rhs, tmp);
-		schur_rhs -= system_rhs_ptr->block(1);
+		Vector<double> schur_rhs (system_rhs.block(1).size());
 
-		// Set Solver parameters for solving for u
-		SolverControl solver_control (basis_ptr->block(1).size(),
-									1e-6*schur_rhs.l2_norm());
-		SolverCG<> cg (solver_control);
+		block_inverse.vmult (tmp, system_rhs.block(0));
+		system_matrix.block(1,0).vmult (schur_rhs, tmp);
+		schur_rhs -= system_rhs.block(1);
 
-//		ApproximateSchurComplement approximate_schur (*system_matrix_ptr);
-//		InverseMatrix<ApproximateSchurComplement> preconditioner (approximate_schur);
-//
-//		// Solve for u
-//		cg.solve (schur_complement,
-//				basis_ptr->block(1),
-//				schur_rhs,
-//				preconditioner);
+		{
+			SolverControl solver_control (system_matrix.m(),
+												1e-6*schur_rhs.l2_norm());
+//			SolverCG<BlockVector<double>> schur_solver (solver_control);
+			SolverMinRes<BlockVector<double>> schur_solver (solver_control);
 
-		// This is faster
-		cg.solve (schur_complement,
-					basis_ptr->block(1),
-					schur_rhs,
-					PreconditionIdentity());
+			schur_solver.solve (schur_complement,
+						solution.block(1),
+						schur_rhs,
+						PreconditionIdentity());
 
-		constraints_ptr->distribute(*basis_ptr);
+			if (parameters.verbose)
+				std::cout
+					<< std::endl
+					<< "   Iterative Schur complement solver converged in"
+					<< solver_control.last_step()
+					<< " iterations."
+					<< std::endl;
+		}
 
-		if (verbose)
-			std::cout
-				<< std::endl
-				<< "       "
-				<< solver_control.last_step()
-				<< " CG Schur complement iterations to obtain convergence."
-				<< std::endl;
+		{
+			// use computed u to solve for sigma
+			system_matrix.block(0,1).vmult (tmp, solution.block(1));
+			tmp *= -1;
+			tmp += system_rhs.block(0);
+
+			// Solve for sigma
+			block_inverse.vmult (solution.block(0), tmp);
+
+			if (parameters.verbose)
+				std::cout << "   Outer solver completed." << std::endl;
+		}
 	}
-
-	{
-		// use computed u to solve for sigma
-		system_matrix_ptr->block(0,1).vmult (tmp, basis_ptr->block(1));
-		tmp *= -1;
-		tmp += system_rhs_ptr->block(0);
-
-		// Solve for sigma
-		A_inverse.vmult (basis_ptr->block(0), tmp);
-	}
-
-	constraints_ptr->distribute(*basis_ptr);
-
-	if (verbose)
-	{
-		timer.stop ();
-		printf("....done (%gs)\n",timer());
-	}
-}
-
-
-void
-NedRTBasis::solve_iterative(unsigned int n_basis)
-{
-	Timer timer;
-	if (verbose)
-	{
-		printf("Solving linear system (iteratively, invert flux, no preconditioner) in   cell %6d   for basis   %d .......", cell_number, n_basis);
-
-		timer.start ();
-	}
-
-	// Better work with references here but this should also be ok.
-	ConstraintMatrix *constraints_ptr = NULL;
-	BlockVector<double> *basis_ptr = NULL;
-	BlockSparseMatrix<double> *system_matrix_ptr = NULL;
-	BlockVector<double> *system_rhs_ptr = NULL;
 
 	if (n_basis < GeometryInfo<3>::lines_per_cell)
 	{
-		constraints_ptr = &(constraints_curl_v.at(n_basis));
-		basis_ptr = &(basis_curl_v.at(n_basis));
-		system_matrix_ptr = &(system_matrix_curl_v.at(n_basis));
-		system_rhs_ptr = &(system_rhs_curl_v.at(n_basis));
+		constraints_curl_v[n_basis].distribute(solution);
 	}
 	else
 	{
 		const unsigned int offset_index = n_basis - GeometryInfo<3>::lines_per_cell;
-		constraints_ptr = &(constraints_div_v.at(offset_index));
-		basis_ptr = &(basis_div_v.at(offset_index));
-		system_matrix_ptr = &(system_matrix_div_v.at(offset_index));
-		system_rhs_ptr = &(system_rhs_div_v.at(offset_index));
+
+		constraints_div_v[offset_index].distribute(solution);
 	}
 
-	constraints_ptr->distribute(*basis_ptr);
 
-	// Construct inverse of upper left block
-	InverseMatrix<SparseMatrix<double> > inverse_mass (system_matrix_ptr->block(0,0));
-
-	Vector<double> tmp (basis_ptr->block(0).size());
-	{
-		// Set up Schur complement
-		SchurComplement schur_complement (*system_matrix_ptr, inverse_mass);
-
-		// Compute schur_rhs = -g + C*A^{-1}*f
-		Vector<double> schur_rhs (basis_ptr->block(1).size());
-		inverse_mass.vmult (tmp, system_rhs_ptr->block(0));
-		system_matrix_ptr->block(1,0).vmult (schur_rhs, tmp);
-		schur_rhs -= system_rhs_ptr->block(1);
-
-		// Set Solver parameters for solving for u
-		SolverControl solver_control (basis_ptr->block(1).size(),
-									1e-12*schur_rhs.l2_norm());
-		SolverCG<> cg (solver_control);
-
-		// Set up approximate Schur complement as preconditioner
-		ApproximateSchurComplement approximate_schur (*system_matrix_ptr);
-		InverseMatrix<ApproximateSchurComplement> approximate_inverse (approximate_schur);
-
-		// Solve for u
-		cg.solve (schur_complement,
-				basis_ptr->block(1),
-				schur_rhs,
-				approximate_inverse);
-
-		constraints_ptr->distribute(*basis_ptr);
-
-		if (verbose)
-			std::cout
-				<< std::endl
-				<< "       "
-				<< solver_control.last_step()
-				<< " CG Schur complement iterations to obtain convergence."
-				<< std::endl;
-	}
-
-	{
-		// use computed u to solve for sigma
-		system_matrix_ptr->block(0,1).vmult (tmp, basis_ptr->block(1));
-		tmp *= -1;
-		tmp += system_rhs_ptr->block(0);
-
-		// Solve for sigma
-		inverse_mass.vmult (basis_ptr->block(0), tmp);
-	}
-
-	constraints_ptr->distribute(*basis_ptr);
-
-	if (verbose)
+	if (parameters.verbose)
 	{
 		timer.stop ();
 		printf("....done (%gs)\n",timer());
 	}
 }
+
 
 
 void
@@ -956,13 +866,13 @@ NedRTBasis::assemble_global_element_matrix()
 			{
 				if (block_col==0) /* This means trial function is sigma. */
 				{
-					system_matrix.block(block_row, block_col).vmult(tmp_sigma, trial_vec_ptr->block(block_col));
+					assembled_matrix.block(block_row, block_col).vmult(tmp_sigma, trial_vec_ptr->block(block_col));
 					global_element_matrix(i_test,i_trial) += (test_vec_ptr->block(block_row) * tmp_sigma);
 					tmp_sigma = 0;
 				}
 				if (block_col==1) /* This means trial function is u. */
 				{
-					system_matrix.block(block_row, block_col).vmult(tmp_sigma, trial_vec_ptr->block(block_col));
+					assembled_matrix.block(block_row, block_col).vmult(tmp_sigma, trial_vec_ptr->block(block_col));
 					global_element_matrix(i_test,i_trial) += (test_vec_ptr->block(block_row) * tmp_sigma);
 					tmp_sigma = 0;
 				}
@@ -971,13 +881,13 @@ NedRTBasis::assemble_global_element_matrix()
 			{
 				if (block_col==0) /* This means trial function is sigma. */
 				{
-					system_matrix.block(block_row, block_col).vmult(tmp_u, trial_vec_ptr->block(block_col));
+					assembled_matrix.block(block_row, block_col).vmult(tmp_u, trial_vec_ptr->block(block_col));
 					global_element_matrix(i_test,i_trial) += (test_vec_ptr->block(block_row) * tmp_u);
 					tmp_u = 0;
 				}
 				if (block_col==1) /* This means trial function is u. */
 				{
-					system_matrix.block(block_row, block_col).vmult(tmp_u, trial_vec_ptr->block(block_col));
+					assembled_matrix.block(block_row, block_col).vmult(tmp_u, trial_vec_ptr->block(block_col));
 					global_element_matrix(i_test,i_trial) += test_vec_ptr->block(block_row) * tmp_u;
 					tmp_u = 0;
 				}
@@ -988,43 +898,33 @@ NedRTBasis::assemble_global_element_matrix()
 		{
 			block_row = 1;
 			// If we are testing with u we possibly have a right-hand side.
-			global_element_rhs(i_test) += test_vec_ptr->block(block_row) * system_rhs.block(block_row);
+			global_element_rhs(i_test) += test_vec_ptr->block(block_row) * global_rhs.block(block_row);
 		}
 	} // end for i_test
 
-	if (debug_verbose)
-	{
-		std::cout << "\n\nMS_MATRIX\n";
-		for (unsigned int i=0; i<fe.dofs_per_cell; ++i)
-		{
-			for (unsigned int j=0; j<fe.dofs_per_cell; ++j)
-			{
-				std::cout << global_element_matrix(i,j) << "   " ;
-			}
-			std::cout << "\n";
-		}
-		std::cout << "\n" << std::endl;
-	}
-
-
 	is_built_global_element_matrix = true;
 }
+
 
 
 void
 NedRTBasis::output_basis (unsigned int n_basis)
 {
 	Timer timer;
-	if (verbose)
+	if (parameters.verbose)
 	{
-		printf("Writing local solution in   cell %6d   for basis   %d .......", cell_number, n_basis);
+		std::cout << "Writing local solution in cell   "
+			<< global_cell_id.to_string()
+			<< "for basis   "
+			<< n_basis
+			<< "....." << std::endl;
 
 		timer.start ();
 	}
 
 	BlockVector<double> *basis_ptr = NULL;
 	if (n_basis<GeometryInfo<3>::lines_per_cell)
-		basis_ptr = &(basis_curl_v.at(n_basis));
+		basis_ptr = &(basis_curl_v[n_basis]);
 	else
 		basis_ptr = &(basis_div_v.at(n_basis - GeometryInfo<3>::lines_per_cell));
 
@@ -1046,21 +946,23 @@ NedRTBasis::output_basis (unsigned int n_basis)
 								solution_names,
 								interpretation);
 
-	data_out.build_patches (degree+1);
+	data_out.build_patches (parameters.degree + 1);
 
-	std::string filename = "basis_3d_cell-";
+	std::string filename = "basis_";
 	if (n_basis<GeometryInfo<3>::lines_per_cell)
 	{
 		filename += "curl";
-		filename += Utilities::int_to_string (cell_number, 3);
-		filename += "_index-";
+		filename += "." + Utilities::int_to_string(local_subdomain, 5);
+		filename += ".cell-" + global_cell_id.to_string();
+		filename += ".index-";
 		filename += Utilities::int_to_string (n_basis, 2);
 	}
 	else
 	{
-		filename += "div";
-		filename += Utilities::int_to_string (cell_number, 3);
-		filename += "_index-";
+		filename += "div-";
+		filename += "." + Utilities::int_to_string(local_subdomain, 5);
+		filename += ".cell-" + global_cell_id.to_string();
+		filename += ".index-";
 		filename += Utilities::int_to_string (n_basis - GeometryInfo<3>::lines_per_cell, 2);
 	}
 	filename += ".vtu";
@@ -1068,12 +970,13 @@ NedRTBasis::output_basis (unsigned int n_basis)
 	std::ofstream output (filename);
 	data_out.write_vtu (output);
 
-	if (verbose)
+	if (parameters.verbose)
 	{
 		timer.stop ();
 		printf("done (%gs)\n",timer());
 	}
 }
+
 
 
 void
@@ -1102,54 +1005,56 @@ NedRTBasis::output_global_solution_in_cell () const
 
 	data_out.build_patches ();
 
-	std::ofstream output (filename_global_solution.c_str());
+	std::ofstream output (parameters.filename_global.c_str());
 	data_out.write_vtu (output);
 }
+
 
 
 void
 NedRTBasis::set_output_flag(bool flag)
 {
-	output_flag = flag;
+	parameters.output_flag = flag;
 }
 
 
+
 void
-NedRTBasis::set_cell_data(typename Triangulation<3>::active_cell_iterator &cell,
-									unsigned int n_cell)
+NedRTBasis::set_cell_data ()
 {
-	global_cell = cell;
-	cell_number = n_cell;
+
+	global_cell_id = (*global_cell_ptr)->id();
 
 	for (unsigned int vertex_n=0;
 		 vertex_n<GeometryInfo<3>::vertices_per_cell;
 		 ++vertex_n)
 	{
-		corner_points.at(vertex_n) = cell->vertex(vertex_n);
+		corner_points.at(vertex_n) = (*global_cell_ptr)->vertex(vertex_n);
 	}
 
-	volume_measure = cell->measure ();
+	volume_measure = (*global_cell_ptr)->measure ();
 
 	for (unsigned int j_face=0;
 			j_face<GeometryInfo<3>::faces_per_cell;
 			++j_face)
 	{
-		face_measure.at(j_face) = cell->face(j_face)->measure ();
+		face_measure.at(j_face) = (*global_cell_ptr)->face(j_face)->measure ();
 	}
 
 	for (unsigned int j_egde=0;
 			j_egde<GeometryInfo<3>::lines_per_cell;
 			++j_egde)
 	{
-		edge_measure.at(j_egde) = cell->line(j_egde)->measure ();
+		edge_measure.at(j_egde) = (*global_cell_ptr)->line(j_egde)->measure ();
 	}
 
 	is_set_cell_data = true;
 }
 
 
+
 void
-NedRTBasis::set_global_weights (std::vector<double> &weights)
+NedRTBasis::set_global_weights (const std::vector<double> &weights)
 {
 	// Copy assignment of global weights
 	global_weights = weights;
@@ -1164,16 +1069,17 @@ NedRTBasis::set_global_weights (std::vector<double> &weights)
 	for (unsigned int i=0;
 			i<dofs_per_cell_sigma;
 			++i)
-		global_solution.block(0).sadd (1, global_weights.at(i), basis_curl_v.at(i).block(0));
+		global_solution.block(0).sadd (1, global_weights[i], basis_curl_v[i].block(0));
 
 	// Then set block 1
 	for (unsigned int i=0;
 			i<dofs_per_cell_u;
 			++i)
-		global_solution.block(1).sadd (1, global_weights.at(i+dofs_per_cell_sigma), basis_div_v.at(i).block(1));
+		global_solution.block(1).sadd (1, global_weights[i+dofs_per_cell_sigma], basis_div_v[i].block(1));
 
 	is_set_global_weights = true;
 }
+
 
 
 void
@@ -1185,26 +1091,26 @@ NedRTBasis::set_sigma_to_std ()
 	// Set up vector shape function from finite element on current cell
 	ShapeFun::ShapeFunctionVector<3>
 		std_shape_function_curl (fe.base_element(0),
-				global_cell,
+				*global_cell_ptr,
 				/*verbose =*/ false);
 
 	DoFHandler<3>	dof_handler_fake (triangulation);
 	dof_handler_fake.distribute_dofs (fe.base_element(0));
 
-	if (renumber_dofs)
+	if (parameters.renumber_dofs)
 	{
 		DoFRenumbering::Cuthill_McKee (dof_handler_fake);
 	}
 
-	ConstraintMatrix	constraints;
+	AffineConstraints<double>	constraints;
 	constraints.clear ();
-	DoFTools::setup_hanging_node_constraints (dof_handler_fake, constraints);
+	DoFTools::make_hanging_node_constraints (dof_handler_fake, constraints);
 	constraints.close();
 
 	for (unsigned int i=0; i<basis_curl_v.size(); ++i)
 	{
-		basis_curl_v.at(i).block(0).reinit (dof_handler_fake.n_dofs());
-		basis_curl_v.at(i).block(1) = 0;
+		basis_curl_v[i].block(0).reinit (dof_handler_fake.n_dofs());
+		basis_curl_v[i].block(1) = 0;
 
 		std_shape_function_curl.set_shape_fun_index (i);
 
@@ -1212,11 +1118,12 @@ NedRTBasis::set_sigma_to_std ()
 				constraints,
 				quad_rule,
 				std_shape_function_curl,
-				basis_curl_v.at(i).block(0));
+				basis_curl_v[i].block(0));
 	}
 
 	dof_handler_fake.clear ();
 }
+
 
 
 void
@@ -1228,26 +1135,26 @@ NedRTBasis::set_u_to_std ()
 	// Set up vector shape function from finite element on current cell
 	ShapeFun::ShapeFunctionVector<3>
 			std_shape_function_div (fe.base_element(1),
-					global_cell,
+					*global_cell_ptr,
 					/*verbose =*/ false);
 
 	DoFHandler<3>	dof_handler_fake (triangulation);
 	dof_handler_fake.distribute_dofs (fe.base_element(1));
 
-	if (renumber_dofs)
+	if (parameters.renumber_dofs)
 	{
 		DoFRenumbering::Cuthill_McKee (dof_handler_fake);
 	}
 
-	ConstraintMatrix	constraints;
+	AffineConstraints<double>	constraints;
 	constraints.clear ();
-	DoFTools::setup_hanging_node_constraints (dof_handler_fake, constraints);
+	DoFTools::make_hanging_node_constraints (dof_handler_fake, constraints);
 	constraints.close();
 
 	for (unsigned int i=0; i<basis_div_v.size(); ++i)
 	{
-		basis_div_v.at(i).block(0) = 0;
-		basis_div_v.at(i).block(1).reinit (dof_handler_fake.n_dofs());
+		basis_div_v[i].block(0) = 0;
+		basis_div_v[i].block(1).reinit (dof_handler_fake.n_dofs());
 
 		std_shape_function_div.set_shape_fun_index (i);
 
@@ -1255,50 +1162,23 @@ NedRTBasis::set_u_to_std ()
 				constraints,
 				quad_rule,
 				std_shape_function_div,
-				basis_div_v.at(i).block(1));
+				basis_div_v[i].block(1));
 	}
 
 	dof_handler_fake.clear ();
 }
 
 
+
 void
-NedRTBasis::set_filename_global_solution ()
+NedRTBasis::set_filename_global ()
 {
-	filename_global_solution += ("solution_ms_3d_fine-"
-								  + Utilities::int_to_string (cell_number, 3)
-								  + ".vtu");
+	parameters.filename_global += (parameters.filename_global
+			+ "." + Utilities::int_to_string(local_subdomain, 5)
+			+ ".cell-" + global_cell_id.to_string()
+			+ ".vtu");
 }
 
-
-unsigned int
-NedRTBasis::get_cell_number () const
-{
-	Assert (is_set_cell_data,
-				ExcMessage ("Cell number must be set first."));
-
-	return cell_number;
-}
-
-
-unsigned int
-NedRTBasis::get_n_sigma () const
-{
-	std::vector<types::global_dof_index> dofs_per_component (3+1);
-	DoFTools::count_dofs_per_component (dof_handler, dofs_per_component);
-
-	return dofs_per_component[0];
-}
-
-
-unsigned int
-NedRTBasis::get_n_u () const
-{
-	std::vector<types::global_dof_index> dofs_per_component (3+1);
-	DoFTools::count_dofs_per_component (dof_handler, dofs_per_component);
-
-	return dofs_per_component[3];
-}
 
 
 const FullMatrix<double>&
@@ -1308,22 +1188,26 @@ NedRTBasis::get_global_element_matrix () const
 }
 
 
+
 const Vector<double>&
 NedRTBasis::get_global_element_rhs () const
 {
 	return global_element_rhs;
 }
 
+
+
 const std::string&
-NedRTBasis::get_filename_global_solution () const
+NedRTBasis::get_filename_global () const
 {
-	return filename_global_solution;
+	return parameters.filename_global;
 }
+
 
 
 void NedRTBasis::run ()
 {
-	if (verbose)
+	if (parameters.verbose)
 	{
 		printf("\n------------------------------------------------------------\n");
 	}
@@ -1341,82 +1225,86 @@ void NedRTBasis::run ()
 	// Assemble
 	assemble_system ();
 
-	set_filename_global ();
-
-	for (unsigned int index_basis=0;
-			index_basis<GeometryInfo<3>::vertices_per_cell;
-			++index_basis)
-	{
-		// reset everything
-		system_rhs.reinit(solution_vector[index_basis].size());
-		system_matrix.reinit (sparsity_pattern);
-
-		system_matrix.copy_from(diffusion_matrix);
-
-		// Now take care of constraints
-		constraints_vector[index_basis].condense(system_matrix, system_rhs);
-
-		// Now solve
-		if (parameters.use_direct_solver)
-			solve_direct (n_basis);
-		else
-		{
-			solve_iterative(n_basis);
-		}
-	}
-
 	if (parameters.set_to_std)
 	{
-		if (parameters.renumber_dofs)
+		set_sigma_to_std (); /* This is only a sanity check. */
+		set_u_to_std (); /* This is only a sanity check. */
+	}
+	else // in this case solve
+	{
+		for (unsigned int n_basis=0;
+						n_basis<length_system_basis;
+						++n_basis)
 		{
-			throw std::runtime_error("DoF renumbering must be disabled when setting multiscale basis to standard setting.");
-		}
-		else
-		{
-			set_sigma_to_std (); /* This is only a sanity check. */
-			set_u_to_std (); /* This is only a sanity check. */
+			if (n_basis<GeometryInfo<3>::lines_per_cell)
+			{
+				// This is for curl.
+				system_matrix.reinit (sparsity_pattern_curl);
+
+				system_matrix.copy_from(assembled_matrix);
+
+				// Now take care of constraints
+				constraints_curl_v[n_basis].condense(system_matrix, system_rhs_curl_v[n_basis]);
+
+				// Now solve
+				if (parameters.use_direct_solver)
+					solve_direct (n_basis);
+				else
+				{
+					solve_iterative (n_basis);
+				}
+			}
+			else
+			{
+				// This is for div.
+				const unsigned int offset_index = n_basis - GeometryInfo<3>::lines_per_cell;
+
+				system_matrix.reinit (sparsity_pattern_curl);
+
+				system_matrix.copy_from(assembled_matrix);
+
+				// Now take care of constraints
+				constraints_div_v[offset_index].condense(system_matrix, system_rhs_div_v[offset_index]);
+
+				// Now solve
+				if (parameters.use_direct_solver)
+					solve_direct (n_basis);
+				else
+				{
+					solve_iterative (n_basis);
+				}
+			}
 		}
 	}
 
 	assemble_global_element_matrix ();
 
-	if (output_flag)
-		output_basis ();
-
-
-
-
-
-	// Free memory as much as possible
-	for (unsigned int i=0; i<basis_curl_v.size(); ++i)
 	{
-		sparsity_pattern_curl_v.at(i).reinit (0,0);
-		system_matrix_curl_v.at(i).clear ();
-		system_rhs_curl_v.at(i).reinit (2);
-		system_rhs_curl_v.at(i).collect_sizes ();
-		constraints_curl_v.at(i).clear ();
+		// Free memory as much as possible
+		system_matrix.clear ();
+		for (unsigned int i=0; i<basis_curl_v.size(); ++i)
+		{
+			sparsity_pattern_curl.reinit (0,0);
+			constraints_curl_v[i].clear ();
+		}
+		for (unsigned int i=0; i<basis_div_v.size(); ++i)
+		{
+			sparsity_pattern_div.reinit (0,0);
+			constraints_div_v[i].clear ();
+		}
 	}
-	for (unsigned int i=0; i<basis_div_v.size(); ++i)
-	{
-		sparsity_pattern_div_v.at(i).reinit (0,0);
-		system_matrix_div_v.at(i).clear ();
-		system_rhs_div_v.at(i).reinit (2);
-		system_rhs_div_v.at(i).collect_sizes ();
-		constraints_div_v.at(i).clear ();
-	}
-
 
 	// We need to set a filename for the global solution on the current cell
-	set_filename_global_solution ();
+	set_filename_global ();
 
 	// Write basis output only if desired
-	if (output_flag)
+	if (parameters.output_flag)
 		for (unsigned int n_basis=0;
-				n_basis<basis_curl_v.size()+basis_div_v.size();
+				n_basis<length_system_basis;
 				++n_basis)
 			output_basis (n_basis);
 
-	if (verbose)
+	if (parameters.verbose)
 	{
 		printf("------------------------------------------------------------\n");
 	}

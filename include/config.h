@@ -1,6 +1,7 @@
 #ifndef INCLUDE_CONFIG_H_
 #define INCLUDE_CONFIG_H_
 
+#include <deal.II/lac/generic_linear_algebra.h>
 
 #include <cmath>
 #include <limits>

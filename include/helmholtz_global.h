@@ -95,7 +95,9 @@ public:
 
 		bool compute_solution;
 		bool verbose;
+		bool verbose_basis;
 		bool use_direct_solver; /* This is often better for 2D problems. */
+		bool use_direct_solver_basis; /* This is often better for 2D problems. */
 		bool renumber_dofs; /* Reduce bandwidth in either system component */
 
 		unsigned int n_refine_global;
@@ -118,10 +120,9 @@ private:
 	void solve_iterative ();
 	void send_global_weights_to_cell ();
 
+	std::vector<std::string> collect_filenames_on_mpi_process ();
 	void output_results_coarse () const;
 	void output_results_fine ();
-
-	std::vector<std::string> collect_filenames_on_mpi_process ();
 
 	MPI_Comm mpi_communicator;
 

@@ -75,7 +75,17 @@ NedRTMultiscale::Parameters::declare_parameters(
 				Patterns::Bool(),
 				"Set runtime output true or false.");
 			prm.declare_entry(
+				"verbose basis",
+				"false",
+				Patterns::Bool(),
+				"Set runtime output true or false for basis.");
+			prm.declare_entry(
 				"use direct solver",
+				"false",
+				Patterns::Bool(),
+				"Use direct solvers true or false.");
+			prm.declare_entry(
+				"use direct solver basis",
 				"false",
 				Patterns::Bool(),
 				"Use direct solvers true or false.");
@@ -115,7 +125,9 @@ NedRTMultiscale::Parameters::parse_parameters(
 		{
 			compute_solution = prm.get_bool("compute solution");
 			verbose = prm.get_bool("verbose");
+			verbose_basis = prm.get_bool("verbose_basis");
 			use_direct_solver = prm.get_bool("use direct solver");
+			use_direct_solver_basis = prm.get_bool("use direct solver basis");
 			renumber_dofs  = prm.get_bool("dof renumbering");
 		}
 		prm.leave_subsection();
@@ -571,19 +583,77 @@ NedRTMultiscale::output_results_coarse () const
 									+ ".vtu";
 		}
 
-		std::string master_file = parameters.filename_output
-								+ "_n_refine-" + Utilities::int_to_string(parameters.n_refine_global,2)
-								+ ".pvtu";
+		std::string master_file = parameters.filename_output + "_coarse";
+		master_file += "_refine-" + Utilities::int_to_string(parameters.n_refine_global,2)
+				+ Utilities::int_to_string(parameters.n_refine_local,2) + ".pvtu";
 		std::ofstream master_output(master_file.c_str());
 		data_out.write_pvtu_record(master_output, local_filenames);
 	}
 }
 
 
+
+std::vector<std::string>
+NedRTMultiscale::collect_filenames_on_mpi_process ()
+{
+	std::vector<std::string> filename_list;
+
+	typename std::map<CellId, NedRTBasis>::iterator
+		it_basis = cell_basis_map.begin(),
+		it_endbasis = cell_basis_map.end();
+
+	for (; it_basis != it_endbasis; ++it_basis)
+	{
+		filename_list.push_back((it_basis->second).get_filename_global ());
+	}
+
+	return filename_list;
+}
+
+
+
 void
 NedRTMultiscale::output_results_fine ()
 {
 
+	// write local fine solution
+	typename std::map<CellId, NedRTBasis>::iterator
+		it_basis = cell_basis_map.begin(),
+		it_endbasis = cell_basis_map.end();
+
+	for (; it_basis != it_endbasis; ++it_basis)
+	{
+		(it_basis->second).output_global_solution_in_cell ();
+	}
+
+	// Gather local filenames
+	std::vector<std::vector<std::string>> filename_list_list =
+			Utilities::MPI::gather (mpi_communicator,
+			collect_filenames_on_mpi_process (),
+			/* root_process = */ 0);
+
+	std::vector<std::string> filenames_on_cell;
+	for (unsigned int i = 0; i<filename_list_list.size(); ++i)
+		for (unsigned int j = 0; j<filename_list_list[i].size(); ++j)
+			filenames_on_cell.push_back (filename_list_list[i][j]);
+
+	// write a pvtu record
+	if (Utilities::MPI::this_mpi_process(mpi_communicator) == 0)
+	{
+		DataOut<3> data_out;
+		data_out.attach_dof_handler (dof_handler);
+
+		// Names of solution components
+		data_out.add_data_vector (locally_relevant_solution, "solution");
+
+		std::string filename_master = parameters.filename_output;
+		filename_master += "_fine";
+		filename_master += "_refine-" + Utilities::int_to_string(parameters.n_refine_global,2)
+		+ Utilities::int_to_string(parameters.n_refine_local,2) + ".pvtu";
+
+		std::ofstream master_output(filename_master.c_str ());
+		data_out.write_pvtu_record(master_output, filenames_on_cell);
+	}
 }
 
 

@@ -35,6 +35,27 @@ public:
 //	typedef PreconditionIdentity type;
 };
 
+
+
+template <int dim>
+class LocalInnerPreconditioner;
+
+
+template <>
+class LocalInnerPreconditioner<2>
+{
+public:
+	using type = SparseDirectUMFPACK;
+};
+
+
+template <>
+class LocalInnerPreconditioner<3>
+{
+public:
+	using type = SparseILU<double>;
+};
+
 } // namespace LinearSolvers
 
 #endif /* HELMHOLTZ_PRECON_H_ */

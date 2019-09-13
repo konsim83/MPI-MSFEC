@@ -90,6 +90,8 @@ public:
 		static void declare_parameters(ParameterHandler &prm);
 		void        parse_parameters(ParameterHandler &prm);
 
+		const bool degree = 0;
+
 		bool compute_solution;
 		bool verbose;
 		bool use_direct_solver; /* This is often better for 2D problems. */

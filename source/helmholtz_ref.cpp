@@ -259,8 +259,8 @@ void NedRTStd::assemble_system ()
 	system_matrix         = 0;
 	system_rhs            = 0;
 
-	QGauss<3>   quadrature_formula(3);
-	QGauss<2> 	face_quadrature_formula(3);
+	QGauss<3>   quadrature_formula(parameters.degree + 2);
+	QGauss<2> 	face_quadrature_formula(parameters.degree + 2);
 
 	// Get relevant quantities to be updated from finite element
 	FEValues<3> fe_values (fe, quadrature_formula,
