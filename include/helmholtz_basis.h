@@ -53,7 +53,7 @@
 #include "config.h"
 #include "helmholtz_eqn_data.h"
 
-//#include "helmholtz_global.h"
+#include "parameters.h"
 
 #include "inverse_matrix.tpp"
 #include "schur_complement.tpp"
@@ -69,55 +69,12 @@ namespace HelmholtzProblem
 
 using namespace dealii;
 
-class NedRTMultiscale
-{
-public:
-	struct Parameters
-	{
-		Parameters(const std::string &parameter_filename);
-
-		static void declare_parameters(ParameterHandler &prm);
-		void        parse_parameters(ParameterHandler &prm);
-
-		bool compute_solution;
-		bool verbose;
-		bool verbose_basis;
-		bool use_direct_solver; /* This is often better for 2D problems. */
-		bool use_direct_solver_basis; /* This is often better for 2D problems. */
-		bool renumber_dofs; /* Reduce bandwidth in either system component */
-
-		unsigned int n_refine_global;
-		unsigned int n_refine_local;
-
-		std::string filename_output;
-	};
-};
-
-
 class NedRTBasis
 {
 	public:
-		struct Parameters
-		{
-			Parameters(const NedRTMultiscale::Parameters &global_param);
-			Parameters(const Parameters &other); // This the the copy constructor
 
-			const unsigned int degree = 0;
-			const bool set_to_std = false;
-
-			bool verbose;
-			bool use_direct_solver; /* This is often better for 2D problems. */
-			bool renumber_dofs; /* Reduce bandwidth in either system component */
-
-			bool output_flag;
-
-			unsigned int n_refine_global;
-			unsigned int n_refine_local;
-
-			std::string filename_global;
-		};
 		NedRTBasis () = delete;
-		NedRTBasis (const NedRTMultiscale::Parameters &parameters,
+		NedRTBasis (const Parameters::NedRT::ParametersMs &parameters_ms,
 					typename Triangulation<3>::active_cell_iterator& global_cell,
 					unsigned int local_subdomain,
 					MPI_Comm mpi_communicator);
@@ -161,7 +118,7 @@ class NedRTBasis
 
 		MPI_Comm mpi_communicator;
 
-		Parameters &parameters;
+		Parameters::NedRT::ParametersBasis parameters;
 
 		Triangulation<3>   triangulation;
 
@@ -203,12 +160,12 @@ class NedRTBasis
 		/*!
 		 * Global cell number.
 		 */
-		const CellId global_cell_id;
+		CellId global_cell_id;
 
 		/*!
-		 * Smart pointer to global cell.
+		 * Global cell iterator.
 		 */
-		const std::shared_ptr<typename Triangulation<3>::active_cell_iterator>  global_cell_ptr;
+		typename Triangulation<3>::active_cell_iterator  global_cell_it;
 
 		/*!
 		 * Global subdomain number.

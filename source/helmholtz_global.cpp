@@ -5,141 +5,7 @@ namespace HelmholtzProblem
 
 using namespace dealii;
 
-NedRTMultiscale::Parameters::Parameters(
-		const std::string &parameter_filename)
-:
-compute_solution (true),
-verbose (true),
-use_direct_solver (false),
-renumber_dofs (true),
-n_refine_global (2),
-n_refine_local (2),
-filename_output ("NED_RT_Ms")
-{
-	ParameterHandler prm;
-
-	NedRTMultiscale::Parameters::declare_parameters(prm);
-
-	std::ifstream parameter_file(parameter_filename);
-	if (!parameter_file)
-	{
-		parameter_file.close();
-		std::ofstream parameter_out(parameter_filename);
-		prm.print_parameters(parameter_out, ParameterHandler::Text);
-		AssertThrow( false,
-				ExcMessage(
-					"Input parameter file <" + parameter_filename +
-					"> not found. Creating a template file of the same name."));
-	}
-
-	prm.parse_input(parameter_file,
-			/* filename = */ "generated_parameter.in",
-			/* last_line = */ "",
-			/* skip_undefined = */ true);
-	parse_parameters(prm);
-}
-
-
-
-void
-NedRTMultiscale::Parameters::declare_parameters(
-		ParameterHandler &prm)
-{
-	prm.enter_subsection("Multiscale method parameters");
-	{
-		prm.enter_subsection("Mesh");
-		{
-			prm.declare_entry(
-				"global refinements",
-				"2",
-				Patterns::Integer(1,10),
-				"Number of initial coarse mesh refinements.");
-			prm.declare_entry(
-				"local refinements",
-				"2",
-				Patterns::Integer(1,10),
-				"Number of initial coarse mesh refinements.");
-		}
-		prm.leave_subsection();
-
-		prm.enter_subsection("Control flow");
-		{
-			prm.declare_entry(
-				"compute solution",
-				"true",
-				Patterns::Bool(),
-				"Choose whether to compute the solution or not.");
-			prm.declare_entry(
-				"verbose",
-				"true",
-				Patterns::Bool(),
-				"Set runtime output true or false.");
-			prm.declare_entry(
-				"verbose basis",
-				"false",
-				Patterns::Bool(),
-				"Set runtime output true or false for basis.");
-			prm.declare_entry(
-				"use direct solver",
-				"false",
-				Patterns::Bool(),
-				"Use direct solvers true or false.");
-			prm.declare_entry(
-				"use direct solver basis",
-				"false",
-				Patterns::Bool(),
-				"Use direct solvers true or false.");
-			prm.declare_entry(
-				"dof renumbering",
-				"true",
-				Patterns::Bool(),
-				"Dof renumbering reduces bandwidth in system matrices.");
-		}
-		prm.leave_subsection();
-
-		prm.declare_entry(
-			"filename output",
-			"NED_RT_Ms",
-			Patterns::FileName(),
-			".");
-	}
-	prm.leave_subsection();
-}
-
-
-
-void
-NedRTMultiscale::Parameters::parse_parameters(
-		ParameterHandler &prm)
-{
-	prm.enter_subsection("Multiscale method parameters");
-	{
-		prm.enter_subsection("Mesh");
-		{
-			n_refine_global = prm.get_integer("global refinements");
-			n_refine_local = prm.get_integer("local refinements");
-		}
-		prm.leave_subsection();
-
-		prm.enter_subsection("Control flow");
-		{
-			compute_solution = prm.get_bool("compute solution");
-			verbose = prm.get_bool("verbose");
-			verbose_basis = prm.get_bool("verbose_basis");
-			use_direct_solver = prm.get_bool("use direct solver");
-			use_direct_solver_basis = prm.get_bool("use direct solver basis");
-			renumber_dofs  = prm.get_bool("dof renumbering");
-		}
-		prm.leave_subsection();
-
-		filename_output = prm.get("filename output");
-	}
-	prm.leave_subsection();
-}
-
-
-
-NedRTMultiscale::NedRTMultiscale (Parameters &parameters_)
+NedRTMultiscale::NedRTMultiscale (Parameters::NedRT::ParametersMs &parameters_)
 :
 mpi_communicator(MPI_COMM_WORLD),
 parameters(parameters_),
@@ -192,7 +58,7 @@ void NedRTMultiscale::initialize_and_compute_basis ()
 	{
 		if (cell->is_locally_owned())
 		{
-			NedRTBasis current_cell_problem(parameters.n_refine_local,
+			NedRTBasis current_cell_problem(parameters,
 					cell,
 					triangulation.locally_owned_subdomain(),
 					mpi_communicator);

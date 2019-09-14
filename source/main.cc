@@ -79,7 +79,7 @@ int main (int argc, char* argv[]){
 		}
 
 		{
-			HelmholtzProblem::NedRTMultiscale::Parameters parameters(input_file);
+			Parameters::NedRT::ParametersMs parameters(input_file);
 			HelmholtzProblem::NedRTMultiscale mixed_helmholtz_global (parameters);
 			mixed_helmholtz_global.run ();
 		}

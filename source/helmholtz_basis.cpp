@@ -5,41 +5,13 @@ namespace HelmholtzProblem
 
 using namespace dealii;
 
-NedRTBasis::Parameters::Parameters(const NedRTMultiscale::Parameters &parameters)
-:
-verbose (parameters.verbose_basis),
-use_direct_solver (parameters.use_direct_solver_basis),
-renumber_dofs (parameters.renumber_dofs),
-output_flag(false),
-n_refine_global (parameters.n_refine_global),
-n_refine_local (parameters.n_refine_local),
-filename_global (parameters.filename_output)
-{
-}
-
-
-
-NedRTBasis::Parameters::Parameters(const Parameters &other)
-:
-verbose (other.verbose),
-use_direct_solver (other.use_direct_solver),
-renumber_dofs (other.renumber_dofs),
-output_flag(other.output_flag),
-n_refine_global (other.n_refine_global),
-n_refine_local (other.n_refine_local),
-filename_global (other.filename_global)
-{
-}
-
-
-
-NedRTBasis::NedRTBasis (const NedRTMultiscale::Parameters &parameters_,
+NedRTBasis::NedRTBasis (const Parameters::NedRT::ParametersMs &parameters_ms,
 		typename Triangulation<3>::active_cell_iterator& global_cell,
 		unsigned int local_subdomain,
 		MPI_Comm mpi_communicator)
 :
 mpi_communicator(mpi_communicator),
-parameters(parameters_),
+parameters(parameters_ms),
 triangulation(),
 fe (FE_Nedelec<3>(parameters.degree), 1,
 		FE_RaviartThomas<3>(parameters.degree), 1),
@@ -57,6 +29,7 @@ global_element_matrix(fe.dofs_per_cell,
 global_element_rhs(fe.dofs_per_cell),
 global_weights(fe.dofs_per_cell, 0),
 global_cell_id (global_cell->id()),
+global_cell_it(global_cell),
 local_subdomain(local_subdomain),
 volume_measure(0),
 face_measure(GeometryInfo<3>::faces_per_cell, 0),
@@ -70,8 +43,30 @@ is_set_global_weights(false),
 is_set_cell_data(false),
 is_copyable (true)
 {
-	global_cell_ptr = std::make_shared<typename Triangulation<3>::active_cell_iterator> (&global_cell);
-	set_cell_data ();
+	for (unsigned int vertex_n=0;
+		 vertex_n<GeometryInfo<3>::vertices_per_cell;
+		 ++vertex_n)
+	{
+		corner_points.at(vertex_n) = global_cell_it->vertex(vertex_n);
+	}
+
+	volume_measure = global_cell_it->measure ();
+
+	for (unsigned int j_face=0;
+			j_face<GeometryInfo<3>::faces_per_cell;
+			++j_face)
+	{
+		face_measure.at(j_face) = global_cell_it->face(j_face)->measure ();
+	}
+
+	for (unsigned int j_egde=0;
+			j_egde<GeometryInfo<3>::lines_per_cell;
+			++j_egde)
+	{
+		edge_measure.at(j_egde) = global_cell_it->line(j_egde)->measure ();
+	}
+
+	is_set_cell_data = true;
 }
 
 
@@ -84,7 +79,8 @@ NedRTBasis::NedRTBasis(const NedRTBasis &other)
 mpi_communicator (other.mpi_communicator),
 parameters (other.parameters),
 triangulation (), // must be constructed deliberately, but is empty on copying anyway
-fe (other.fe),
+fe (FE_Nedelec<3>(parameters.degree), 1,
+		FE_RaviartThomas<3>(parameters.degree), 1),
 dof_handler (triangulation),
 constraints_curl_v (other.constraints_curl_v),
 constraints_div_v (other.constraints_div_v),
@@ -103,7 +99,7 @@ global_weights (other.global_weights),
 global_solution (other.global_solution),
 inner_schur_preconditioner (other.inner_schur_preconditioner),
 global_cell_id (other.global_cell_id),
-global_cell_ptr(other.global_cell_ptr),
+global_cell_it(other.global_cell_it),
 local_subdomain (other.local_subdomain),
 volume_measure (other.volume_measure),
 face_measure (other.face_measure),
@@ -115,7 +111,32 @@ is_set_global_weights (other.is_set_global_weights),
 is_set_cell_data (other.is_set_cell_data),
 is_copyable (other.is_copyable)
 {
-	set_cell_data ();
+	global_cell_id = global_cell_it->id();
+
+	for (unsigned int vertex_n=0;
+		 vertex_n<GeometryInfo<3>::vertices_per_cell;
+		 ++vertex_n)
+	{
+		corner_points.at(vertex_n) = global_cell_it->vertex(vertex_n);
+	}
+
+	volume_measure = global_cell_it->measure ();
+
+	for (unsigned int j_face=0;
+			j_face<GeometryInfo<3>::faces_per_cell;
+			++j_face)
+	{
+		face_measure.at(j_face) = global_cell_it->face(j_face)->measure ();
+	}
+
+	for (unsigned int j_egde=0;
+			j_egde<GeometryInfo<3>::lines_per_cell;
+			++j_egde)
+	{
+		edge_measure.at(j_egde) = global_cell_it->line(j_egde)->measure ();
+	}
+
+	is_set_cell_data = true;
 }
 
 
@@ -219,17 +240,15 @@ NedRTBasis::setup_basis_dofs_curl ()
 
 	ShapeFun::ShapeFunctionVector<3>
 			std_shape_function (fe.base_element(0),
-					*global_cell_ptr,
+					global_cell_it,
 					/*verbose =*/ false);
 	ShapeFun::ShapeFunctionVectorCurl<3>
 			std_shape_function_curl (fe.base_element(0),
-					*global_cell_ptr,
+					global_cell_it,
 					/*verbose =*/ false);
 
 	std::vector<types::global_dof_index> dofs_per_block (2);
 	DoFTools::count_dofs_per_block (dof_handler, dofs_per_block);
-	const unsigned int n_sigma = dofs_per_block[0],
-					   n_u = dofs_per_block[1];
 
 	// Allocate memory
 	BlockDynamicSparsityPattern dsp(dofs_per_block, dofs_per_block);
@@ -298,17 +317,15 @@ NedRTBasis::setup_basis_dofs_div ()
 
 	ShapeFun::ShapeFunctionVector<3>
 			std_shape_function (fe.base_element(1),
-					*global_cell_ptr,
+					global_cell_it,
 					/*verbose =*/ false);
 //	ShapeFun::ShapeFunctionVectorCurl<3>
 //			std_shape_function_curl (fe.base_element(1),
-//					*global_cell_ptr,
+//					global_cell_it,
 //					/*verbose =*/ false);
 
 	std::vector<types::global_dof_index> dofs_per_block (2);
 	DoFTools::count_dofs_per_block (dof_handler, dofs_per_block);
-	const unsigned int n_sigma = dofs_per_block[0],
-					   n_u = dofs_per_block[1];
 
 	// Allocate memory
 	BlockDynamicSparsityPattern dsp(dofs_per_block, dofs_per_block);
@@ -407,11 +424,11 @@ NedRTBasis::assemble_system ()
 	// Equation data for right-hand side
 //	ShapeFun::ShapeFunctionVectorCurl<3>
 //				std_shape_function_sigma_curl (fe.base_element(0),
-//						*global_cell_ptr,
+//						global_cell_it,
 //						/*verbose =*/ false);
 	ShapeFun::ShapeFunctionVectorDiv<3>
 				std_shape_function_u_div (fe.base_element(1),
-						*global_cell_ptr,
+						global_cell_it,
 						/*verbose =*/ false);
 
 	// allocate
@@ -594,13 +611,13 @@ NedRTBasis::assemble_system ()
 				if (n_basis<GeometryInfo<3>::lines_per_cell)
 				{
 					// This is for curl.
-					system_rhs_curl_v[n_basis](local_dof_indices[i]) += local_rhs_v[n_basis];
+					system_rhs_curl_v[n_basis](local_dof_indices[i]) += local_rhs_v[n_basis](i);
 				}
 				else
 				{
 					// This is for curl.
 					const unsigned int offset_index = n_basis - GeometryInfo<3>::lines_per_cell;
-					system_rhs_div_v[offset_index](local_dof_indices[i]) += local_rhs_v[n_basis];
+					system_rhs_div_v[offset_index](local_dof_indices[i]) += local_rhs_v[n_basis](i);
 				}
 			}
 		}
@@ -678,133 +695,133 @@ NedRTBasis::solve_direct (unsigned int n_basis)
 void
 NedRTBasis::solve_iterative (unsigned int n_basis)
 {
-	Timer timer;
-
-	// ------------------------------------------
-	// Make a preconditioner for each system matrix
-	if (parameters.verbose)
-	{
-		std::cout << "Computing preconditioner in cell   "
-			<< global_cell_id.to_string()
-			<< "for basis   "
-			<< n_basis
-			<< "....." << std::endl;
-
-		timer.start ();
-	}
-
-	BlockVector<double> *system_rhs_ptr = NULL;
-	BlockVector<double> *solution_ptr = NULL;
-	if (n_basis < GeometryInfo<3>::lines_per_cell)
-	{
-		system_rhs_ptr = &(system_rhs_curl_v[n_basis]);
-		solution_ptr = &(basis_curl_v[n_basis]);
-	}
-	else
-	{
-		const unsigned int offset_index = n_basis - GeometryInfo<3>::lines_per_cell;
-		system_rhs_ptr = &(system_rhs_div_v[offset_index]);
-		solution_ptr = &(basis_div_v[offset_index]);
-	}
-
-	// for convenience
-	const BlockVector<double> &system_rhs = *system_rhs_ptr;
-	BlockVector<double> &solution = *solution_ptr;
-
-	inner_schur_preconditioner = std::make_shared<typename LinearSolvers::LocalInnerPreconditioner<3>::type>();
-
-	typename LinearSolvers::InnerPreconditioner<3>::type::AdditionalData data;
-	inner_schur_preconditioner->initialize (system_matrix.block(0,0), data);
-
-	if (parameters.verbose)
-	{
-		timer.stop ();
-		printf("done (%gs)\n",timer());
-	}
-	// ------------------------------------------
-
-	// Now solve.
-	if (parameters.verbose)
-	{
-		std::cout << "Solving linear system (iteratively, with preconditioner) in cell   "
-					<< global_cell_id.to_string()
-					<< "for basis   "
-					<< n_basis
-					<< "....." << std::endl;
-
-		timer.start ();
-	}
-
-	// Construct inverse of upper left block
-	const LinearSolvers::InverseMatrix<SparseMatrix<double>, typename LinearSolvers::LocalInnerPreconditioner<3>::type>
-						block_inverse ( system_matrix.block(0,0), *inner_schur_preconditioner );
-
-	Vector<double> tmp (system_rhs.block(0).size());
-	{
-		// Set up Schur complement
-		LinearSolvers::SchurComplement<BlockSparseMatrix<double>,
-						BlockVector<double>,
-						typename LinearSolvers::InnerPreconditioner<3>::type>
-				schur_complement (system_matrix, block_inverse);
-
-		// Compute schur_rhs = -g + C*A^{-1}*f
-		Vector<double> schur_rhs (system_rhs.block(1).size());
-
-		block_inverse.vmult (tmp, system_rhs.block(0));
-		system_matrix.block(1,0).vmult (schur_rhs, tmp);
-		schur_rhs -= system_rhs.block(1);
-
-		{
-			SolverControl solver_control (system_matrix.m(),
-												1e-6*schur_rhs.l2_norm());
-//			SolverCG<BlockVector<double>> schur_solver (solver_control);
-			SolverMinRes<BlockVector<double>> schur_solver (solver_control);
-
-			schur_solver.solve (schur_complement,
-						solution.block(1),
-						schur_rhs,
-						PreconditionIdentity());
-
-			if (parameters.verbose)
-				std::cout
-					<< std::endl
-					<< "   Iterative Schur complement solver converged in"
-					<< solver_control.last_step()
-					<< " iterations."
-					<< std::endl;
-		}
-
-		{
-			// use computed u to solve for sigma
-			system_matrix.block(0,1).vmult (tmp, solution.block(1));
-			tmp *= -1;
-			tmp += system_rhs.block(0);
-
-			// Solve for sigma
-			block_inverse.vmult (solution.block(0), tmp);
-
-			if (parameters.verbose)
-				std::cout << "   Outer solver completed." << std::endl;
-		}
-	}
-
-	if (n_basis < GeometryInfo<3>::lines_per_cell)
-	{
-		constraints_curl_v[n_basis].distribute(solution);
-	}
-	else
-	{
-		const unsigned int offset_index = n_basis - GeometryInfo<3>::lines_per_cell;
-
-		constraints_div_v[offset_index].distribute(solution);
-	}
-
-
-	if (parameters.verbose)
-	{
-		timer.stop ();
-		printf("....done (%gs)\n",timer());
-	}
+//	Timer timer;
+//
+//	// ------------------------------------------
+//	// Make a preconditioner for each system matrix
+//	if (parameters.verbose)
+//	{
+//		std::cout << "Computing preconditioner in cell   "
+//			<< global_cell_id.to_string()
+//			<< "for basis   "
+//			<< n_basis
+//			<< "....." << std::endl;
+//
+//		timer.start ();
+//	}
+//
+//	BlockVector<double> *system_rhs_ptr = NULL;
+//	BlockVector<double> *solution_ptr = NULL;
+//	if (n_basis < GeometryInfo<3>::lines_per_cell)
+//	{
+//		system_rhs_ptr = &(system_rhs_curl_v[n_basis]);
+//		solution_ptr = &(basis_curl_v[n_basis]);
+//	}
+//	else
+//	{
+//		const unsigned int offset_index = n_basis - GeometryInfo<3>::lines_per_cell;
+//		system_rhs_ptr = &(system_rhs_div_v[offset_index]);
+//		solution_ptr = &(basis_div_v[offset_index]);
+//	}
+//
+//	// for convenience
+//	const BlockVector<double> &system_rhs = *system_rhs_ptr;
+//	BlockVector<double> &solution = *solution_ptr;
+//
+//	inner_schur_preconditioner = std::make_shared<typename LinearSolvers::LocalInnerPreconditioner<3>::type>();
+//
+//	typename LinearSolvers::InnerPreconditioner<3>::type::AdditionalData data;
+//	inner_schur_preconditioner->initialize (system_matrix.block(0,0), data);
+//
+//	if (parameters.verbose)
+//	{
+//		timer.stop ();
+//		printf("done (%gs)\n",timer());
+//	}
+//	// ------------------------------------------
+//
+//	// Now solve.
+//	if (parameters.verbose)
+//	{
+//		std::cout << "Solving linear system (iteratively, with preconditioner) in cell   "
+//					<< global_cell_id.to_string()
+//					<< "for basis   "
+//					<< n_basis
+//					<< "....." << std::endl;
+//
+//		timer.start ();
+//	}
+//
+//	// Construct inverse of upper left block
+//	const LinearSolvers::InverseMatrix<SparseMatrix<double>, typename LinearSolvers::LocalInnerPreconditioner<3>::type>
+//						block_inverse ( system_matrix.block(0,0), *inner_schur_preconditioner );
+//
+//	Vector<double> tmp (system_rhs.block(0).size());
+//	{
+//		// Set up Schur complement
+//		LinearSolvers::SchurComplement<BlockSparseMatrix<double>,
+//						BlockVector<double>,
+//						typename LinearSolvers::InnerPreconditioner<3>::type>
+//				schur_complement (system_matrix, block_inverse);
+//
+//		// Compute schur_rhs = -g + C*A^{-1}*f
+//		Vector<double> schur_rhs (system_rhs.block(1).size());
+//
+//		block_inverse.vmult (tmp, system_rhs.block(0));
+//		system_matrix.block(1,0).vmult (schur_rhs, tmp);
+//		schur_rhs -= system_rhs.block(1);
+//
+//		{
+//			SolverControl solver_control (system_matrix.m(),
+//												1e-6*schur_rhs.l2_norm());
+////			SolverCG<BlockVector<double>> schur_solver (solver_control);
+//			SolverMinRes<BlockVector<double>> schur_solver (solver_control);
+//
+//			schur_solver.solve (schur_complement,
+//						solution.block(1),
+//						schur_rhs,
+//						PreconditionIdentity());
+//
+//			if (parameters.verbose)
+//				std::cout
+//					<< std::endl
+//					<< "   Iterative Schur complement solver converged in"
+//					<< solver_control.last_step()
+//					<< " iterations."
+//					<< std::endl;
+//		}
+//
+//		{
+//			// use computed u to solve for sigma
+//			system_matrix.block(0,1).vmult (tmp, solution.block(1));
+//			tmp *= -1;
+//			tmp += system_rhs.block(0);
+//
+//			// Solve for sigma
+//			block_inverse.vmult (solution.block(0), tmp);
+//
+//			if (parameters.verbose)
+//				std::cout << "   Outer solver completed." << std::endl;
+//		}
+//	}
+//
+//	if (n_basis < GeometryInfo<3>::lines_per_cell)
+//	{
+//		constraints_curl_v[n_basis].distribute(solution);
+//	}
+//	else
+//	{
+//		const unsigned int offset_index = n_basis - GeometryInfo<3>::lines_per_cell;
+//
+//		constraints_div_v[offset_index].distribute(solution);
+//	}
+//
+//
+//	if (parameters.verbose)
+//	{
+//		timer.stop ();
+//		printf("....done (%gs)\n",timer());
+//	}
 }
 
 
@@ -1020,40 +1037,6 @@ NedRTBasis::set_output_flag(bool flag)
 
 
 void
-NedRTBasis::set_cell_data ()
-{
-
-	global_cell_id = (*global_cell_ptr)->id();
-
-	for (unsigned int vertex_n=0;
-		 vertex_n<GeometryInfo<3>::vertices_per_cell;
-		 ++vertex_n)
-	{
-		corner_points.at(vertex_n) = (*global_cell_ptr)->vertex(vertex_n);
-	}
-
-	volume_measure = (*global_cell_ptr)->measure ();
-
-	for (unsigned int j_face=0;
-			j_face<GeometryInfo<3>::faces_per_cell;
-			++j_face)
-	{
-		face_measure.at(j_face) = (*global_cell_ptr)->face(j_face)->measure ();
-	}
-
-	for (unsigned int j_egde=0;
-			j_egde<GeometryInfo<3>::lines_per_cell;
-			++j_egde)
-	{
-		edge_measure.at(j_egde) = (*global_cell_ptr)->line(j_egde)->measure ();
-	}
-
-	is_set_cell_data = true;
-}
-
-
-
-void
 NedRTBasis::set_global_weights (const std::vector<double> &weights)
 {
 	// Copy assignment of global weights
@@ -1091,7 +1074,7 @@ NedRTBasis::set_sigma_to_std ()
 	// Set up vector shape function from finite element on current cell
 	ShapeFun::ShapeFunctionVector<3>
 		std_shape_function_curl (fe.base_element(0),
-				*global_cell_ptr,
+				global_cell_it,
 				/*verbose =*/ false);
 
 	DoFHandler<3>	dof_handler_fake (triangulation);
@@ -1135,7 +1118,7 @@ NedRTBasis::set_u_to_std ()
 	// Set up vector shape function from finite element on current cell
 	ShapeFun::ShapeFunctionVector<3>
 			std_shape_function_div (fe.base_element(1),
-					*global_cell_ptr,
+					global_cell_it,
 					/*verbose =*/ false);
 
 	DoFHandler<3>	dof_handler_fake (triangulation);
