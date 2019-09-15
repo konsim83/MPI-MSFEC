@@ -63,7 +63,7 @@ public:
 	 * @param[in] component
 	 */
 	virtual double value (const Point<dim> &p,
-		                        const unsigned int component = 0) const;
+		                        const unsigned int component = 0) const override;
 
 	/**
 	 * Evaluate shape function at point list <code> points <\code>
@@ -72,7 +72,8 @@ public:
 	 * @param[out] values
 	 */
 	virtual void value_list (const std::vector<Point<dim> > &points,
-								 	 std::vector<double>    &values) const;
+								 	 std::vector<double>    &values,
+									 const unsigned int 	component = 0) const override;
 
 	/**
 	 * Set pointer to current cell (actually and iterator).
@@ -145,7 +146,7 @@ verbose(verbose)
 
 
 template <int dim>
-inline void
+void
 ShapeFunctionVectorDiv<dim>::set_current_cell (const typename Triangulation<dim>::active_cell_iterator &cell)
 {
 	current_cell_ptr = &cell;
@@ -153,7 +154,7 @@ ShapeFunctionVectorDiv<dim>::set_current_cell (const typename Triangulation<dim>
 
 
 template <int dim>
-inline void
+void
 ShapeFunctionVectorDiv<dim>::set_shape_fun_index(unsigned int index)
 {
 	shape_fun_index = index;
@@ -161,7 +162,7 @@ ShapeFunctionVectorDiv<dim>::set_shape_fun_index(unsigned int index)
 
 
 template <int dim>
-inline double
+double
 ShapeFunctionVectorDiv<dim>::value(const Point<dim>   &p, const unsigned int /* component = 0 */) const
 {
 	// Map physical points to reference cell
@@ -181,9 +182,10 @@ ShapeFunctionVectorDiv<dim>::value(const Point<dim>   &p, const unsigned int /* 
 
 
 template <int dim>
-inline void
+void
 ShapeFunctionVectorDiv<dim>::value_list(const std::vector<Point<dim> > &points,
-		 	 	 	 	 	 	 std::vector<double>    &values) const
+		 	 	 	 	 	 	 std::vector<double>    &values,
+								 const unsigned int /* component = 0 */) const
 {
 	Assert (points.size() == values.size(),
 				ExcDimensionMismatch (points.size(), values.size()));

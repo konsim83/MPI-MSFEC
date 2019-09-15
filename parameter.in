@@ -38,7 +38,7 @@ subsection Multiscale method parameters
 	  
 	  	# what solver to use
 	  	set use direct solver = false
-	  	set use direct solver basis = false
+	  	set use direct solver basis = true
 	  
 	  	# renumbering to reduce bandwidth
 	  	set dof renumbering = true

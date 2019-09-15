@@ -219,6 +219,8 @@ NedRTBasis::setup_system_matrix ()
 	assembled_matrix.reinit (sparsity_pattern);
 
 	global_solution.reinit (dofs_per_block);
+
+	global_rhs.reinit (dofs_per_block);
 }
 
 
@@ -263,7 +265,7 @@ NedRTBasis::setup_basis_dofs_curl ()
 
 		DoFTools::make_hanging_node_constraints (dof_handler, constraints_curl_v[n_basis]);
 
-		VectorTools::project_boundary_values_curl_conforming(dof_handler,
+		VectorTools::project_boundary_values_curl_conforming_l2(dof_handler,
 					/*first vector component */ 0,
 					std_shape_function,
 					/*boundary id*/ 0,
@@ -294,7 +296,7 @@ NedRTBasis::setup_basis_dofs_curl ()
 	if (parameters.verbose)
 	{
 		timer.stop ();
-		printf("done (%gs)\n",timer());
+		printf("done (%gs)\n",timer.cpu_time());
 	}
 }
 
@@ -370,7 +372,7 @@ NedRTBasis::setup_basis_dofs_div ()
 	if (parameters.verbose)
 	{
 		timer.stop ();
-		printf("done (%gs)\n",timer());
+		printf("done (%gs)\n",timer.cpu_time());
 	}
 }
 
@@ -611,11 +613,13 @@ NedRTBasis::assemble_system ()
 				if (n_basis<GeometryInfo<3>::lines_per_cell)
 				{
 					// This is for curl.
+					std::cout << "curl----------------->" << std::endl;
 					system_rhs_curl_v[n_basis](local_dof_indices[i]) += local_rhs_v[n_basis](i);
 				}
 				else
 				{
 					// This is for curl.
+					std::cout << "div----------------->" << std::endl;
 					const unsigned int offset_index = n_basis - GeometryInfo<3>::lines_per_cell;
 					system_rhs_div_v[offset_index](local_dof_indices[i]) += local_rhs_v[n_basis](i);
 				}
@@ -627,7 +631,7 @@ NedRTBasis::assemble_system ()
 	if (parameters.verbose)
 	{
 		timer.stop ();
-		printf("done (%gs)\n",timer());
+		printf("done (%gs)\n",timer.cpu_time());
 	}
 } // end assemble()
 
@@ -686,7 +690,7 @@ NedRTBasis::solve_direct (unsigned int n_basis)
 	if (parameters.verbose)
 	{
 		timer.stop ();
-		printf("done (%gs)\n",timer());
+		printf("done (%gs)\n",timer.cpu_time());
 	}
 }
 
@@ -736,7 +740,7 @@ NedRTBasis::solve_iterative (unsigned int n_basis)
 //	if (parameters.verbose)
 //	{
 //		timer.stop ();
-//		printf("done (%gs)\n",timer());
+//		printf("done (%gs)\n",timer.cpu_time());
 //	}
 //	// ------------------------------------------
 //
@@ -820,7 +824,7 @@ NedRTBasis::solve_iterative (unsigned int n_basis)
 //	if (parameters.verbose)
 //	{
 //		timer.stop ();
-//		printf("....done (%gs)\n",timer());
+//		printf("....done (%gs)\n",timer.cpu_time());
 //	}
 }
 
@@ -990,7 +994,7 @@ NedRTBasis::output_basis (unsigned int n_basis)
 	if (parameters.verbose)
 	{
 		timer.stop ();
-		printf("done (%gs)\n",timer());
+		printf("done (%gs)\n",timer.cpu_time());
 	}
 }
 

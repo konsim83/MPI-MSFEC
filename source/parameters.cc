@@ -125,7 +125,7 @@ ParametersMs::parse_parameters(ParameterHandler &prm)
 		{
 			compute_solution = prm.get_bool("compute solution");
 			verbose = prm.get_bool("verbose");
-			verbose_basis = prm.get_bool("verbose_basis");
+			verbose_basis = prm.get_bool("verbose basis");
 			use_direct_solver = prm.get_bool("use direct solver");
 			use_direct_solver_basis = prm.get_bool("use direct solver basis");
 			renumber_dofs  = prm.get_bool("dof renumbering");

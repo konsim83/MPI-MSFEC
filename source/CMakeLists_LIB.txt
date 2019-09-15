@@ -22,7 +22,7 @@ print_all_args (
 #
 # Compile and link the sources as SHARED
 #
-add_library (${MsFEComplex_LIBRARY} ${MsFEComplex_TARGET_LIB_SRC})
+add_library (${MsFEComplex_LIBRARY} SHARED ${MsFEComplex_TARGET_LIB_SRC})
 DEAL_II_SETUP_TARGET(${MsFEComplex_LIBRARY})
 
 #
