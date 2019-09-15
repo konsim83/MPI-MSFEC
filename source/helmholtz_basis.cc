@@ -18,8 +18,7 @@ fe (FE_Nedelec<3>(parameters.degree), 1,
 dof_handler (triangulation),
 constraints_curl_v(GeometryInfo<3>::lines_per_cell),
 constraints_div_v(GeometryInfo<3>::faces_per_cell),
-sparsity_pattern_curl(),
-sparsity_pattern_div(),
+sparsity_pattern(),
 basis_curl_v(GeometryInfo<3>::lines_per_cell),
 basis_div_v(GeometryInfo<3>::faces_per_cell),
 system_rhs_curl_v(GeometryInfo<3>::lines_per_cell),
@@ -84,8 +83,7 @@ fe (FE_Nedelec<3>(parameters.degree), 1,
 dof_handler (triangulation),
 constraints_curl_v (other.constraints_curl_v),
 constraints_div_v (other.constraints_div_v),
-sparsity_pattern_curl (other.sparsity_pattern_curl), // only possible if object is empty
-sparsity_pattern_div (other.sparsity_pattern_div), // only possible if object is empty
+sparsity_pattern (other.sparsity_pattern), // only possible if object is empty
 assembled_matrix (other.assembled_matrix), // only possible if object is empty
 system_matrix (other.system_matrix), // only possible if object is empty
 basis_curl_v (other.basis_curl_v),
@@ -206,17 +204,18 @@ NedRTBasis::setup_system_matrix ()
 				  << std::endl;
 	}
 
-	BlockSparsityPattern     sparsity_pattern;
-
 	{
 		// Allocate memory
 		BlockDynamicSparsityPattern dsp(dofs_per_block, dofs_per_block);
+
+		DoFTools::make_sparsity_pattern (dof_handler, dsp);
 
 		// Initialize the system matrix for global assembly
 		sparsity_pattern.copy_from(dsp);
 	}
 
 	assembled_matrix.reinit (sparsity_pattern);
+	system_matrix.reinit (sparsity_pattern);
 
 	global_solution.reinit (dofs_per_block);
 
@@ -253,7 +252,7 @@ NedRTBasis::setup_basis_dofs_curl ()
 	DoFTools::count_dofs_per_block (dof_handler, dofs_per_block);
 
 	// Allocate memory
-	BlockDynamicSparsityPattern dsp(dofs_per_block, dofs_per_block);
+//	BlockDynamicSparsityPattern dsp(dofs_per_block, dofs_per_block);
 
 	// set constraints (first hanging nodes, then boundary conditions)
 	for (unsigned int n_basis=0; n_basis<basis_curl_v.size(); ++n_basis)
@@ -280,12 +279,12 @@ NedRTBasis::setup_basis_dofs_curl ()
 		constraints_curl_v[n_basis].close ();
 	}
 
-	DoFTools::make_sparsity_pattern(dof_handler,
-									  dsp,
-									  constraints_curl_v[0], // do not write into constraint dofs (same dofs for all problems)
-									  /*keep_constrained_dofs = */ true); // must condense constraints later
+//	DoFTools::make_sparsity_pattern(dof_handler,
+//									  dsp,
+//									  constraints_curl_v[0], // do not write into constraint dofs (same dofs for all problems)
+//									  /*keep_constrained_dofs = */ true); // must condense constraints later
 
-	sparsity_pattern_curl.copy_from(dsp);
+//	sparsity_pattern_curl.copy_from(dsp);
 
 	for (unsigned int n_basis=0; n_basis<basis_curl_v.size(); ++n_basis)
 	{
@@ -330,7 +329,7 @@ NedRTBasis::setup_basis_dofs_div ()
 	DoFTools::count_dofs_per_block (dof_handler, dofs_per_block);
 
 	// Allocate memory
-	BlockDynamicSparsityPattern dsp(dofs_per_block, dofs_per_block);
+//	BlockDynamicSparsityPattern dsp(dofs_per_block, dofs_per_block);
 
 	for (unsigned int n_basis=0; n_basis<basis_div_v.size(); ++n_basis)
 	{
@@ -356,12 +355,12 @@ NedRTBasis::setup_basis_dofs_div ()
 		constraints_div_v[n_basis].close ();
 	}
 
-	DoFTools::make_sparsity_pattern(dof_handler,
-									  dsp,
-									  constraints_div_v[0], // do not write into constraint dofs (same dofs for all problems)
-									  /*keep_constrained_dofs = */ true); // must condense constraints later
+//	DoFTools::make_sparsity_pattern(dof_handler,
+//									  dsp,
+//									  constraints_div_v[0], // do not write into constraint dofs (same dofs for all problems)
+//									  /*keep_constrained_dofs = */ true); // must condense constraints later
 
-	sparsity_pattern_div.copy_from(dsp);
+//	sparsity_pattern_div.copy_from(dsp);
 
 	for (unsigned int n_basis=0; n_basis<basis_div_v.size(); ++n_basis)
 	{
@@ -613,13 +612,11 @@ NedRTBasis::assemble_system ()
 				if (n_basis<GeometryInfo<3>::lines_per_cell)
 				{
 					// This is for curl.
-					std::cout << "curl----------------->" << std::endl;
 					system_rhs_curl_v[n_basis](local_dof_indices[i]) += local_rhs_v[n_basis](i);
 				}
 				else
 				{
 					// This is for curl.
-					std::cout << "div----------------->" << std::endl;
 					const unsigned int offset_index = n_basis - GeometryInfo<3>::lines_per_cell;
 					system_rhs_div_v[offset_index](local_dof_indices[i]) += local_rhs_v[n_basis](i);
 				}
@@ -645,7 +642,7 @@ NedRTBasis::solve_direct (unsigned int n_basis)
 	{
 		std::cout << "Solving linear system (directly) in cell   "
 					<< global_cell_id.to_string()
-					<< "for basis   "
+					<< "   for basis   "
 					<< n_basis
 					<< "....." << std::endl;
 
@@ -1226,7 +1223,7 @@ void NedRTBasis::run ()
 			if (n_basis<GeometryInfo<3>::lines_per_cell)
 			{
 				// This is for curl.
-				system_matrix.reinit (sparsity_pattern_curl);
+				system_matrix.reinit (sparsity_pattern);
 
 				system_matrix.copy_from(assembled_matrix);
 
@@ -1246,7 +1243,7 @@ void NedRTBasis::run ()
 				// This is for div.
 				const unsigned int offset_index = n_basis - GeometryInfo<3>::lines_per_cell;
 
-				system_matrix.reinit (sparsity_pattern_curl);
+				system_matrix.reinit (sparsity_pattern);
 
 				system_matrix.copy_from(assembled_matrix);
 
@@ -1269,14 +1266,13 @@ void NedRTBasis::run ()
 	{
 		// Free memory as much as possible
 		system_matrix.clear ();
+		sparsity_pattern.reinit (0,0);
 		for (unsigned int i=0; i<basis_curl_v.size(); ++i)
 		{
-			sparsity_pattern_curl.reinit (0,0);
 			constraints_curl_v[i].clear ();
 		}
 		for (unsigned int i=0; i<basis_div_v.size(); ++i)
 		{
-			sparsity_pattern_div.reinit (0,0);
 			constraints_div_v[i].clear ();
 		}
 	}

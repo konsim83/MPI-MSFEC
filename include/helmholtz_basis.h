@@ -131,8 +131,9 @@ class NedRTBasis
 		std::vector<AffineConstraints<double>> 		  	constraints_div_v;
 
 		// Sparsity patterns and system matrices for each basis
-		BlockSparsityPattern     sparsity_pattern_curl;
-		BlockSparsityPattern     sparsity_pattern_div;
+		BlockSparsityPattern     sparsity_pattern;
+//		BlockSparsityPattern     sparsity_pattern_curl;
+//		BlockSparsityPattern     sparsity_pattern_div;
 
 		BlockSparseMatrix<double> 	assembled_matrix;
 		BlockSparseMatrix<double> 	system_matrix;
