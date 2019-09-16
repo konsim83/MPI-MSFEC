@@ -2,6 +2,7 @@
 #define HELMHOLTZ_REF_H_
 
 // Deal.ii MPI
+#include <coefficients.h>
 #include <deal.II/base/conditional_ostream.h>
 #include <deal.II/base/mpi.h>
 #include <deal.II/base/function.h>
@@ -69,8 +70,7 @@
 
 // my headers
 #include "config.h"
-#include "helmholtz_eqn_data.h"
-
+#include "parameters.h"
 #include "inverse_matrix.tpp"
 #include "schur_complement.tpp"
 #include "approximate_schur_complement.tpp"
@@ -83,26 +83,8 @@ using namespace dealii;
 class NedRTStd
 {
 public:
-	struct Parameters
-	{
-		Parameters(const std::string &parameter_filename);
-
-		static void declare_parameters(ParameterHandler &prm);
-		void        parse_parameters(ParameterHandler &prm);
-
-		const bool degree = 0;
-
-		bool compute_solution;
-		bool verbose;
-		bool use_direct_solver; /* This is often better for 2D problems. */
-		bool renumber_dofs; /* Reduce bandwidth in either system component */
-
-		unsigned int n_refine;
-
-		std::string filename_output;
-	};
 	NedRTStd () = delete;
-	NedRTStd (Parameters &parameters);
+	NedRTStd (Parameters::NedRT::ParametersStd &parameters);
 	~NedRTStd ();
 
 	void run ();
@@ -118,7 +100,7 @@ private:
 
 	MPI_Comm mpi_communicator;
 
-	Parameters &parameters;
+	Parameters::NedRT::ParametersStd &parameters;
 
 	parallel::distributed::Triangulation<3> triangulation;
 

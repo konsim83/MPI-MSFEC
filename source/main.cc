@@ -73,7 +73,7 @@ int main (int argc, char* argv[]){
 
 		{
 			// reference solution
-			HelmholtzProblem::NedRTStd::Parameters parameters(input_file);
+			Parameters::NedRT::ParametersStd parameters(input_file);
 			HelmholtzProblem::NedRTStd	 mixed_helmholtz_std (parameters);
 			mixed_helmholtz_std.run();
 		}

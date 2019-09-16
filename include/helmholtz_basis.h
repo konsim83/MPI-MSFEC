@@ -2,6 +2,7 @@
 #define HELMHOLTZ_BASIS_H_
 
 // Deal.ii MPI
+#include <coefficients.h>
 #include <deal.II/base/conditional_ostream.h>
 #include <deal.II/base/mpi.h>
 
@@ -51,8 +52,6 @@
 
 // my headers
 #include "config.h"
-#include "helmholtz_eqn_data.h"
-
 #include "parameters.h"
 
 #include "inverse_matrix.tpp"

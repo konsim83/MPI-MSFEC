@@ -15,6 +15,27 @@ using namespace dealii;
 namespace NedRT
 {
 
+struct ParametersStd
+{
+	ParametersStd(const std::string &parameter_filename);
+
+	static void declare_parameters(ParameterHandler &prm);
+	void        parse_parameters(ParameterHandler &prm);
+
+	const bool degree = 0;
+
+	bool compute_solution;
+	bool verbose;
+	bool use_direct_solver; /* This is often better for 2D problems. */
+	bool renumber_dofs; /* Reduce bandwidth in either system component */
+
+	unsigned int n_refine;
+
+	std::string filename_output;
+};
+
+
+
 struct ParametersMs
 {
 	ParametersMs(const std::string &parameter_filename);

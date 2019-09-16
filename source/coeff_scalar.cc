@@ -1,4 +1,4 @@
-#include "helmholtz_eqn_data.h"
+#include <coefficients.h>
 
 namespace HelmholtzProblem
 {
