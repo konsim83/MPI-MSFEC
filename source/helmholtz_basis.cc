@@ -234,7 +234,7 @@ NedRTBasis::setup_basis_dofs_curl ()
 
 	if (parameters.verbose)
 	{
-		std::cout << "Setting up dofs for H(curl) part....." << std::endl;
+		std::cout << "	Setting up dofs for H(curl) part.....";
 
 		timer.start ();
 	}
@@ -295,7 +295,7 @@ NedRTBasis::setup_basis_dofs_curl ()
 	if (parameters.verbose)
 	{
 		timer.stop ();
-		printf("done (%gs)\n",timer.cpu_time());
+		std::cout << "done in   " << timer.cpu_time() << "   seconds." << std::endl;
 	}
 }
 
@@ -311,7 +311,7 @@ NedRTBasis::setup_basis_dofs_div ()
 
 	if (parameters.verbose)
 	{
-		std::cout << "Setting up dofs for H(div) part....." << std::endl;
+		std::cout << "	Setting up dofs for H(div) part.....";
 
 		timer.start ();
 	}
@@ -371,7 +371,7 @@ NedRTBasis::setup_basis_dofs_div ()
 	if (parameters.verbose)
 	{
 		timer.stop ();
-		printf("done (%gs)\n",timer.cpu_time());
+		std::cout << "done in   " << timer.cpu_time() << "   seconds." << std::endl;
 	}
 }
 
@@ -383,9 +383,9 @@ NedRTBasis::assemble_system ()
 	Timer timer;
 	if (parameters.verbose)
 	{
-		std::cout << "Assembling local linear system in cell   "
+		std::cout << "	Assembling local linear system in cell   "
 			<< global_cell_id.to_string()
-			<< "....." << std::endl;
+			<< ".....";
 
 		timer.start ();
 	}
@@ -628,7 +628,7 @@ NedRTBasis::assemble_system ()
 	if (parameters.verbose)
 	{
 		timer.stop ();
-		printf("done (%gs)\n",timer.cpu_time());
+		std::cout << "done in   " << timer.cpu_time() << "   seconds." << std::endl;
 	}
 } // end assemble()
 
@@ -640,11 +640,11 @@ NedRTBasis::solve_direct (unsigned int n_basis)
 	Timer timer;
 	if (parameters.verbose)
 	{
-		std::cout << "Solving linear system (directly) in cell   "
+		std::cout << "	Solving linear system (directly) in cell   "
 					<< global_cell_id.to_string()
 					<< "   for basis   "
 					<< n_basis
-					<< "....." << std::endl;
+					<< ".....";
 
 		timer.start ();
 	}
@@ -687,7 +687,7 @@ NedRTBasis::solve_direct (unsigned int n_basis)
 	if (parameters.verbose)
 	{
 		timer.stop ();
-		printf("done (%gs)\n",timer.cpu_time());
+		std::cout << "done in   " << timer.cpu_time() << "   seconds." << std::endl;
 	}
 }
 
@@ -696,133 +696,133 @@ NedRTBasis::solve_direct (unsigned int n_basis)
 void
 NedRTBasis::solve_iterative (unsigned int n_basis)
 {
-//	Timer timer;
-//
-//	// ------------------------------------------
-//	// Make a preconditioner for each system matrix
-//	if (parameters.verbose)
-//	{
-//		std::cout << "Computing preconditioner in cell   "
-//			<< global_cell_id.to_string()
-//			<< "for basis   "
-//			<< n_basis
-//			<< "....." << std::endl;
-//
-//		timer.start ();
-//	}
-//
-//	BlockVector<double> *system_rhs_ptr = NULL;
-//	BlockVector<double> *solution_ptr = NULL;
-//	if (n_basis < GeometryInfo<3>::lines_per_cell)
-//	{
-//		system_rhs_ptr = &(system_rhs_curl_v[n_basis]);
-//		solution_ptr = &(basis_curl_v[n_basis]);
-//	}
-//	else
-//	{
-//		const unsigned int offset_index = n_basis - GeometryInfo<3>::lines_per_cell;
-//		system_rhs_ptr = &(system_rhs_div_v[offset_index]);
-//		solution_ptr = &(basis_div_v[offset_index]);
-//	}
-//
-//	// for convenience
-//	const BlockVector<double> &system_rhs = *system_rhs_ptr;
-//	BlockVector<double> &solution = *solution_ptr;
-//
-//	inner_schur_preconditioner = std::make_shared<typename LinearSolvers::LocalInnerPreconditioner<3>::type>();
-//
-//	typename LinearSolvers::InnerPreconditioner<3>::type::AdditionalData data;
-//	inner_schur_preconditioner->initialize (system_matrix.block(0,0), data);
-//
-//	if (parameters.verbose)
-//	{
-//		timer.stop ();
-//		printf("done (%gs)\n",timer.cpu_time());
-//	}
-//	// ------------------------------------------
-//
-//	// Now solve.
-//	if (parameters.verbose)
-//	{
-//		std::cout << "Solving linear system (iteratively, with preconditioner) in cell   "
-//					<< global_cell_id.to_string()
-//					<< "for basis   "
-//					<< n_basis
-//					<< "....." << std::endl;
-//
-//		timer.start ();
-//	}
-//
-//	// Construct inverse of upper left block
-//	const LinearSolvers::InverseMatrix<SparseMatrix<double>, typename LinearSolvers::LocalInnerPreconditioner<3>::type>
-//						block_inverse ( system_matrix.block(0,0), *inner_schur_preconditioner );
-//
-//	Vector<double> tmp (system_rhs.block(0).size());
-//	{
-//		// Set up Schur complement
-//		LinearSolvers::SchurComplement<BlockSparseMatrix<double>,
-//						BlockVector<double>,
-//						typename LinearSolvers::InnerPreconditioner<3>::type>
-//				schur_complement (system_matrix, block_inverse);
-//
-//		// Compute schur_rhs = -g + C*A^{-1}*f
-//		Vector<double> schur_rhs (system_rhs.block(1).size());
-//
-//		block_inverse.vmult (tmp, system_rhs.block(0));
-//		system_matrix.block(1,0).vmult (schur_rhs, tmp);
-//		schur_rhs -= system_rhs.block(1);
-//
-//		{
-//			SolverControl solver_control (system_matrix.m(),
-//												1e-6*schur_rhs.l2_norm());
-////			SolverCG<BlockVector<double>> schur_solver (solver_control);
-//			SolverMinRes<BlockVector<double>> schur_solver (solver_control);
-//
-//			schur_solver.solve (schur_complement,
-//						solution.block(1),
-//						schur_rhs,
-//						PreconditionIdentity());
-//
-//			if (parameters.verbose)
-//				std::cout
-//					<< std::endl
-//					<< "   Iterative Schur complement solver converged in"
-//					<< solver_control.last_step()
-//					<< " iterations."
-//					<< std::endl;
-//		}
-//
-//		{
-//			// use computed u to solve for sigma
-//			system_matrix.block(0,1).vmult (tmp, solution.block(1));
-//			tmp *= -1;
-//			tmp += system_rhs.block(0);
-//
-//			// Solve for sigma
-//			block_inverse.vmult (solution.block(0), tmp);
-//
-//			if (parameters.verbose)
-//				std::cout << "   Outer solver completed." << std::endl;
-//		}
-//	}
-//
-//	if (n_basis < GeometryInfo<3>::lines_per_cell)
-//	{
-//		constraints_curl_v[n_basis].distribute(solution);
-//	}
-//	else
-//	{
-//		const unsigned int offset_index = n_basis - GeometryInfo<3>::lines_per_cell;
-//
-//		constraints_div_v[offset_index].distribute(solution);
-//	}
-//
-//
-//	if (parameters.verbose)
-//	{
-//		timer.stop ();
-//		printf("....done (%gs)\n",timer.cpu_time());
-//	}
+	Timer timer;
+
+	// ------------------------------------------
+	// Make a preconditioner for each system matrix
+	if (parameters.verbose)
+	{
+		std::cout << "	Computing preconditioner in cell   "
+			<< global_cell_id.to_string()
+			<< "for basis   "
+			<< n_basis
+			<< ".....";
+
+		timer.start ();
+	}
+
+	BlockVector<double> *system_rhs_ptr = NULL;
+	BlockVector<double> *solution_ptr = NULL;
+	if (n_basis < GeometryInfo<3>::lines_per_cell)
+	{
+		system_rhs_ptr = &(system_rhs_curl_v[n_basis]);
+		solution_ptr = &(basis_curl_v[n_basis]);
+	}
+	else
+	{
+		const unsigned int offset_index = n_basis - GeometryInfo<3>::lines_per_cell;
+		system_rhs_ptr = &(system_rhs_div_v[offset_index]);
+		solution_ptr = &(basis_div_v[offset_index]);
+	}
+
+	// for convenience
+	const BlockVector<double> &system_rhs = *system_rhs_ptr;
+	BlockVector<double> &solution = *solution_ptr;
+
+	inner_schur_preconditioner = std::make_shared<typename LinearSolvers::LocalInnerPreconditioner<3>::type>();
+
+	typename LinearSolvers::LocalInnerPreconditioner<3>::type::AdditionalData data;
+	inner_schur_preconditioner->initialize (system_matrix.block(0,0), data);
+
+	if (parameters.verbose)
+	{
+		timer.stop ();
+		std::cout << "done in   " << timer.cpu_time() << "   seconds." << std::endl;
+	}
+	// ------------------------------------------
+
+	// Now solve.
+	if (parameters.verbose)
+	{
+		std::cout << "	Solving linear system (iteratively, with preconditioner) in cell   "
+					<< global_cell_id.to_string()
+					<< "for basis   "
+					<< n_basis
+					<< ".....";
+
+		timer.start ();
+	}
+
+	// Construct inverse of upper left block
+	const LinearSolvers::InverseMatrix<SparseMatrix<double>, typename LinearSolvers::LocalInnerPreconditioner<3>::type>
+						block_inverse ( system_matrix.block(0,0), *inner_schur_preconditioner );
+
+	Vector<double> tmp (system_rhs.block(0).size());
+	{
+		// Set up Schur complement
+		LinearSolvers::SchurComplement<BlockSparseMatrix<double>,
+						Vector<double>,
+						typename LinearSolvers::LocalInnerPreconditioner<3>::type>
+				schur_complement (system_matrix, block_inverse);
+
+		// Compute schur_rhs = -g + C*A^{-1}*f
+		Vector<double> schur_rhs (system_rhs.block(1).size());
+
+		block_inverse.vmult (tmp, system_rhs.block(0));
+		system_matrix.block(1,0).vmult (schur_rhs, tmp);
+		schur_rhs -= system_rhs.block(1);
+
+		{
+			SolverControl solver_control (system_matrix.m(),
+												1e-6*schur_rhs.l2_norm());
+			SolverCG<Vector<double>> schur_solver (solver_control);
+//			SolverMinRes<Vector<double>> schur_solver (solver_control);
+
+			schur_solver.solve (schur_complement,
+						solution.block(1),
+						schur_rhs,
+						PreconditionIdentity());
+
+			if (parameters.verbose)
+				std::cout
+					<< std::endl
+					<< "		- Iterative Schur complement solver converged in"
+					<< solver_control.last_step()
+					<< " iterations."
+					<< std::endl;
+		}
+
+		{
+			// use computed u to solve for sigma
+			system_matrix.block(0,1).vmult (tmp, solution.block(1));
+			tmp *= -1;
+			tmp += system_rhs.block(0);
+
+			// Solve for sigma
+			block_inverse.vmult (solution.block(0), tmp);
+
+			if (parameters.verbose)
+				std::cout << "		- Outer solver completed." << std::endl;
+		}
+	}
+
+	if (n_basis < GeometryInfo<3>::lines_per_cell)
+	{
+		constraints_curl_v[n_basis].distribute(solution);
+	}
+	else
+	{
+		const unsigned int offset_index = n_basis - GeometryInfo<3>::lines_per_cell;
+
+		constraints_div_v[offset_index].distribute(solution);
+	}
+
+
+	if (parameters.verbose)
+	{
+		timer.stop ();
+		std::cout << "		- done in   " << timer.cpu_time() << "   seconds." << std::endl;
+	}
 }
 
 
@@ -931,11 +931,11 @@ NedRTBasis::output_basis (unsigned int n_basis)
 	Timer timer;
 	if (parameters.verbose)
 	{
-		std::cout << "Writing local solution in cell   "
+		std::cout << "	Writing local solution in cell   "
 			<< global_cell_id.to_string()
 			<< "for basis   "
 			<< n_basis
-			<< "....." << std::endl;
+			<< ".....";
 
 		timer.start ();
 	}
@@ -991,7 +991,7 @@ NedRTBasis::output_basis (unsigned int n_basis)
 	if (parameters.verbose)
 	{
 		timer.stop ();
-		printf("done (%gs)\n",timer.cpu_time());
+		std::cout << "done in   " << timer.cpu_time() << "   seconds." << std::endl;
 	}
 }
 
@@ -1193,7 +1193,7 @@ void NedRTBasis::run ()
 {
 	if (parameters.verbose)
 	{
-		printf("\n------------------------------------------------------------\n");
+		std::cout << "------------------------------------------------------------" << std::endl;
 	}
 
 	// Create grid
@@ -1289,7 +1289,7 @@ void NedRTBasis::run ()
 
 	if (parameters.verbose)
 	{
-		printf("------------------------------------------------------------\n");
+		std::cout << "------------------------------------------------------------" << std::endl;
 	}
 }
 
