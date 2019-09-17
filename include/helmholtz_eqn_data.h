@@ -10,19 +10,13 @@
 #include <vector>
 #include <cstdlib>
 
-// my headers
-#include "config.h"
-
-
-namespace Coefficients
+namespace HelmholtzProblem
 {
-
-using namespace dealii;
 
 const double PI_D = 3.141592653589793238463;
 const float  PI_F = 3.14159265358979f;
 
-
+using namespace dealii;
 
 /**
  * Right hand side of equation is a vectorial function.
@@ -81,6 +75,21 @@ public:
 
 
 /**
+ * Second diffusion tensor. Must be positive definite and uniformly bounded from below and above.
+ */
+class Diffusion_B : public Function<3>
+{
+public:
+	Diffusion_B () : Function<3>() {}
+
+  virtual void value_list (const std::vector<Point<3>> &points,
+                           std::vector<double>    &values,
+						   const unsigned int  component = 0) const override;
+};
+
+
+
+/**
  * Implementation of reaction rate. This term regularizes the weak form. If it vanishes we have a Darcy problem.
  */
 class ReactionRate : public Function<3>
@@ -96,6 +105,6 @@ public:
 };
 ///
   
-} // end namespace Coefficients
+} // end namespace HelmholtzProblem
 
 #endif /* HELMHOLTZ_EQN_DATA_H_ */
