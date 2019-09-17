@@ -63,7 +63,7 @@ int main (int argc, char* argv[]){
 
 	try
     {
-	  dealii::deallog.depth_console(2);
+	  dealii::deallog.depth_console(0);
 
 #ifdef USE_PETSC_LA
 		dealii::Utilities::MPI::MPI_InitFinalize

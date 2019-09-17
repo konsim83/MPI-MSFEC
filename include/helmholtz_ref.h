@@ -2,7 +2,6 @@
 #define HELMHOLTZ_REF_H_
 
 // Deal.ii MPI
-#include <coefficients.h>
 #include <deal.II/base/conditional_ostream.h>
 #include <deal.II/base/mpi.h>
 #include <deal.II/base/function.h>
@@ -71,6 +70,9 @@
 // my headers
 #include "config.h"
 #include "parameters.h"
+
+#include "helmholtz_eqn_data.h"
+
 #include "inverse_matrix.tpp"
 #include "approximate_inverse.tpp"
 #include "schur_complement.tpp"
