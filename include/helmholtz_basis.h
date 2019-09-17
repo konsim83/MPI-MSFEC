@@ -51,14 +51,16 @@
 
 // my headers
 #include "config.h"
-#include "helmholtz_eqn_data.h"
-
 #include "parameters.h"
 
+#include "helmholtz_eqn_data.h"
+
 #include "inverse_matrix.tpp"
+#include "approximate_inverse.tpp"
 #include "schur_complement.tpp"
 #include "approximate_schur_complement.tpp"
 #include "preconditioner.h"
+
 #include "shape_fun_vector.tpp"
 #include "shape_fun_vector_curl.tpp"
 #include "shape_fun_vector_div.tpp"

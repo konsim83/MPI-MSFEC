@@ -71,9 +71,8 @@
 #include "parameters.h"
 
 #include "config.h"
-#include "helmholtz_eqn_data.h"
-
 #include "inverse_matrix.tpp"
+#include "approximate_inverse.tpp"
 #include "schur_complement.tpp"
 #include "approximate_schur_complement.tpp"
 #include "preconditioner.h"

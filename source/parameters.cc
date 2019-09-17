@@ -8,6 +8,118 @@ using namespace dealii;
 namespace NedRT
 {
 
+ParametersStd::ParametersStd(
+		const std::string &parameter_filename)
+:
+compute_solution (true),
+verbose (true),
+use_direct_solver (false),
+renumber_dofs (true),
+n_refine (3),
+filename_output ("NED_RT_Std")
+{
+	ParameterHandler prm;
+
+	ParametersStd::declare_parameters(prm);
+
+	std::ifstream parameter_file(parameter_filename);
+	if (!parameter_file)
+	{
+		parameter_file.close();
+		std::ofstream parameter_out(parameter_filename);
+		prm.print_parameters(parameter_out, ParameterHandler::Text);
+		AssertThrow( false,
+				ExcMessage(
+					"Input parameter file <" + parameter_filename +
+					"> not found. Creating a template file of the same name."));
+	}
+
+	prm.parse_input(parameter_file,
+			/* filename = */ "generated_parameter.in",
+			/* last_line = */ "",
+			/* skip_undefined = */ true);
+	ParametersStd::parse_parameters(prm);
+}
+
+void
+ParametersStd::declare_parameters(
+		ParameterHandler &prm)
+{
+	prm.enter_subsection("Standard method parameters");
+	{
+		prm.enter_subsection("Mesh");
+		{
+			prm.declare_entry(
+				"refinements",
+				"3",
+				Patterns::Integer(1,10),
+				"Number of initial mesh refinements.");
+		}
+		prm.leave_subsection();
+
+		prm.enter_subsection("Control flow");
+		{
+			prm.declare_entry(
+				"compute solution",
+				"true",
+				Patterns::Bool(),
+				"Choose whether to compute the solution or not.");
+			prm.declare_entry(
+				"verbose",
+				"true",
+				Patterns::Bool(),
+				"Set runtime output true or false.");
+			prm.declare_entry(
+				"use direct solver",
+				"true",
+				Patterns::Bool(),
+				"Use direct solvers true or false.");
+			prm.declare_entry(
+				"dof renumbering",
+				"true",
+				Patterns::Bool(),
+				"Dof renumbering reduces bandwidth in system matrices.");
+		}
+		prm.leave_subsection();
+
+		prm.declare_entry(
+			"filename output",
+			"NED_RT_Std",
+			Patterns::FileName(),
+			".");
+	}
+	prm.leave_subsection();
+}
+
+
+void
+ParametersStd::parse_parameters(
+		ParameterHandler &prm)
+{
+	prm.enter_subsection("Standard method parameters");
+	{
+		prm.enter_subsection("Mesh");
+		{
+			n_refine = prm.get_integer("refinements");
+		}
+		prm.leave_subsection();
+
+		prm.enter_subsection("Control flow");
+		{
+			compute_solution = prm.get_bool("compute solution");
+			verbose = prm.get_bool("verbose");
+			use_direct_solver = prm.get_bool("use direct solver");
+			renumber_dofs  = prm.get_bool("dof renumbering");
+		}
+		prm.leave_subsection();
+
+		filename_output = prm.get("filename output");
+	}
+	prm.leave_subsection();
+}
+
+
+
 ParametersMs::ParametersMs(const std::string &parameter_filename)
 :
 compute_solution (true),

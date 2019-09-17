@@ -69,9 +69,12 @@
 
 // my headers
 #include "config.h"
+#include "parameters.h"
+
 #include "helmholtz_eqn_data.h"
 
 #include "inverse_matrix.tpp"
+#include "approximate_inverse.tpp"
 #include "schur_complement.tpp"
 #include "approximate_schur_complement.tpp"
 #include "preconditioner.h"
@@ -83,26 +86,8 @@ using namespace dealii;
 class NedRTStd
 {
 public:
-	struct Parameters
-	{
-		Parameters(const std::string &parameter_filename);
-
-		static void declare_parameters(ParameterHandler &prm);
-		void        parse_parameters(ParameterHandler &prm);
-
-		const bool degree = 0;
-
-		bool compute_solution;
-		bool verbose;
-		bool use_direct_solver; /* This is often better for 2D problems. */
-		bool renumber_dofs; /* Reduce bandwidth in either system component */
-
-		unsigned int n_refine;
-
-		std::string filename_output;
-	};
 	NedRTStd () = delete;
-	NedRTStd (Parameters &parameters);
+	NedRTStd (Parameters::NedRT::ParametersStd &parameters);
 	~NedRTStd ();
 
 	void run ();
@@ -118,7 +103,7 @@ private:
 
 	MPI_Comm mpi_communicator;
 
-	Parameters &parameters;
+	Parameters::NedRT::ParametersStd &parameters;
 
 	parallel::distributed::Triangulation<3> triangulation;
 

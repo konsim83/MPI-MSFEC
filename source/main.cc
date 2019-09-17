@@ -63,6 +63,8 @@ int main (int argc, char* argv[]){
 
 	try
     {
+	  dealii::deallog.depth_console(0);
+
 #ifdef USE_PETSC_LA
 		dealii::Utilities::MPI::MPI_InitFinalize
 			mpi_initialization(argc, argv, /* disable threading for petsc */ 1);
@@ -73,7 +75,7 @@ int main (int argc, char* argv[]){
 
 		{
 			// reference solution
-			HelmholtzProblem::NedRTStd::Parameters parameters(input_file);
+			Parameters::NedRT::ParametersStd parameters(input_file);
 			HelmholtzProblem::NedRTStd	 mixed_helmholtz_std (parameters);
 			mixed_helmholtz_std.run();
 		}

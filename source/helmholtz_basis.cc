@@ -704,9 +704,9 @@ NedRTBasis::solve_iterative (unsigned int n_basis)
 	{
 		std::cout << "	Computing preconditioner in cell   "
 			<< global_cell_id.to_string()
-			<< "for basis   "
+			<< "   for basis   "
 			<< n_basis
-			<< ".....";
+			<< "   .....";
 
 		timer.start ();
 	}
@@ -746,9 +746,9 @@ NedRTBasis::solve_iterative (unsigned int n_basis)
 	{
 		std::cout << "	Solving linear system (iteratively, with preconditioner) in cell   "
 					<< global_cell_id.to_string()
-					<< "for basis   "
+					<< "   for basis   "
 					<< n_basis
-					<< ".....";
+					<< "   .....";
 
 		timer.start ();
 	}
@@ -776,7 +776,41 @@ NedRTBasis::solve_iterative (unsigned int n_basis)
 			SolverControl solver_control (system_matrix.m(),
 												1e-6*schur_rhs.l2_norm());
 			SolverCG<Vector<double>> schur_solver (solver_control);
-//			SolverMinRes<Vector<double>> schur_solver (solver_control);
+
+
+//			PreconditionIdentity preconditioner;
+
+			/*
+			 * Precondition the Schur complement with
+			 * the approximate inverse of the
+			 * Schur complement.
+			 */
+	//		LinearSolvers::ApproximateInverseMatrix<LinearSolvers::SchurComplementMPI<LA::MPI::BlockSparseMatrix,
+	//																					LA::MPI::Vector,
+	//																					typename LinearSolvers::InnerPreconditioner<3>::type>,
+	//									PreconditionIdentity>
+	//									preconditioner (schur_complement,
+	//												PreconditionIdentity() );
+
+			/*
+			 * Precondition the Schur complement with
+			 * the (approximate) inverse of an approximate
+			 * Schur complement.
+			 */
+			using ApproxSchurPrecon = PreconditionJacobi<SparseMatrix<double>>;
+//			using ApproxSchurPrecon = PreconditionSOR<SparseMatrix<double>>;
+//			using ApproxSchurPrecon = SparseILU<double>;
+			LinearSolvers::ApproximateSchurComplement<BlockSparseMatrix<double>,
+														Vector<double>,
+														ApproxSchurPrecon>
+														approx_schur (system_matrix);
+
+			LinearSolvers::ApproximateInverseMatrix<LinearSolvers::ApproximateSchurComplement<BlockSparseMatrix<double>,
+																						Vector<double>,
+																						ApproxSchurPrecon>,
+													PreconditionIdentity>
+													preconditioner (approx_schur,
+																PreconditionIdentity() );
 
 			schur_solver.solve (schur_complement,
 						solution.block(1),
@@ -786,9 +820,9 @@ NedRTBasis::solve_iterative (unsigned int n_basis)
 			if (parameters.verbose)
 				std::cout
 					<< std::endl
-					<< "		- Iterative Schur complement solver converged in"
+					<< "		- Iterative Schur complement solver converged in   "
 					<< solver_control.last_step()
-					<< " iterations."
+					<< "   iterations."
 					<< std::endl;
 		}
 
