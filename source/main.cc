@@ -63,6 +63,8 @@ int main (int argc, char* argv[]){
 
 	try
     {
+	  dealii::deallog.depth_console(2);
+
 #ifdef USE_PETSC_LA
 		dealii::Utilities::MPI::MPI_InitFinalize
 			mpi_initialization(argc, argv, /* disable threading for petsc */ 1);

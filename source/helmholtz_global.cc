@@ -325,19 +325,44 @@ void NedRTMultiscale::solve_iterative ()
 		// Set Solver parameters for solving for u
 		SolverControl solver_control (system_matrix.m(),
 									1e-6*schur_rhs.l2_norm());
-//		SolverCG<LA::MPI::Vector> schur_solver (solver_control);
-		SolverMinRes<LA::MPI::Vector> schur_solver (solver_control);
+		SolverCG<LA::MPI::Vector> schur_solver (solver_control);
 
-	#ifdef USE_PETSC_LA
-		PreconditionIdentity preconditioner;
+	//		PreconditionIdentity preconditioner;
 
-//		LinearSolvers::ApproximateSchurComplementMPI<LA::MPI::BlockSparseMatrix,
-//													LA::MPI::Vector,
-//													PETScWrappers::PreconditionSOR>
-//														preconditioner (system_matrix, owned_partitioning, mpi_communicator);
-	#else
-		typename TrilinosWrappers::PreconditionIdentity preconditioner;
-	#endif
+			/*
+			 * Precondition the Schur complement with
+			 * the approximate inverse of the
+			 * Schur complement.
+			 */
+	//		LinearSolvers::ApproximateInverseMatrix<LinearSolvers::SchurComplementMPI<LA::MPI::BlockSparseMatrix,
+	//																					LA::MPI::Vector,
+	//																					typename LinearSolvers::InnerPreconditioner<3>::type>,
+	//									PreconditionIdentity>
+	//									preconditioner (schur_complement,
+	//												PreconditionIdentity() );
+
+			/*
+			 * Precondition the Schur complement with
+			 * the (approximate) inverse of an approximate
+			 * Schur complement.
+			 */
+			LinearSolvers::ApproximateSchurComplementMPI<LA::MPI::BlockSparseMatrix,
+														LA::MPI::Vector,
+														LA::MPI::PreconditionAMG>
+														approx_schur (system_matrix, owned_partitioning, mpi_communicator);
+
+			LinearSolvers::ApproximateInverseMatrix<LinearSolvers::ApproximateSchurComplementMPI<LA::MPI::BlockSparseMatrix,
+																						LA::MPI::Vector,
+																						LA::MPI::PreconditionAMG>,
+													PreconditionIdentity>
+													preconditioner (approx_schur,
+																PreconditionIdentity() );
+
+			/*
+			 * Precondition the Schur complement with a preconditioner of block(1,1).
+			 */
+	//		LA::MPI::PreconditionAMG preconditioner;
+	//		preconditioner.initialize(system_matrix.block(1, 1), data);
 
 		schur_solver.solve (schur_complement,
 					distributed_solution.block(1),
