@@ -63,7 +63,6 @@ int main (int argc, char* argv[]){
 
 	try
     {
-	  dealii::deallog.depth_console(0);
 
 #ifdef USE_PETSC_LA
 		dealii::Utilities::MPI::MPI_InitFinalize
@@ -74,6 +73,8 @@ int main (int argc, char* argv[]){
 #endif
 
 		{
+			dealii::deallog.depth_console(2);
+
 			// reference solution
 			Parameters::NedRT::ParametersStd parameters(input_file);
 			HelmholtzProblem::NedRTStd	 mixed_helmholtz_std (parameters);
@@ -81,6 +82,9 @@ int main (int argc, char* argv[]){
 		}
 
 		{
+			dealii::deallog.depth_console(0);
+
+			// multiscale solution
 			Parameters::NedRT::ParametersMs parameters(input_file);
 			HelmholtzProblem::NedRTMultiscale mixed_helmholtz_global (parameters);
 			mixed_helmholtz_global.run ();

@@ -147,7 +147,7 @@ DiffusionInverse_A::value_list (const std::vector<Point<3> > &points,
 	Assert (points.size() == values.size(),
 			ExcDimensionMismatch (points.size(), values.size()));
 
-	const int k = 0;
+	const int k = 19;
 
 	const double alpha = PI_D/3,
 				beta = PI_D/6,
@@ -171,8 +171,8 @@ DiffusionInverse_A::value_list (const std::vector<Point<3> > &points,
 
 		//This is just diagonal
 		values[p][0][0] = 1 / (1.0 - 0.999 * sin( 2 * PI_D * k * points.at(p)(1) ));
-		values[p][1][1] = 1 / (1.0 - 0.999 * sin( 2 * PI_D * k * points.at(p)(2) ));
-		values[p][2][2] = 1 / (1.0 - 0.999 * sin( 2 * PI_D * k * points.at(p)(0) ));
+		values[p][1][1] = 0.01 / (1.0 - 0.999 * sin( 2 * PI_D * k * points.at(p)(2) ));
+		values[p][2][2] = 0.01 / (1.0 - 0.999 * sin( 2 * PI_D * k * points.at(p)(0) ));
 
 		// Now rotation leads to anisotropy
 //		values[p] = rot * values[p] * transpose (rot);

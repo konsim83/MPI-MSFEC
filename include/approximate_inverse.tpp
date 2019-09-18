@@ -54,7 +54,7 @@ ApproximateInverseMatrix<MatrixType, PreconditionerType>::vmult(
 		VectorType       &dst,
 		const VectorType &src) const
 {
-	SolverControl solver_control (/* max_iter */ 16,
+	SolverControl solver_control (/* max_iter */ 14,
 									1e-6*src.l2_norm());
 	SolverCG<VectorType> local_solver(solver_control);
 

@@ -373,7 +373,7 @@ NedRTStd::solve_iterative ()
 									1e-6*schur_rhs.l2_norm());
 		SolverCG<LA::MPI::Vector> schur_solver (solver_control);
 
-//		PreconditionIdentity preconditioner;
+		PreconditionIdentity preconditioner;
 
 		/*
 		 * Precondition the Schur complement with
@@ -392,17 +392,17 @@ NedRTStd::solve_iterative ()
 		 * the (approximate) inverse of an approximate
 		 * Schur complement.
 		 */
-		LinearSolvers::ApproximateSchurComplementMPI<LA::MPI::BlockSparseMatrix,
-													LA::MPI::Vector,
-													LA::MPI::PreconditionAMG>
-													approx_schur (system_matrix, owned_partitioning, mpi_communicator);
-
-		LinearSolvers::ApproximateInverseMatrix<LinearSolvers::ApproximateSchurComplementMPI<LA::MPI::BlockSparseMatrix,
-																					LA::MPI::Vector,
-																					LA::MPI::PreconditionAMG>,
-												PreconditionIdentity>
-												preconditioner (approx_schur,
-															PreconditionIdentity() );
+//		LinearSolvers::ApproximateSchurComplementMPI<LA::MPI::BlockSparseMatrix,
+//													LA::MPI::Vector,
+//													LA::MPI::PreconditionAMG>
+//													approx_schur (system_matrix, owned_partitioning, mpi_communicator);
+//
+//		LinearSolvers::ApproximateInverseMatrix<LinearSolvers::ApproximateSchurComplementMPI<LA::MPI::BlockSparseMatrix,
+//																					LA::MPI::Vector,
+//																					LA::MPI::PreconditionAMG>,
+//												PreconditionIdentity>
+//												preconditioner (approx_schur,
+//															PreconditionIdentity() );
 
 		/*
 		 * Precondition the Schur complement with a preconditioner of block(1,1).
@@ -417,6 +417,8 @@ NedRTStd::solve_iterative ()
 
 		pcout << "   Iterative Schur complement solver converged in " << solver_control.last_step() << " iterations."
 					  << std::endl;
+
+		constraints.distribute(distributed_solution);
 	}
 
 	{
@@ -437,9 +439,9 @@ NedRTStd::solve_iterative ()
 
 		pcout << "   Outer solver completed."
 						  << std::endl;
-	}
 
-	constraints.distribute(distributed_solution);
+		constraints.distribute(distributed_solution);
+	}
 
 	locally_relevant_solution = distributed_solution;
 }

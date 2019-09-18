@@ -341,11 +341,12 @@ NedRTBasis::setup_basis_dofs_div ()
 
 		DoFTools::make_hanging_node_constraints (dof_handler, constraints_div_v[n_basis]);
 
-//		VectorTools::project_boundary_values_curl_conforming(dof_handler,
-//					/*first vector component */ 0,
+		VectorTools::project_boundary_values_curl_conforming_l2(dof_handler,
+					/*first vector component */ 0,
 //					std_shape_function_curl,
-//					/*boundary id*/ 0,
-//					constraints_div_v[n_basis]);
+					ZeroFunction<3>(3),
+					/*boundary id*/ 0,
+					constraints_div_v[n_basis]);
 		VectorTools::project_boundary_values_div_conforming(dof_handler,
 					/*first vector component */ 3,
 					std_shape_function,
@@ -427,19 +428,19 @@ NedRTBasis::assemble_system ()
 //				std_shape_function_sigma_curl (fe.base_element(0),
 //						global_cell_it,
 //						/*verbose =*/ false);
-	ShapeFun::ShapeFunctionVectorDiv<3>
-				std_shape_function_u_div (fe.base_element(1),
-						global_cell_it,
-						/*verbose =*/ false);
+//	ShapeFun::ShapeFunctionVectorDiv<3>
+//				std_shape_function_u_div (fe.base_element(1),
+//						global_cell_it,
+//						/*verbose =*/ false);
 
 	// allocate
 	std::vector<Tensor<1,3>> 	rhs_values (n_q_points);
 	std::vector<double> 		reaction_rate_values (n_q_points);
 	std::vector<Tensor<2,3> > 	diffusion_inverse_a_values (n_q_points);
 	std::vector<double>		 	diffusion_b_values (n_q_points);
-	std::vector<double>		 	diffusion_b_face_values (n_face_q_points);
-	std::vector<Tensor<1,3>> 	std_shape_function_sigma_curl_values (n_face_q_points);
-	std::vector<double>			std_shape_function_u_div_values (n_face_q_points);
+//	std::vector<Tensor<1,3>> 	std_shape_function_sigma_curl_values (n_face_q_points);
+//	std::vector<double>		 	diffusion_b_face_values (n_face_q_points);
+//	std::vector<double>			std_shape_function_u_div_values (n_face_q_points);
 
 	const FEValuesExtractors::Vector curl (/* first_vector_component */ 0);
 	const FEValuesExtractors::Vector flux (/* first_vector_component */ 3);
@@ -524,69 +525,69 @@ NedRTBasis::assemble_system ()
 			} // end for ++i
 		} // end for ++q
 
-		for (unsigned int face_number=0;
-				face_number<GeometryInfo<3>::faces_per_cell;
-				++face_number)
-		{
-			if (cell->face(face_number)->at_boundary()
-//				&&
-//				(cell->face(face_number)->boundary_id() == 1)
-				)
-			{
-				fe_face_values.reinit (cell, face_number);
-
-				diffusion_b.value_list (fe_face_values.get_quadrature_points(),
-										diffusion_b_face_values);
-
-				for (unsigned int n_basis=0; n_basis<length_system_basis; ++n_basis)
-				{
-					if (n_basis<GeometryInfo<3>::lines_per_cell)
-					{
-//						// The curl of sigma has natural BCs -(curl sigma)xn
-//						std_shape_function_sigma_curl.set_shape_fun_index(n_basis);
+//		for (unsigned int face_number=0;
+//				face_number<GeometryInfo<3>::faces_per_cell;
+//				++face_number)
+//		{
+//			if (cell->face(face_number)->at_boundary()
+////				&&
+////				(cell->face(face_number)->boundary_id() == 1)
+//				)
+//			{
+//				fe_face_values.reinit (cell, face_number);
 //
-//						std_shape_function_sigma_curl.tensor_value_list (fe_face_values.get_quadrature_points(),
-//																	std_shape_function_sigma_curl_values);
+//				diffusion_b.value_list (fe_face_values.get_quadrature_points(),
+//										diffusion_b_face_values);
+//
+//				for (unsigned int n_basis=0; n_basis<length_system_basis; ++n_basis)
+//				{
+//					if (n_basis<GeometryInfo<3>::lines_per_cell)
+//					{
+////						// The curl of sigma has natural BCs -(curl sigma)xn
+////						std_shape_function_sigma_curl.set_shape_fun_index(n_basis);
+////
+////						std_shape_function_sigma_curl.tensor_value_list (fe_face_values.get_quadrature_points(),
+////																	std_shape_function_sigma_curl_values);
+////
+////						for (unsigned int q_point=0; q_point<n_face_q_points; ++q_point)
+////						{
+////							const Tensor<1,3> 	sigma_curl_cross_n = cross_product_3d ( std_shape_function_sigma_curl_values[q_point],
+////													           	   	   	   	   fe_face_values.normal_vector(q_point));
+////
+////							for (unsigned int i=0; i<dofs_per_cell; ++i)
+////							{
+////								// Note the minus.
+////								local_rhs_v[n_basis](i) -= ( sigma_curl_cross_n *
+////																fe_face_values[curl].value (i, q_point) *
+////																fe_face_values.JxW(q_point));
+////								std::cout << local_rhs_v[n_basis](i) << std::endl;
+////							}
+////						}
+//					}
+//					else
+//					{
+//						const unsigned int offset_index = n_basis - GeometryInfo<3>::lines_per_cell;
+//
+//						std_shape_function_u_div.set_shape_fun_index(offset_index);//
+//						std_shape_function_u_div.value_list (fe_face_values.get_quadrature_points(),
+//																	std_shape_function_u_div_values);
 //
 //						for (unsigned int q_point=0; q_point<n_face_q_points; ++q_point)
 //						{
-//							const Tensor<1,3> 	sigma_curl_cross_n = cross_product_3d ( std_shape_function_sigma_curl_values[q_point],
-//													           	   	   	   	   fe_face_values.normal_vector(q_point));
-//
 //							for (unsigned int i=0; i<dofs_per_cell; ++i)
 //							{
 //								// Note the minus.
-//								local_rhs_v[n_basis](i) -= ( sigma_curl_cross_n *
-//																fe_face_values[curl].value (i, q_point) *
+//								local_rhs_v[n_basis](i) += ( fe_face_values.normal_vector(q_point) *
+//																fe_face_values[flux].value (i, q_point) *
+//																diffusion_b_face_values[q_point] *
+//																std_shape_function_u_div_values[q_point] *
 //																fe_face_values.JxW(q_point));
-//								std::cout << local_rhs_v[n_basis](i) << std::endl;
 //							}
 //						}
-					}
-					else
-					{
-						const unsigned int offset_index = n_basis - GeometryInfo<3>::lines_per_cell;
-
-						std_shape_function_u_div.set_shape_fun_index(offset_index);//
-						std_shape_function_u_div.value_list (fe_face_values.get_quadrature_points(),
-																	std_shape_function_u_div_values);
-
-						for (unsigned int q_point=0; q_point<n_face_q_points; ++q_point)
-						{
-							for (unsigned int i=0; i<dofs_per_cell; ++i)
-							{
-								// Note the minus.
-								local_rhs_v[n_basis](i) += ( fe_face_values.normal_vector(q_point) *
-																fe_face_values[flux].value (i, q_point) *
-																diffusion_b_face_values[q_point] *
-																std_shape_function_u_div_values[q_point] *
-																fe_face_values.JxW(q_point));
-							}
-						}
-					}
-				} // end n_basis++
-			} // end if cell->at_boundary()
-		} // end face_number++
+//					}
+//				} // end n_basis++
+//			} // end if cell->at_boundary()
+//		} // end face_number++
 
 		// Only for use in global assembly
 		cell->get_dof_indices(local_dof_indices);
@@ -640,7 +641,7 @@ NedRTBasis::solve_direct (unsigned int n_basis)
 	Timer timer;
 	if (parameters.verbose)
 	{
-		std::cout << "	Solving linear system (directly) in cell   "
+		std::cout << "	Solving linear system (SparseDirectUMFPACK) in cell   "
 					<< global_cell_id.to_string()
 					<< "   for basis   "
 					<< n_basis
@@ -817,6 +818,17 @@ NedRTBasis::solve_iterative (unsigned int n_basis)
 						schur_rhs,
 						PreconditionIdentity());
 
+			if (n_basis < GeometryInfo<3>::lines_per_cell)
+			{
+				constraints_curl_v[n_basis].distribute(solution);
+			}
+			else
+			{
+				const unsigned int offset_index = n_basis - GeometryInfo<3>::lines_per_cell;
+
+				constraints_div_v[offset_index].distribute(solution);
+			}
+
 			if (parameters.verbose)
 				std::cout
 					<< std::endl
@@ -838,19 +850,18 @@ NedRTBasis::solve_iterative (unsigned int n_basis)
 			if (parameters.verbose)
 				std::cout << "		- Outer solver completed." << std::endl;
 		}
-	}
 
-	if (n_basis < GeometryInfo<3>::lines_per_cell)
-	{
-		constraints_curl_v[n_basis].distribute(solution);
-	}
-	else
-	{
-		const unsigned int offset_index = n_basis - GeometryInfo<3>::lines_per_cell;
+		if (n_basis < GeometryInfo<3>::lines_per_cell)
+		{
+			constraints_curl_v[n_basis].distribute(solution);
+		}
+		else
+		{
+			const unsigned int offset_index = n_basis - GeometryInfo<3>::lines_per_cell;
 
-		constraints_div_v[offset_index].distribute(solution);
+			constraints_div_v[offset_index].distribute(solution);
+		}
 	}
-
 
 	if (parameters.verbose)
 	{
@@ -967,7 +978,7 @@ NedRTBasis::output_basis (unsigned int n_basis)
 	{
 		std::cout << "	Writing local solution in cell   "
 			<< global_cell_id.to_string()
-			<< "for basis   "
+			<< "   for basis   "
 			<< n_basis
 			<< ".....";
 
@@ -1245,8 +1256,25 @@ void NedRTBasis::run ()
 
 	if (parameters.set_to_std)
 	{
+		Assert (parameters.renumber_dofs == false,
+					ExcMessage ("Dof renumbering messes up the basis."));
+
+		Timer timer;
+		if (parameters.verbose)
+		{
+			std::cout << "      Setting basis functions to standard functions. This is slow"
+				<< ".....";
+
+			timer.start ();
+		}
 		set_sigma_to_std (); /* This is only a sanity check. */
 		set_u_to_std (); /* This is only a sanity check. */
+
+		if (parameters.verbose)
+		{
+			timer.stop ();
+			std::cout << "done in   " << timer.cpu_time() << "   seconds." << std::endl;
+		}
 	}
 	else // in this case solve
 	{

@@ -371,6 +371,8 @@ void NedRTMultiscale::solve_iterative ()
 
 		pcout << "   Iterative Schur complement solver converged in " << solver_control.last_step() << " iterations."
 					  << std::endl;
+
+		constraints.distribute(distributed_solution);
 	}
 
 	{
@@ -391,9 +393,9 @@ void NedRTMultiscale::solve_iterative ()
 
 		pcout << "   Outer solver completed."
 						  << std::endl;
-	}
 
-	constraints.distribute(distributed_solution);
+		constraints.distribute(distributed_solution);
+	}
 
 	locally_relevant_solution = distributed_solution;
 }
@@ -531,16 +533,33 @@ NedRTMultiscale::output_results_fine ()
 	// write a pvtu record
 	if (Utilities::MPI::this_mpi_process(mpi_communicator) == 0)
 	{
+		std::vector<std::string> solution_names(3, "sigma");
+		solution_names.push_back ("u");
+		solution_names.push_back ("u");
+		solution_names.push_back ("u");
+
+		// Interpretation of solution components
+		std::vector<DataComponentInterpretation::DataComponentInterpretation>
+		interpretation (3,
+						DataComponentInterpretation::component_is_part_of_vector);
+		interpretation.push_back (DataComponentInterpretation::component_is_part_of_vector);
+		interpretation.push_back (DataComponentInterpretation::component_is_part_of_vector);
+		interpretation.push_back (DataComponentInterpretation::component_is_part_of_vector);
+
 		DataOut<3> data_out;
-		data_out.attach_dof_handler (dof_handler);
+//		data_out.attach_dof_handler (dof_handler);
 
 		// Names of solution components
-		data_out.add_data_vector (locally_relevant_solution, "solution");
+		data_out.add_data_vector (dof_handler,
+					locally_relevant_solution,
+					solution_names,
+					interpretation);
+//		data_out.add_data_vector (locally_relevant_solution, "solution");
 
 		std::string filename_master = parameters.filename_output;
 		filename_master += "_fine";
 		filename_master += "_refine-" + Utilities::int_to_string(parameters.n_refine_global,2)
-		+ Utilities::int_to_string(parameters.n_refine_local,2) + ".pvtu";
+		+ "-" + Utilities::int_to_string(parameters.n_refine_local,2) + ".pvtu";
 
 		std::ofstream master_output(filename_master.c_str ());
 		data_out.write_pvtu_record(master_output, filenames_on_cell);

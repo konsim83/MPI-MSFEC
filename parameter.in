@@ -5,7 +5,7 @@ subsection Standard method parameters
   
 	subsection Control flow
 		# compute flag
-	  	set compute solution = false
+	  	set compute solution = true
 	  
 	  	# verbose
 	  	set verbose = true
@@ -24,8 +24,8 @@ end
 
 subsection Multiscale method parameters
 	subsection Mesh
-  		set global refinements = 1
-  		set local refinements = 4
+  		set global refinements = 2
+  		set local refinements = 3
 	end
   
 	subsection Control flow
