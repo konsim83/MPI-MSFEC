@@ -332,7 +332,7 @@ NedRTStd::solve_iterative ()
 
 	typename LinearSolvers::InnerPreconditioner<3>::type::AdditionalData data;
 #ifdef USE_PETSC_LA
-	data.symmetric_operator = true; // Only for AMG
+//	data.symmetric_operator = true; // Only for AMG
 #endif
 
 	inner_schur_preconditioner->initialize(system_matrix.block(0, 0), data);
