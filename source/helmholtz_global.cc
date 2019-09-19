@@ -348,15 +348,16 @@ void NedRTMultiscale::solve_iterative ()
 			 */
 			LinearSolvers::ApproximateSchurComplementMPI<LA::MPI::BlockSparseMatrix,
 														LA::MPI::Vector,
-														LA::MPI::PreconditionAMG>
+														LA::MPI::PreconditionILU>
 														approx_schur (system_matrix, owned_partitioning, mpi_communicator);
 
 			LinearSolvers::ApproximateInverseMatrix<LinearSolvers::ApproximateSchurComplementMPI<LA::MPI::BlockSparseMatrix,
 																						LA::MPI::Vector,
-																						LA::MPI::PreconditionAMG>,
+																						LA::MPI::PreconditionILU>,
 													PreconditionIdentity>
 													preconditioner (approx_schur,
-																PreconditionIdentity() );
+																PreconditionIdentity(),
+																/* n_iter */ 14);
 
 			/*
 			 * Precondition the Schur complement with a preconditioner of block(1,1).

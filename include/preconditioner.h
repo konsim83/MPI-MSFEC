@@ -20,8 +20,9 @@ class InnerPreconditioner
 {
 public:
 	// Parallell, generic
-	using type = LA::MPI::PreconditionAMG;
-//	using type = LA::MPI::PreconditionILU;
+//	using type = LA::MPI::PreconditionAMG;
+	using type = LA::MPI::PreconditionILU; // Turns out to be the best
+//	using type = PreconditionIdentity;
 
 	// Parallel, Petsc
 //	tyename PETScWrappers::PreconditionNone type;

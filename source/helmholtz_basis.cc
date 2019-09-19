@@ -236,7 +236,7 @@ NedRTBasis::setup_basis_dofs_curl ()
 	{
 		std::cout << "	Setting up dofs for H(curl) part.....";
 
-		timer.start ();
+		timer.restart ();
 	}
 
 	ShapeFun::ShapeFunctionVector<3>
@@ -313,7 +313,7 @@ NedRTBasis::setup_basis_dofs_div ()
 	{
 		std::cout << "	Setting up dofs for H(div) part.....";
 
-		timer.start ();
+		timer.restart ();
 	}
 
 	ShapeFun::ShapeFunctionVector<3>
@@ -388,7 +388,7 @@ NedRTBasis::assemble_system ()
 			<< global_cell_id.to_string()
 			<< ".....";
 
-		timer.start ();
+		timer.restart ();
 	}
 	// Choose appropriate quadrature rules
 	QGauss<3>   quadrature_formula(parameters.degree + 2);
@@ -647,7 +647,7 @@ NedRTBasis::solve_direct (unsigned int n_basis)
 					<< n_basis
 					<< ".....";
 
-		timer.start ();
+		timer.restart ();
 	}
 
 	BlockVector<double> *system_rhs_ptr = NULL;
@@ -698,6 +698,7 @@ void
 NedRTBasis::solve_iterative (unsigned int n_basis)
 {
 	Timer timer;
+	Timer inner_timer;
 
 	// ------------------------------------------
 	// Make a preconditioner for each system matrix
@@ -709,7 +710,7 @@ NedRTBasis::solve_iterative (unsigned int n_basis)
 			<< n_basis
 			<< "   .....";
 
-		timer.start ();
+		timer.restart ();
 	}
 
 	BlockVector<double> *system_rhs_ptr = NULL;
@@ -751,7 +752,7 @@ NedRTBasis::solve_iterative (unsigned int n_basis)
 					<< n_basis
 					<< "   .....";
 
-		timer.start ();
+		timer.restart ();
 	}
 
 	// Construct inverse of upper left block
@@ -774,10 +775,13 @@ NedRTBasis::solve_iterative (unsigned int n_basis)
 		schur_rhs -= system_rhs.block(1);
 
 		{
+			if (parameters.verbose)
+			{
+				inner_timer.restart ();
+			}
 			SolverControl solver_control (system_matrix.m(),
 												1e-6*schur_rhs.l2_norm());
 			SolverCG<Vector<double>> schur_solver (solver_control);
-
 
 //			PreconditionIdentity preconditioner;
 
@@ -786,21 +790,23 @@ NedRTBasis::solve_iterative (unsigned int n_basis)
 			 * the approximate inverse of the
 			 * Schur complement.
 			 */
-	//		LinearSolvers::ApproximateInverseMatrix<LinearSolvers::SchurComplementMPI<LA::MPI::BlockSparseMatrix,
-	//																					LA::MPI::Vector,
-	//																					typename LinearSolvers::InnerPreconditioner<3>::type>,
-	//									PreconditionIdentity>
-	//									preconditioner (schur_complement,
-	//												PreconditionIdentity() );
+//			LinearSolvers::ApproximateInverseMatrix<LinearSolvers::SchurComplement<BlockSparseMatrix<double>,
+//																					Vector<double>,
+//																					typename LinearSolvers::LocalInnerPreconditioner<3>::type>,
+//										PreconditionIdentity>
+//										preconditioner (schur_complement,
+//													PreconditionIdentity(),
+//													/* n_iter */ 5);
 
 			/*
 			 * Precondition the Schur complement with
 			 * the (approximate) inverse of an approximate
 			 * Schur complement.
 			 */
-			using ApproxSchurPrecon = PreconditionJacobi<SparseMatrix<double>>;
+//			using ApproxSchurPrecon = PreconditionJacobi<SparseMatrix<double>>;
 //			using ApproxSchurPrecon = PreconditionSOR<SparseMatrix<double>>;
-//			using ApproxSchurPrecon = SparseILU<double>;
+			using ApproxSchurPrecon = SparseILU<double>;
+//			using ApproxSchurPrecon = PreconditionIdentity;
 			LinearSolvers::ApproximateSchurComplement<BlockSparseMatrix<double>,
 														Vector<double>,
 														ApproxSchurPrecon>
@@ -811,12 +817,13 @@ NedRTBasis::solve_iterative (unsigned int n_basis)
 																						ApproxSchurPrecon>,
 													PreconditionIdentity>
 													preconditioner (approx_schur,
-																PreconditionIdentity() );
+																PreconditionIdentity() ,
+																/* n_iter */ 14);
 
 			schur_solver.solve (schur_complement,
 						solution.block(1),
 						schur_rhs,
-						PreconditionIdentity());
+						preconditioner);
 
 			if (n_basis < GeometryInfo<3>::lines_per_cell)
 			{
@@ -830,15 +837,26 @@ NedRTBasis::solve_iterative (unsigned int n_basis)
 			}
 
 			if (parameters.verbose)
+			{
+				inner_timer.stop();
+
 				std::cout
 					<< std::endl
 					<< "		- Iterative Schur complement solver converged in   "
 					<< solver_control.last_step()
-					<< "   iterations."
+					<< "   iterations.	Time:	"
+					<< inner_timer.cpu_time()
+					<< "   seconds."
 					<< std::endl;
+			}
 		}
 
 		{
+			if (parameters.verbose)
+			{
+				inner_timer.restart ();
+			}
+
 			// use computed u to solve for sigma
 			system_matrix.block(0,1).vmult (tmp, solution.block(1));
 			tmp *= -1;
@@ -848,7 +866,15 @@ NedRTBasis::solve_iterative (unsigned int n_basis)
 			block_inverse.vmult (solution.block(0), tmp);
 
 			if (parameters.verbose)
-				std::cout << "		- Outer solver completed." << std::endl;
+			{
+				inner_timer.stop();
+
+				std::cout
+					<< "		- Outer solver completed.   Time:   "
+					<< inner_timer.cpu_time()
+					<< "   seconds."
+					<< std::endl;
+			}
 		}
 
 		if (n_basis < GeometryInfo<3>::lines_per_cell)
@@ -976,13 +1002,13 @@ NedRTBasis::output_basis (unsigned int n_basis)
 	Timer timer;
 	if (parameters.verbose)
 	{
-		std::cout << "	Writing local solution in cell   "
+		std::cout << "	Writing local basis in cell   "
 			<< global_cell_id.to_string()
 			<< "   for basis   "
 			<< n_basis
 			<< ".....";
 
-		timer.start ();
+		timer.restart ();
 	}
 
 	BlockVector<double> *basis_ptr = NULL;
@@ -1236,9 +1262,14 @@ NedRTBasis::get_filename_global () const
 
 void NedRTBasis::run ()
 {
-	if (parameters.verbose)
+	Timer timer;
+
+	if (true)
 	{
-		std::cout << "------------------------------------------------------------" << std::endl;
+		std::cout << "	Solving for basis in cell   "
+							<< global_cell_id.to_string()
+							<< "   .....";
+		timer.restart ();
 	}
 
 	// Create grid
@@ -1265,7 +1296,7 @@ void NedRTBasis::run ()
 			std::cout << "      Setting basis functions to standard functions. This is slow"
 				<< ".....";
 
-			timer.start ();
+			timer.restart ();
 		}
 		set_sigma_to_std (); /* This is only a sanity check. */
 		set_u_to_std (); /* This is only a sanity check. */
@@ -1349,9 +1380,11 @@ void NedRTBasis::run ()
 				++n_basis)
 			output_basis (n_basis);
 
-	if (parameters.verbose)
+	if (true)
 	{
-		std::cout << "------------------------------------------------------------" << std::endl;
+		timer.stop ();
+
+		std::cout << "done in   " << timer.cpu_time() << "   seconds." << std::endl;
 	}
 }
 

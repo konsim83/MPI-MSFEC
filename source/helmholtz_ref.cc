@@ -373,7 +373,7 @@ NedRTStd::solve_iterative ()
 									1e-6*schur_rhs.l2_norm());
 		SolverCG<LA::MPI::Vector> schur_solver (solver_control);
 
-		PreconditionIdentity preconditioner;
+//		PreconditionIdentity preconditioner;
 
 		/*
 		 * Precondition the Schur complement with
@@ -389,20 +389,21 @@ NedRTStd::solve_iterative ()
 
 		/*
 		 * Precondition the Schur complement with
-		 * the (approximate) inverse of an approximate
+		 * the approximate inverse of an approximate
 		 * Schur complement.
 		 */
-//		LinearSolvers::ApproximateSchurComplementMPI<LA::MPI::BlockSparseMatrix,
-//													LA::MPI::Vector,
-//													LA::MPI::PreconditionAMG>
-//													approx_schur (system_matrix, owned_partitioning, mpi_communicator);
-//
-//		LinearSolvers::ApproximateInverseMatrix<LinearSolvers::ApproximateSchurComplementMPI<LA::MPI::BlockSparseMatrix,
-//																					LA::MPI::Vector,
-//																					LA::MPI::PreconditionAMG>,
-//												PreconditionIdentity>
-//												preconditioner (approx_schur,
-//															PreconditionIdentity() );
+		LinearSolvers::ApproximateSchurComplementMPI<LA::MPI::BlockSparseMatrix,
+													LA::MPI::Vector,
+													LA::MPI::PreconditionILU>
+													approx_schur (system_matrix, owned_partitioning, mpi_communicator);
+
+		LinearSolvers::ApproximateInverseMatrix<LinearSolvers::ApproximateSchurComplementMPI<LA::MPI::BlockSparseMatrix,
+																					LA::MPI::Vector,
+																					LA::MPI::PreconditionILU>,
+												PreconditionIdentity>
+												preconditioner (approx_schur,
+															PreconditionIdentity(),
+															/* n_iter */ 14);
 
 		/*
 		 * Precondition the Schur complement with a preconditioner of block(1,1).

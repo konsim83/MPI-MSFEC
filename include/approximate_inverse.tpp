@@ -25,7 +25,8 @@ class ApproximateInverseMatrix : public Subscriptor
 {
 public:
 	ApproximateInverseMatrix (const MatrixType &m,
-			 const PreconditionerType &preconditioner);
+			 const PreconditionerType &preconditioner,
+			 const unsigned int n_iter);
 
 	template <typename VectorType>
 	void vmult(VectorType &dst, const VectorType &src) const;
@@ -33,16 +34,19 @@ public:
 private:
 	const SmartPointer<const MatrixType> matrix;
 	const PreconditionerType& preconditioner;
+	const unsigned int max_iter;
 };
 
 
 template <typename MatrixType, typename PreconditionerType>
 ApproximateInverseMatrix<MatrixType, PreconditionerType>::ApproximateInverseMatrix(
 		const MatrixType &m,
-		const PreconditionerType &preconditioner)
+		const PreconditionerType &preconditioner,
+		const unsigned int n_iter)
 :
 matrix (&m),
-preconditioner (preconditioner)
+preconditioner (preconditioner),
+max_iter(n_iter)
 {
 }
 
@@ -54,7 +58,7 @@ ApproximateInverseMatrix<MatrixType, PreconditionerType>::vmult(
 		VectorType       &dst,
 		const VectorType &src) const
 {
-	SolverControl solver_control (/* max_iter */ 14,
+	SolverControl solver_control (/* max_iter */ max_iter,
 									1e-6*src.l2_norm());
 	SolverCG<VectorType> local_solver(solver_control);
 

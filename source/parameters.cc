@@ -278,6 +278,13 @@ filename_global (other.filename_global)
 }
 
 
+
+void
+ParametersBasis::set_output_flag (bool flag)
+{
+	output_flag = flag;
+}
+
 }  // namespace NedRT
 
 } // namespace Parameters

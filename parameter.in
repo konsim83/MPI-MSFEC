@@ -24,8 +24,8 @@ end
 
 subsection Multiscale method parameters
 	subsection Mesh
-  		set global refinements = 2
-  		set local refinements = 3
+  		set global refinements = 1
+  		set local refinements = 4
 	end
   
 	subsection Control flow
@@ -34,7 +34,7 @@ subsection Multiscale method parameters
 	  
 	  	# verbose
 	  	set verbose = true
-	  	set verbose basis = true
+	  	set verbose basis = false
 	  
 	  	# what solver to use
 	  	set use direct solver = false

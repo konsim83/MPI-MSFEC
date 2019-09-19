@@ -31,12 +31,12 @@ RightHandSide::value_list (const std::vector<Point<3> > &points,
 //		values.at(i)[2] = a*2*PI_D*l*sin(2*PI_D*j*points[i](0))*sin(2*PI_D*k*points[i](1))*cos(2*PI_D*l*points[i](2));
 
 		// Gradient_0 of x(x-1)y(y-1)z(z-1)
-//		double x2 = points[i](0)*points[i](0) - points[i](0);
-//		double y2 = points[i](1)*points[i](1) - points[i](1);
-//		double z2 = points[i](2)*points[i](2) - points[i](2);
-//		values.at(i)[0] = (2*points[i](0) - 1) * y2 * z2;
-//		values.at(i)[1] = (2*points[i](1) - 1) * x2 * z2;
-//		values.at(i)[2] = (2*points[i](2) - 1) * x2 * y2;
+		double x2 = points[i](0)*points[i](0) - points[i](0);
+		double y2 = points[i](1)*points[i](1) - points[i](1);
+		double z2 = points[i](2)*points[i](2) - points[i](2);
+		values.at(i)[0] = (2*points[i](0) - 1) * y2 * z2;
+		values.at(i)[1] = (2*points[i](1) - 1) * x2 * z2;
+		values.at(i)[2] = (2*points[i](2) - 1) * x2 * y2;
 
 		// Curl_0
 //		const double a = 1, b = 0.7, c = 0.5;
@@ -74,9 +74,9 @@ RightHandSide::value_list (const std::vector<Point<3> > &points,
 //						- cos(2 * PI_D * k * points[i](1) * points[i](2))) * points[i](2);
 
 		// Curl
-		values.at(i)[0] += - points[i](1);
-		values.at(i)[1] += - points[i](2);
-		values.at(i)[2] += - points[i](0);
+//		values.at(i)[0] += - points[i](1);
+//		values.at(i)[1] += - points[i](2);
+//		values.at(i)[2] += - points[i](0);
 
 
 
@@ -147,7 +147,7 @@ DiffusionInverse_A::value_list (const std::vector<Point<3> > &points,
 	Assert (points.size() == values.size(),
 			ExcDimensionMismatch (points.size(), values.size()));
 
-	const int k = 19;
+	const int k = 12;
 
 	const double alpha = PI_D/3,
 				beta = PI_D/6,
@@ -170,9 +170,9 @@ DiffusionInverse_A::value_list (const std::vector<Point<3> > &points,
 		values[p].clear ();
 
 		//This is just diagonal
-		values[p][0][0] = 1 / (1.0 - 0.999 * sin( 2 * PI_D * k * points.at(p)(1) ));
-		values[p][1][1] = 0.01 / (1.0 - 0.999 * sin( 2 * PI_D * k * points.at(p)(2) ));
-		values[p][2][2] = 0.01 / (1.0 - 0.999 * sin( 2 * PI_D * k * points.at(p)(0) ));
+		values[p][0][0] = 1 / (1.0 - 0.99 * sin( 2 * PI_D * k * points.at(p)(0) ));
+		values[p][1][1] = 1 / (1.0 - 0.99 * sin( 2 * PI_D * k * points.at(p)(1) ));
+		values[p][2][2] = 1 / (1.0 - 0.99 * sin( 2 * PI_D * k * points.at(p)(2) ));
 
 		// Now rotation leads to anisotropy
 //		values[p] = rot * values[p] * transpose (rot);
@@ -199,7 +199,7 @@ Diffusion_B::value_list (const std::vector<Point<3> > &points,
 	Assert (points.size() == values.size(),
 			ExcDimensionMismatch (points.size(), values.size()));
 
-	const int k = 0;
+	const int k = 11;
 
 	for (unsigned int p=0; p<points.size(); ++p)
 	{

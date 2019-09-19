@@ -20,7 +20,7 @@ struct ParametersStd
 	ParametersStd(const std::string &parameter_filename);
 
 	static void declare_parameters(ParameterHandler &prm);
-	void        parse_parameters(ParameterHandler &prm);
+	void parse_parameters(ParameterHandler &prm);
 
 	const bool degree = 0;
 
@@ -62,6 +62,8 @@ struct ParametersBasis
 {
 	ParametersBasis(const ParametersMs &param_ms);
 	ParametersBasis(const ParametersBasis &other); // This the the copy constructor
+
+	void set_output_flag (bool flag);
 
 	const unsigned int degree = 0;
 	const bool set_to_std = false;
