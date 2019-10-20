@@ -74,6 +74,15 @@ public:
 								 	 std::vector<Vector<double>>    &values) const;
 
 	/**
+	 * Evaluate shape function at point list <code> points <\code>
+	 *
+	 * @param[in] points
+	 * @param[out] values
+	 */
+	void tensor_value_list (const std::vector<Point<dim> > &points,
+									 std::vector<Tensor<1,dim>>    &values) const;
+
+	/**
 	 * Set pointer to current cell (actually and iterator).
 	 *
 	 * @param cell
@@ -202,6 +211,44 @@ ShapeFunctionVector<dim>::vector_value_list(const std::vector<Point<dim> > &poin
 	// Update he fe_values object
 	FEValues<dim>		fe_values(*fe_ptr, fake_quadrature,
 								update_values    | update_quadrature_points);
+
+	fe_values.reinit(*current_cell_ptr);
+
+	for (unsigned int i = 0; i < n_q_points; ++i)
+	{
+		for (unsigned int component = 0; component < dim; ++component)
+		{
+			values.at(i)[component] = fe_values.shape_value_component (shape_fun_index,
+																	/* q_index */ i,
+																	component);
+		}
+	}
+}
+
+
+template <int dim>
+inline void
+ShapeFunctionVector<dim>::tensor_value_list(const std::vector<Point<dim> > &points,
+		 	 	 	 	 	 	 std::vector<Tensor<1,dim>>    &values) const
+{
+	Assert (points.size() == values.size(),
+				ExcDimensionMismatch (points.size(), values.size()));
+
+	const unsigned int   n_q_points = points.size();
+
+	// Map physical points to reference cell
+	std::vector<Point<dim>> points_on_ref_cell (n_q_points);
+	for (unsigned int i = 0; i < n_q_points; ++i)
+	{
+		points_on_ref_cell.at(i) = mapping.transform_real_to_unit_cell(*current_cell_ptr, points.at(i));
+	}
+
+	// Copy-assign a fake quadrature rule form mapped point
+	Quadrature<dim> fake_quadrature (points_on_ref_cell);
+
+	// Update he fe_values object
+	FEValues<dim>		fe_values(*fe_ptr, fake_quadrature,
+			update_values  | update_gradients |  update_quadrature_points);
 
 	fe_values.reinit(*current_cell_ptr);
 
