@@ -74,9 +74,9 @@ RightHandSide::value_list (const std::vector<Point<3> > &points,
 //						- cos(2 * PI_D * k * points[i](1) * points[i](2))) * points[i](2);
 
 		// Curl
-//		values.at(i)[0] += - points[i](1);
-//		values.at(i)[1] += - points[i](2);
-//		values.at(i)[2] += - points[i](0);
+		values.at(i)[0] += - points[i](1);
+		values.at(i)[1] += - points[i](2);
+		values.at(i)[2] += - points[i](0);
 
 
 
@@ -147,7 +147,7 @@ DiffusionInverse_A::value_list (const std::vector<Point<3> > &points,
 	Assert (points.size() == values.size(),
 			ExcDimensionMismatch (points.size(), values.size()));
 
-	const int k = 12;
+	const int k = 14;
 
 	const double alpha = PI_D/3,
 				beta = PI_D/6,
@@ -199,12 +199,12 @@ Diffusion_B::value_list (const std::vector<Point<3> > &points,
 	Assert (points.size() == values.size(),
 			ExcDimensionMismatch (points.size(), values.size()));
 
-	const int k = 11;
+	const int k = 21;
 
 	for (unsigned int p=0; p<points.size(); ++p)
 	{
-		values[p] = 1.0 * (1.0 - 0.99 * (
-									  sin(2*PI_D*k*(  points.at(p)(0)*points.at(p)(2)  ))
+		values[p] = 10 * (1.0 - 0.99999 * (
+									  sin(2*PI_D*k*(  points.at(p)(0) + points.at(p)(2)  ))
 //									+ cos(2*PI_D*k*(  points.at(p)(1)  ))
 //									+ sin(2*PI_D*k*(  points.at(p)(2)  ))
 									)
