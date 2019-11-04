@@ -10,7 +10,7 @@
 #include <vector>
 #include <cstdlib>
 
-namespace HelmholtzProblem
+namespace LaplaceProblem
 {
 
 const double PI_D = 3.141592653589793238463;
@@ -105,6 +105,6 @@ public:
 };
 ///
   
-} // end namespace HelmholtzProblem
+} // end namespace LaplaceProblem
 
 #endif /* HELMHOLTZ_EQN_DATA_H_ */

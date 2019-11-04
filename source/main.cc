@@ -3,17 +3,13 @@
 #include <deal.II/base/utilities.h>
 #include <deal.II/base/numbers.h>
 
+#include <ned_rt_global.h>
+#include <ned_rt_global.h>
+#include <ned_rt_ref.h>
 
 // Std C++
 #include <fstream>
 #include <iostream>
-#include <list>
-
-
-// My own headers
-#include "helmholtz_ref.h"
-#include "helmholtz_global.h"
-
 
 /**
  * Main file. Call ./main and see instructions for command lie parameters.
@@ -77,8 +73,8 @@ int main (int argc, char* argv[]){
 
 			// reference solution
 			Parameters::NedRT::ParametersStd parameters(input_file);
-			HelmholtzProblem::NedRTStd	 mixed_helmholtz_std (parameters);
-			mixed_helmholtz_std.run();
+			LaplaceProblem::NedRTStd	 mixed_laplace_std (parameters);
+			mixed_laplace_std.run();
 		}
 
 		{
@@ -86,8 +82,8 @@ int main (int argc, char* argv[]){
 
 			// multiscale solution
 			Parameters::NedRT::ParametersMs parameters(input_file);
-			HelmholtzProblem::NedRTMultiscale mixed_helmholtz_global (parameters);
-			mixed_helmholtz_global.run ();
+			LaplaceProblem::NedRTMultiscale mixed_laplace_global (parameters);
+			mixed_laplace_global.run ();
 		}
     } /* try */
 

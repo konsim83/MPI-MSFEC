@@ -1,12 +1,13 @@
-#include "helmholtz_basis.h"
+#include <ned_rt_basis.h>
 
-namespace HelmholtzProblem
+namespace LaplaceProblem
 {
 
 using namespace dealii;
 
 NedRTBasis::NedRTBasis (const Parameters::NedRT::ParametersMs &parameters_ms,
 		typename Triangulation<3>::active_cell_iterator& global_cell,
+		CellId first_cell,
 		unsigned int local_subdomain,
 		MPI_Comm mpi_communicator)
 :
@@ -28,6 +29,7 @@ global_element_matrix(fe.dofs_per_cell,
 global_element_rhs(fe.dofs_per_cell),
 global_weights(fe.dofs_per_cell, 0),
 global_cell_id (global_cell->id()),
+first_cell(first_cell),
 global_cell_it(global_cell),
 local_subdomain(local_subdomain),
 volume_measure(0),
@@ -97,6 +99,7 @@ global_weights (other.global_weights),
 global_solution (other.global_solution),
 inner_schur_preconditioner (other.inner_schur_preconditioner),
 global_cell_id (other.global_cell_id),
+first_cell(other.first_cell),
 global_cell_it(other.global_cell_it),
 local_subdomain (other.local_subdomain),
 volume_measure (other.volume_measure),
@@ -164,7 +167,7 @@ NedRTBasis::setup_grid ()
 	Assert (is_set_cell_data,
 			ExcMessage ("Cell data must be set first."));
 
-	GridGenerator::general_cell(triangulation, corner_points, /* colorize faces */false);
+	GridGenerator::general_cell(triangulation, corner_points, /* colorize faces */ false);
 
 	triangulation.refine_global (parameters.n_refine_local);
 
@@ -243,10 +246,10 @@ NedRTBasis::setup_basis_dofs_curl ()
 			std_shape_function_Ned (fe.base_element(0),
 					global_cell_it,
 					/*verbose =*/ false);
-//	ShapeFun::ShapeFunctionVectorCurl<3>
-//			std_shape_function_curl (fe.base_element(0),
-//					global_cell_it,
-//					/*verbose =*/ false);
+	ShapeFun::ShapeFunctionVectorCurl<3>
+			std_shape_function_Ned_curl (fe.base_element(0),
+					global_cell_it,
+					/*verbose =*/ false);
 
 	std::vector<types::global_dof_index> dofs_per_block (2);
 	DoFTools::count_dofs_per_block (dof_handler, dofs_per_block);
@@ -258,7 +261,7 @@ NedRTBasis::setup_basis_dofs_curl ()
 	for (unsigned int n_basis=0; n_basis<basis_curl_v.size(); ++n_basis)
 	{
 		std_shape_function_Ned.set_shape_fun_index(n_basis);
-//		std_shape_function_curl.set_shape_fun_index(n_basis);
+		std_shape_function_Ned_curl.set_shape_fun_index(n_basis);
 
 		constraints_curl_v[n_basis].clear ();
 
@@ -266,14 +269,13 @@ NedRTBasis::setup_basis_dofs_curl ()
 
 		VectorTools::project_boundary_values_curl_conforming_l2(dof_handler,
 					/*first vector component */ 0,
-					std_shape_function_Ned,
+					std_shape_function_Ned, // This is important!!!
 //					ZeroFunction<3>(3),
 					/*boundary id*/ 0,
 					constraints_curl_v[n_basis]);
 		VectorTools::project_boundary_values_div_conforming(dof_handler,
 					/*first vector component */ 3,
-								ZeroFunction<3>(3),
-//					std_shape_function_curl,
+					std_shape_function_Ned_curl, // This is important!!!
 					/*boundary id*/ 0,
 					constraints_curl_v[n_basis]);
 
@@ -317,20 +319,10 @@ NedRTBasis::setup_basis_dofs_div ()
 		timer.restart ();
 	}
 
-//	ShapeFun::ShapeFunctionVector<3>
-//				std_shape_function_curl (fe.base_element(0),
-//						global_cell_it,
-//						/*verbose =*/ false);
-
 	ShapeFun::ShapeFunctionVector<3>
 			std_shape_function_RT (fe.base_element(1),
 					global_cell_it,
 					/*verbose =*/ false);
-
-//	ShapeFun::ShapeFunctionVectorCurl<3>
-//			std_shape_function_curl (fe.base_element(1),
-//					global_cell_it,
-//					/*verbose =*/ false);
 
 	std::vector<types::global_dof_index> dofs_per_block (2);
 	DoFTools::count_dofs_per_block (dof_handler, dofs_per_block);
@@ -350,14 +342,12 @@ NedRTBasis::setup_basis_dofs_div ()
 
 		VectorTools::project_boundary_values_curl_conforming_l2(dof_handler,
 					/*first vector component */ 0,
-//					std_shape_function_curl,
-					ZeroFunction<3>(3),
+					ZeroFunction<3>(3),  // This is not so important as long as BCs do not influence u.
 					/*boundary id*/ 0,
 					constraints_div_v[n_basis]);
 		VectorTools::project_boundary_values_div_conforming(dof_handler,
 					/*first vector component */ 3,
-					std_shape_function_RT,
-//					ZeroFunction<3>(3),
+					std_shape_function_RT, // This is important
 					/*boundary id*/ 0,
 					constraints_div_v[n_basis]);
 
@@ -400,21 +390,15 @@ NedRTBasis::assemble_system ()
 	}
 	// Choose appropriate quadrature rules
 	QGauss<3>   quadrature_formula(parameters.degree + 2);
-    QGauss<2> face_quadrature_formula(parameters.degree + 2);
 
 	// Get relevant quantities to be updated from finite element
 	FEValues<3> fe_values (fe, quadrature_formula,
 							 update_values    | update_gradients |
 							 update_quadrature_points  | update_JxW_values);
 
-    FEFaceValues<3> fe_face_values (fe, face_quadrature_formula,
-                                      update_values    | update_normal_vectors |
-                                      update_quadrature_points  | update_JxW_values);
-
 	// Define some abbreviations
 	const unsigned int   dofs_per_cell   = fe.dofs_per_cell;
 	const unsigned int   n_q_points      = quadrature_formula.size();
-	const unsigned int   n_face_q_points = face_quadrature_formula.size();
 
 	// Declare local contributions and reserve memory
 	FullMatrix<double>   		local_matrix (dofs_per_cell, dofs_per_cell);
@@ -431,29 +415,11 @@ NedRTBasis::assemble_system ()
 	const Diffusion_B				diffusion_b;
 	const ReactionRate				reaction_rate;
 
-	// Equation data for right-hand side
-//	ShapeFun::ShapeFunctionVector<3>
-//				std_shape_function_sigma (fe.base_element(0),
-//						global_cell_it,
-//						/*verbose =*/ false);
-	ShapeFun::ShapeFunctionVectorCurl<3>
-				std_shape_function_sigma_curl (fe.base_element(0),
-						global_cell_it,
-						/*verbose =*/ false);
-//	ShapeFun::ShapeFunctionVectorDiv<3>
-//				std_shape_function_u_div (fe.base_element(1),
-//						global_cell_it,
-//						/*verbose =*/ false);
-
 	// allocate
 	std::vector<Tensor<1,3>> 	rhs_values (n_q_points);
-	std::vector<double> 		reaction_rate_values (n_q_points);
 	std::vector<Tensor<2,3> > 	diffusion_inverse_a_values (n_q_points);
 	std::vector<double>		 	diffusion_b_values (n_q_points);
-//	std::vector<Tensor<1,3>> 	std_shape_function_sigma_curl_values (n_q_points);
-//	std::vector<Tensor<1,3>> 	std_shape_function_sigma_curl_values (n_face_q_points);
-//	std::vector<double>		 	diffusion_b_face_values (n_face_q_points);
-//	std::vector<double>			std_shape_function_u_div_values (n_face_q_points);
+	std::vector<double> 		reaction_rate_values (n_q_points);
 
 	const FEValuesExtractors::Vector curl (/* first_vector_component */ 0);
 	const FEValuesExtractors::Vector flux (/* first_vector_component */ 3);
@@ -463,11 +429,8 @@ NedRTBasis::assemble_system ()
 	typename DoFHandler<3>::active_cell_iterator
 								cell = dof_handler.begin_active(),
 								endc = dof_handler.end();
-	unsigned int n_cell = 0;
 	for (; cell!=endc; ++cell)
 	{
-//		std::cout << "cell no:   " << n_cell;
-
 		fe_values.reinit (cell);
 
 		local_matrix = 0;
@@ -531,15 +494,6 @@ NedRTBasis::assemble_system ()
 				{
 					if (n_basis<GeometryInfo<3>::lines_per_cell)
 					{
-//						std_shape_function_sigma_curl.set_shape_fun_index(n_basis);
-//
-//						std_shape_function_sigma_curl.tensor_value_list (fe_values.get_quadrature_points(),
-//																	std_shape_function_sigma_curl_values);
-//						// This is rhs for curl.
-//						local_rhs_v[n_basis](i) += v_i *
-//								std_shape_function_sigma_curl_values[	q] *
-//								fe_values.JxW(q);
-
 						local_rhs_v[n_basis](i) += 0;
 					}
 					else
@@ -555,61 +509,11 @@ NedRTBasis::assemble_system ()
 //		{
 //			if (cell->face(face_number)->at_boundary()
 ////				&&
-////				(cell->face(face_number)->boundary_id() == 1)
+////				(cell->face(face_number)->boundary_id() == 0)
 //				)
 //			{
 //				fe_face_values.reinit (cell, face_number);
-//
-//				diffusion_b.value_list (fe_face_values.get_quadrature_points(),
-//										diffusion_b_face_values);
-//
-//				for (unsigned int n_basis=0; n_basis<length_system_basis; ++n_basis)
-//				{
-//					if (n_basis<GeometryInfo<3>::lines_per_cell)
-//					{
-////						// The curl of sigma has natural BCs -(curl sigma)xn
-////						std_shape_function_sigma_curl.set_shape_fun_index(n_basis);
-////
-////						std_shape_function_sigma_curl.tensor_value_list (fe_face_values.get_quadrature_points(),
-////																	std_shape_function_sigma_curl_values);
-////
-////						for (unsigned int q_point=0; q_point<n_face_q_points; ++q_point)
-////						{
-////							const Tensor<1,3> 	sigma_curl_cross_n = cross_product_3d ( std_shape_function_sigma_curl_values[q_point],
-////													           	   	   	   	   fe_face_values.normal_vector(q_point));
-////
-////							for (unsigned int i=0; i<dofs_per_cell; ++i)
-////							{
-////								// Note the minus.
-////								local_rhs_v[n_basis](i) -= ( sigma_curl_cross_n *
-////																fe_face_values[curl].value (i, q_point) *
-////																fe_face_values.JxW(q_point));
-////								std::cout << local_rhs_v[n_basis](i) << std::endl;
-////							}
-////						}
-//					}
-//					else
-//					{
-//						const unsigned int offset_index = n_basis - GeometryInfo<3>::lines_per_cell;
-//
-//						std_shape_function_u_div.set_shape_fun_index(offset_index);//
-//						std_shape_function_u_div.value_list (fe_face_values.get_quadrature_points(),
-//																	std_shape_function_u_div_values);
-//
-//						for (unsigned int q_point=0; q_point<n_face_q_points; ++q_point)
-//						{
-//							for (unsigned int i=0; i<dofs_per_cell; ++i)
-//							{
-//								// Note the minus.
-//								local_rhs_v[n_basis](i) += ( fe_face_values.normal_vector(q_point) *
-//																fe_face_values[flux].value (i, q_point) *
-//																diffusion_b_face_values[q_point] *
-//																std_shape_function_u_div_values[q_point] *
-//																fe_face_values.JxW(q_point));
-//							}
-//						}
-//					}
-//				} // end n_basis++
+//		.....
 //			} // end if cell->at_boundary()
 //		} // end face_number++
 
@@ -648,8 +552,6 @@ NedRTBasis::assemble_system ()
 			}
 		}
 		// ------------------------------------------
-//		std::cout << "   ... done" << std::endl;
-//		++n_cell;
 	}// end for ++cell
 
 	if (parameters.verbose)
@@ -1023,63 +925,75 @@ NedRTBasis::assemble_global_element_matrix()
 
 
 void
-NedRTBasis::output_basis (unsigned int n_basis)
+NedRTBasis::output_basis ()
 {
 	Timer timer;
 	if (parameters.verbose)
 	{
 		std::cout << "	Writing local basis in cell   "
 			<< global_cell_id.to_string()
-			<< "   for basis   "
-			<< n_basis
 			<< ".....";
 
 		timer.restart ();
 	}
 
 	BlockVector<double> *basis_ptr = NULL;
-	if (n_basis<GeometryInfo<3>::lines_per_cell)
-		basis_ptr = &(basis_curl_v[n_basis]);
-	else
-		basis_ptr = &(basis_div_v.at(n_basis - GeometryInfo<3>::lines_per_cell));
-
-	std::vector<std::string> solution_names(3, "sigma");
-	solution_names.push_back ("u");
-	solution_names.push_back ("u");
-	solution_names.push_back ("u");
-
-	std::vector<DataComponentInterpretation::DataComponentInterpretation>
-	interpretation (3,
-					DataComponentInterpretation::component_is_part_of_vector);
-	interpretation.push_back (DataComponentInterpretation::component_is_part_of_vector);
-	interpretation.push_back (DataComponentInterpretation::component_is_part_of_vector);
-	interpretation.push_back (DataComponentInterpretation::component_is_part_of_vector);
-
 	DataOut<3> data_out;
-	data_out.add_data_vector (dof_handler,
-								*basis_ptr,
-								solution_names,
-								interpretation);
+
+	for (unsigned int n_basis=0;
+					n_basis<length_system_basis;
+					++n_basis)
+	{
+		if (n_basis<GeometryInfo<3>::lines_per_cell)
+		{
+			basis_ptr = &(basis_curl_v[n_basis]);
+
+			std::vector<std::string> solution_names(3, "sigma-" + Utilities::int_to_string(n_basis,2));
+			solution_names.push_back ("u-aux-" + Utilities::int_to_string(n_basis,2));
+			solution_names.push_back ("u-aux-" + Utilities::int_to_string(n_basis,2));
+			solution_names.push_back ("u-aux-" + Utilities::int_to_string(n_basis,2));
+
+			std::vector<DataComponentInterpretation::DataComponentInterpretation>
+				interpretation (3,
+							DataComponentInterpretation::component_is_part_of_vector);
+			interpretation.push_back (DataComponentInterpretation::component_is_part_of_vector);
+			interpretation.push_back (DataComponentInterpretation::component_is_part_of_vector);
+			interpretation.push_back (DataComponentInterpretation::component_is_part_of_vector);
+
+			data_out.add_data_vector (dof_handler,
+										*basis_ptr,
+										solution_names,
+										interpretation);
+		}
+		else
+		{
+			basis_ptr = &(basis_div_v.at(n_basis - GeometryInfo<3>::lines_per_cell));
+
+			std::vector<std::string> solution_names(3, "sigma-aux-" + Utilities::int_to_string(n_basis,2));
+			solution_names.push_back ("u-" + Utilities::int_to_string(n_basis,2));
+			solution_names.push_back ("u-" + Utilities::int_to_string(n_basis,2));
+			solution_names.push_back ("u-" + Utilities::int_to_string(n_basis,2));
+
+			std::vector<DataComponentInterpretation::DataComponentInterpretation>
+				interpretation (3,
+							DataComponentInterpretation::component_is_part_of_vector);
+			interpretation.push_back (DataComponentInterpretation::component_is_part_of_vector);
+			interpretation.push_back (DataComponentInterpretation::component_is_part_of_vector);
+			interpretation.push_back (DataComponentInterpretation::component_is_part_of_vector);
+
+			data_out.add_data_vector (dof_handler,
+										*basis_ptr,
+										solution_names,
+										interpretation);
+		}
+	}
 
 	data_out.build_patches (parameters.degree + 1);
 
-	std::string filename = "basis_";
-	if (n_basis<GeometryInfo<3>::lines_per_cell)
-	{
-		filename += "curl";
-		filename += "." + Utilities::int_to_string(local_subdomain, 5);
-		filename += ".cell-" + global_cell_id.to_string();
-		filename += ".index-";
-		filename += Utilities::int_to_string (n_basis, 2);
-	}
-	else
-	{
-		filename += "div-";
-		filename += "." + Utilities::int_to_string(local_subdomain, 5);
-		filename += ".cell-" + global_cell_id.to_string();
-		filename += ".index-";
-		filename += Utilities::int_to_string (n_basis - GeometryInfo<3>::lines_per_cell, 2);
-	}
+	std::string filename = "basis";
+
+	filename += "." + Utilities::int_to_string(local_subdomain, 5);
+	filename += ".cell-" + global_cell_id.to_string();
 	filename += ".vtu";
 
 	std::ofstream output (filename);
@@ -1127,9 +1041,9 @@ NedRTBasis::output_global_solution_in_cell () const
 
 
 void
-NedRTBasis::set_output_flag(bool flag)
+NedRTBasis::set_output_flag()
 {
-	parameters.output_flag = flag;
+	parameters.set_output_flag(global_cell_id, first_cell);
 }
 
 
@@ -1400,11 +1314,9 @@ void NedRTBasis::run ()
 	set_filename_global ();
 
 	// Write basis output only if desired
+	set_output_flag();
 	if (parameters.output_flag)
-		for (unsigned int n_basis=0;
-				n_basis<length_system_basis;
-				++n_basis)
-			output_basis (n_basis);
+		output_basis ();
 
 	if (true)
 	{
@@ -1414,4 +1326,4 @@ void NedRTBasis::run ()
 	}
 }
 
-} // end namespace HelmholtzProblem
+} // end namespace LaplaceProblem

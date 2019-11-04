@@ -1,5 +1,5 @@
-#ifndef HELMHOLTZ_REF_H_
-#define HELMHOLTZ_REF_H_
+#ifndef HELMHOLTZ_GLOBAL_H_
+#define HELMHOLTZ_GLOBAL_H_
 
 // Deal.ii MPI
 #include <deal.II/base/conditional_ostream.h>
@@ -68,42 +68,47 @@
 #include <memory>
 
 // my headers
-#include "config.h"
 #include "parameters.h"
 
-#include "helmholtz_eqn_data.h"
-
+#include "config.h"
 #include "inverse_matrix.tpp"
 #include "approximate_inverse.tpp"
 #include "schur_complement.tpp"
 #include "approximate_schur_complement.tpp"
 #include "preconditioner.h"
+#include "ned_rt_basis.h"
 
-namespace HelmholtzProblem
+
+namespace LaplaceProblem
 {
 using namespace dealii;
 
-class NedRTStd
+
+class NedRTMultiscale
 {
 public:
-	NedRTStd () = delete;
-	NedRTStd (Parameters::NedRT::ParametersStd &parameters);
-	~NedRTStd ();
+	NedRTMultiscale (Parameters::NedRT::ParametersMs &parameters_);
+	~NedRTMultiscale ();
 
 	void run ();
 
 private:
 	void setup_grid ();
+	void initialize_and_compute_basis ();
 	void setup_system_matrix ();
 	void setup_constraints ();
 	void assemble_system ();
 	void solve_direct ();
 	void solve_iterative ();
-	void output_results () const;
+	void send_global_weights_to_cell ();
+
+	std::vector<std::string> collect_filenames_on_mpi_process ();
+	void output_results_coarse () const;
+	void output_results_fine ();
 
 	MPI_Comm mpi_communicator;
 
-	Parameters::NedRT::ParametersStd &parameters;
+	Parameters::NedRT::ParametersMs &parameters;
 
 	parallel::distributed::Triangulation<3> triangulation;
 
@@ -140,8 +145,17 @@ private:
 	TimerOutput        		computing_timer;
 
 	std::shared_ptr<typename LinearSolvers::InnerPreconditioner<3>::type> 	inner_schur_preconditioner;
+
+	/*!
+	 * STL Vector holding basis functions for each coarse cell.
+	 */
+	using BasisMap = std::map<CellId, NedRTBasis>;
+	BasisMap cell_basis_map;
+
+	CellId first_cell;
 };
 
-} // end namespace HelmholtzProblem
+} // end namespace LaplaceProblem
 
-#endif /* HELMHOLTZ_REF_H_ */
+
+#endif /* HELMHOLTZ_GLOBAL_H_ */

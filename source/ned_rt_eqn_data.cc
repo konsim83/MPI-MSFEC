@@ -1,6 +1,6 @@
-#include "helmholtz_eqn_data.h"
+#include <ned_rt_eqn_data.h>
 
-namespace HelmholtzProblem
+namespace LaplaceProblem
 {
 
 using namespace dealii;
@@ -34,9 +34,9 @@ RightHandSide::value_list (const std::vector<Point<3> > &points,
 		double x2 = points[i](0)*points[i](0) - points[i](0);
 		double y2 = points[i](1)*points[i](1) - points[i](1);
 		double z2 = points[i](2)*points[i](2) - points[i](2);
-		values.at(i)[0] = (2*points[i](0) - 1) * y2 * z2;
-		values.at(i)[1] = (2*points[i](1) - 1) * x2 * z2;
-		values.at(i)[2] = (2*points[i](2) - 1) * x2 * y2;
+		values.at(i)[0] = 10*(2*points[i](0) - 1) * y2 * z2;
+		values.at(i)[1] = 10*(2*points[i](1) - 1) * x2 * z2;
+		values.at(i)[2] = 10*(2*points[i](2) - 1) * x2 * y2;
 
 		// Curl_0
 //		const double a = 1, b = 0.7, c = 0.5;
@@ -74,9 +74,9 @@ RightHandSide::value_list (const std::vector<Point<3> > &points,
 //						- cos(2 * PI_D * k * points[i](1) * points[i](2))) * points[i](2);
 
 		// Curl
-		values.at(i)[0] += - points[i](1);
-		values.at(i)[1] += - points[i](2);
-		values.at(i)[2] += - points[i](0);
+		values.at(i)[0] += - 10*points[i](1);
+		values.at(i)[1] += - 10*points[i](2);
+		values.at(i)[2] += - 10*points[i](0);
 
 
 
@@ -147,7 +147,7 @@ DiffusionInverse_A::value_list (const std::vector<Point<3> > &points,
 	Assert (points.size() == values.size(),
 			ExcDimensionMismatch (points.size(), values.size()));
 
-	const int k = 14;
+	const int k = 15;
 
 	const double alpha = PI_D/3,
 				beta = PI_D/6,
@@ -199,12 +199,12 @@ Diffusion_B::value_list (const std::vector<Point<3> > &points,
 	Assert (points.size() == values.size(),
 			ExcDimensionMismatch (points.size(), values.size()));
 
-	const int k = 21;
+	const int k = 14;
 
 	for (unsigned int p=0; p<points.size(); ++p)
 	{
-		values[p] = 10 * (1.0 - 0.99999 * (
-									  sin(2*PI_D*k*(  points.at(p)(0) + points.at(p)(2)  ))
+		values[p] = 0.1 * (1.0 - 0.99 * (
+									  sin(2*PI_D*k*(  points.at(p)(0)   ))
 //									+ cos(2*PI_D*k*(  points.at(p)(1)  ))
 //									+ sin(2*PI_D*k*(  points.at(p)(2)  ))
 									)
@@ -230,4 +230,4 @@ ReactionRate::value (const Point<3>  &p,
 	return 0.0;
 }
 
-} // end namespace HelmholtzProblem
+} // end namespace LaplaceProblem

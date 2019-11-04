@@ -1,6 +1,6 @@
-#include "helmholtz_ref.h"
+#include <ned_rt_ref.h>
 
-namespace HelmholtzProblem
+namespace LaplaceProblem
 {
 
 using namespace dealii;
@@ -570,4 +570,4 @@ void NedRTStd::run (){
 	}
 }
 
-} // end namespace HelmholtzProblem
+} // end namespace LaplaceProblem

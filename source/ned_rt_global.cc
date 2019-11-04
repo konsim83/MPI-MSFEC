@@ -1,6 +1,6 @@
-#include "helmholtz_global.h"
+#include <ned_rt_global.h>
 
-namespace HelmholtzProblem
+namespace LaplaceProblem
 {
 
 using namespace dealii;
@@ -54,12 +54,15 @@ void NedRTMultiscale::initialize_and_compute_basis ()
 	typename Triangulation<3>::active_cell_iterator
 									cell = dof_handler.begin_active(),
 									endc = dof_handler.end();
+	first_cell = cell->id(); // only to identify first cell (for setting output flag etc)
+
 	for (; cell!=endc; ++cell)
 	{
 		if (cell->is_locally_owned())
 		{
 			NedRTBasis current_cell_problem(parameters,
 					cell,
+					first_cell,
 					triangulation.locally_owned_subdomain(),
 					mpi_communicator);
 			CellId current_cell_id(cell->id());
@@ -199,7 +202,7 @@ void NedRTMultiscale::assemble_system ()
 
 	// Define some abbreviations
 	const unsigned int   dofs_per_cell   = fe.dofs_per_cell;
-	const unsigned int   n_face_q_points = face_quadrature_formula.size();
+//	const unsigned int   n_face_q_points = face_quadrature_formula.size();
 
 
 	// Declare local contributions and reserve memory
@@ -620,4 +623,4 @@ NedRTMultiscale::run ()
 	}
 }
 
-} // end namespace HelmholtzProblem
+} // end namespace LaplaceProblem

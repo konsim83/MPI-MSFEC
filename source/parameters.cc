@@ -207,6 +207,11 @@ ParametersMs::declare_parameters(ParameterHandler &prm)
 				"true",
 				Patterns::Bool(),
 				"Dof renumbering reduces bandwidth in system matrices.");
+			prm.declare_entry(
+					"write first basis",
+					"false",
+					Patterns::Bool(),
+					"Decide whether first cell's basis will be written for diagnostic purposes.");
 		}
 		prm.leave_subsection();
 
@@ -241,6 +246,7 @@ ParametersMs::parse_parameters(ParameterHandler &prm)
 			use_direct_solver = prm.get_bool("use direct solver");
 			use_direct_solver_basis = prm.get_bool("use direct solver basis");
 			renumber_dofs  = prm.get_bool("dof renumbering");
+			prevent_output = !prm.get_bool("write first basis");
 		}
 		prm.leave_subsection();
 
@@ -256,6 +262,7 @@ ParametersBasis::ParametersBasis(const ParametersMs &parameters_ms)
 verbose (parameters_ms.verbose_basis),
 use_direct_solver (parameters_ms.use_direct_solver_basis),
 renumber_dofs (parameters_ms.renumber_dofs),
+prevent_output(parameters_ms.prevent_output),
 output_flag(false),
 n_refine_global (parameters_ms.n_refine_global),
 n_refine_local (parameters_ms.n_refine_local),
@@ -270,6 +277,7 @@ ParametersBasis::ParametersBasis(const ParametersBasis &other)
 verbose (other.verbose),
 use_direct_solver (other.use_direct_solver),
 renumber_dofs (other.renumber_dofs),
+prevent_output(other.prevent_output),
 output_flag(other.output_flag),
 n_refine_global (other.n_refine_global),
 n_refine_local (other.n_refine_local),
@@ -280,9 +288,10 @@ filename_global (other.filename_global)
 
 
 void
-ParametersBasis::set_output_flag (bool flag)
+ParametersBasis::set_output_flag (CellId local_cell_id, CellId first_cell)
 {
-	output_flag = flag;
+	if (!prevent_output)
+		output_flag = (local_cell_id==first_cell);
 }
 
 }  // namespace NedRT

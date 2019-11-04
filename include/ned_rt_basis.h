@@ -39,6 +39,7 @@
 #include <deal.II/numerics/vector_tools.h>
 #include <deal.II/numerics/matrix_tools.h>
 #include <deal.II/numerics/data_out.h>
+#include <ned_rt_eqn_data.h>
 
 
 // std library
@@ -53,8 +54,6 @@
 #include "config.h"
 #include "parameters.h"
 
-#include "helmholtz_eqn_data.h"
-
 #include "inverse_matrix.tpp"
 #include "approximate_inverse.tpp"
 #include "schur_complement.tpp"
@@ -66,7 +65,7 @@
 #include "shape_fun_vector_div.tpp"
 
 
-namespace HelmholtzProblem
+namespace LaplaceProblem
 {
 
 using namespace dealii;
@@ -78,6 +77,7 @@ class NedRTBasis
 		NedRTBasis () = delete;
 		NedRTBasis (const Parameters::NedRT::ParametersMs &parameters_ms,
 					typename Triangulation<3>::active_cell_iterator& global_cell,
+					CellId first_cell,
 					unsigned int local_subdomain,
 					MPI_Comm mpi_communicator);
 		NedRTBasis (const NedRTBasis &other);
@@ -94,7 +94,6 @@ class NedRTBasis
 
 		// Setter
 		void set_global_weights (const std::vector<double> &global_weights);
-		void set_output_flag (bool flag);
 
 	private:
 		void setup_grid ();
@@ -107,6 +106,7 @@ class NedRTBasis
 		void assemble_global_element_matrix ();
 
 		// Private setters
+		void set_output_flag ();
 		void set_u_to_std ();
 		void set_sigma_to_std ();
 		void set_filename_global ();
@@ -116,7 +116,7 @@ class NedRTBasis
 		void solve_direct (unsigned int n_basis);
 		void solve_iterative (unsigned int n_basis);
 
-		void output_basis (unsigned int n_basis);
+		void output_basis ();
 
 		MPI_Comm mpi_communicator;
 
@@ -166,6 +166,11 @@ class NedRTBasis
 		CellId global_cell_id;
 
 		/*!
+		 * Global cell number of first cell.
+		 */
+		CellId first_cell;
+
+		/*!
 		 * Global cell iterator.
 		 */
 		typename Triangulation<3>::active_cell_iterator  global_cell_it;
@@ -174,7 +179,6 @@ class NedRTBasis
 		 * Global subdomain number.
 		 */
 		const unsigned int local_subdomain;
-
 
 		// Geometry info
 		double volume_measure;
@@ -192,6 +196,6 @@ class NedRTBasis
 		bool is_copyable;
 };
 
-} // end namespace HelmholtzProblem
+} // end namespace LaplaceProblem
 
 #endif /* HELMHOLTZ_BASIS_H_ */

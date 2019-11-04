@@ -1,6 +1,6 @@
 subsection Standard method parameters
 	subsection Mesh
-  		set refinements = 7
+  		set refinements = 2
 	end
   
 	subsection Control flow
@@ -18,14 +18,14 @@ subsection Standard method parameters
   	end
   	
   	# name of outputfile without ending
-  	set filename output = NED_RT_Std
+  	set filename output = NED-RT-Std
 end
 
 
 subsection Multiscale method parameters
 	subsection Mesh
   		set global refinements = 2
-  		set local refinements = 5
+  		set local refinements = 2
 	end
   
 	subsection Control flow
@@ -42,10 +42,13 @@ subsection Multiscale method parameters
 	  
 	  	# renumbering to reduce bandwidth
 	  	set dof renumbering = true
+	  	
+	  	# write first basis
+	  	set write first basis = true 
   	end
   	
   	# name of outputfile without ending
-  	set filename output = NED_RT_Ms
+  	set filename output = NED-RT-Ms
 end
 
 
