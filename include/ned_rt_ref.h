@@ -71,6 +71,7 @@
 // my headers
 #include "config.h"
 #include "parameters.h"
+#include "ned_rt_post_processor.h"
 
 #include "inverse_matrix.tpp"
 #include "approximate_inverse.tpp"
@@ -134,6 +135,8 @@ private:
 	 * solve the linear system.
 	 */
 	LA::MPI::BlockVector       		system_rhs;
+
+	NedRT_PostProcessor porstprocessor;
 
 	ConditionalOStream 		pcout;
 	TimerOutput        		computing_timer;
