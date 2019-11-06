@@ -1,4 +1,4 @@
-#include <ned_rt_ref.h>
+#include "ned_rt_ref.h"
 
 namespace LaplaceProblem
 {
@@ -185,7 +185,6 @@ void NedRTStd::assemble_system ()
 	// allocate
 	std::vector<Tensor<1,3>> 	rhs_values (n_q_points);
 	std::vector<double> 		reaction_rate_values (n_q_points);
-	std::vector<double> 		boundary_divergence_values_u_values (n_face_q_points);
 	std::vector<Tensor<2,3>> 	a_inverse_values (n_q_points);
 	std::vector<double>		 	b_values (n_q_points);
 
@@ -470,7 +469,7 @@ void NedRTStd::output_results () const
 		subdomain(i) = triangulation.locally_owned_subdomain();
 
 	data_out.add_data_vector(subdomain, "subdomain_id");
-	//data_out.add_data_vector(locally_relevant_solution, postprocessor);
+	data_out.add_data_vector(locally_relevant_solution, postprocessor);
 
 	data_out.build_patches();
 

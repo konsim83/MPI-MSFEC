@@ -23,7 +23,7 @@ class Diffusion_B_Data
 {
 public:
 	Diffusion_B_Data ()
-	: k (14),
+	: k (0),
 	  scale (0.1)
 	{
 	}

@@ -342,7 +342,7 @@ NedRTBasis::setup_basis_dofs_div ()
 
 		VectorTools::project_boundary_values_curl_conforming_l2(dof_handler,
 					/*first vector component */ 0,
-					ZeroFunction<3>(3),  // This is not so important as long as BCs do not influence u.
+					ZeroFunction<3>(6),  // This is not so important as long as BCs do not influence u.
 					/*boundary id*/ 0,
 					constraints_div_v[n_basis]);
 		VectorTools::project_boundary_values_div_conforming(dof_handler,
@@ -948,10 +948,10 @@ NedRTBasis::output_basis ()
 		{
 			basis_ptr = &(basis_curl_v[n_basis]);
 
-			std::vector<std::string> solution_names(3, "sigma-" + Utilities::int_to_string(n_basis,2));
-			solution_names.push_back ("u-aux-" + Utilities::int_to_string(n_basis,2));
-			solution_names.push_back ("u-aux-" + Utilities::int_to_string(n_basis,2));
-			solution_names.push_back ("u-aux-" + Utilities::int_to_string(n_basis,2));
+			std::vector<std::string> solution_names(3, "sigma_" + Utilities::int_to_string(n_basis,2));
+			solution_names.push_back ("u_aux_" + Utilities::int_to_string(n_basis,2));
+			solution_names.push_back ("u_aux_" + Utilities::int_to_string(n_basis,2));
+			solution_names.push_back ("u_aux_" + Utilities::int_to_string(n_basis,2));
 
 			std::vector<DataComponentInterpretation::DataComponentInterpretation>
 				interpretation (3,
@@ -969,10 +969,10 @@ NedRTBasis::output_basis ()
 		{
 			basis_ptr = &(basis_div_v.at(n_basis - GeometryInfo<3>::lines_per_cell));
 
-			std::vector<std::string> solution_names(3, "sigma-aux-" + Utilities::int_to_string(n_basis,2));
-			solution_names.push_back ("u-" + Utilities::int_to_string(n_basis,2));
-			solution_names.push_back ("u-" + Utilities::int_to_string(n_basis,2));
-			solution_names.push_back ("u-" + Utilities::int_to_string(n_basis,2));
+			std::vector<std::string> solution_names(3, "sigma_aux_" + Utilities::int_to_string(n_basis,2));
+			solution_names.push_back ("u_" + Utilities::int_to_string(n_basis,2));
+			solution_names.push_back ("u_" + Utilities::int_to_string(n_basis,2));
+			solution_names.push_back ("u_" + Utilities::int_to_string(n_basis,2));
 
 			std::vector<DataComponentInterpretation::DataComponentInterpretation>
 				interpretation (3,
