@@ -470,7 +470,7 @@ void NedRTStd::output_results () const
 		subdomain(i) = triangulation.locally_owned_subdomain();
 
 	data_out.add_data_vector(subdomain, "subdomain_id");
-	data_out.add_data_vector(locally_relevant_solution, postprocessor);
+	//data_out.add_data_vector(locally_relevant_solution, postprocessor);
 
 	data_out.build_patches();
 

@@ -24,6 +24,7 @@ class Diffusion_A_Data
 public:
 	Diffusion_A_Data ()
 	: k(15),
+	  scale(1.0),
 	  alpha(numbers::PI/3),
 	  beta(numbers::PI/6),
 	  gamma(numbers::PI/4),
@@ -44,6 +45,11 @@ public:
 	 * Frequency of oscillations
 	 */
 	const int k;
+
+	/**
+	 * Scaling factor
+	 */
+	const double scale;
 
 	/**
 	 * Three Euler angles.

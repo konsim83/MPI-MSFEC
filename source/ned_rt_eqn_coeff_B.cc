@@ -21,7 +21,7 @@ Diffusion_B::value_list (const std::vector<Point<3> > &points,
 
 	for (unsigned int p=0; p<points.size(); ++p)
 	{
-		values[p] = 0.1 * (1.0 - 0.99 * (
+		values[p] = scale * (1.0 - 0.99 * (
 									  sin(2*numbers::PI*k*(  points.at(p)(0)   ))
 //									+ cos(2*numbers::PI*k*(  points.at(p)(1)  ))
 //									+ sin(2*numbers::PI*k*(  points.at(p)(2)  ))
@@ -49,12 +49,12 @@ DiffusionInverse_B::value_list (const std::vector<Point<3> > &points,
 
 	for (unsigned int p=0; p<points.size(); ++p)
 	{
-		values[p] = 0.1 * (1.0 - 0.99 * (
+		values[p] = 1 / (scale * (1.0 - 0.99 * (
 									  sin(2*numbers::PI*k*(  points.at(p)(0)   ))
 //									+ cos(2*numbers::PI*k*(  points.at(p)(1)  ))
 //									+ sin(2*numbers::PI*k*(  points.at(p)(2)  ))
 									)
-					);
+					));
 	}
 }
 

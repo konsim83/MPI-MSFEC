@@ -23,9 +23,9 @@ Diffusion_A::value_list (const std::vector<Point<3> > &points,
 		values[p].clear ();
 
 		//This is just diagonal
-		values[p][0][0] = (1.0 - 0.99 * sin( 2 * numbers::PI * k * points.at(p)(0) ));
-		values[p][1][1] = (1.0 - 0.99 * sin( 2 * numbers::PI * k * points.at(p)(1) ));
-		values[p][2][2] = (1.0 - 0.99 * sin( 2 * numbers::PI * k * points.at(p)(2) ));
+		values[p][0][0] = scale * (1.0 - 0.99 * sin( 2 * numbers::PI * k * points.at(p)(0) ));
+		values[p][1][1] = scale * (1.0 - 0.99 * sin( 2 * numbers::PI * k * points.at(p)(1) ));
+		values[p][2][2] = scale * (1.0 - 0.99 * sin( 2 * numbers::PI * k * points.at(p)(2) ));
 	}
 
 	if (rotate)
@@ -56,9 +56,9 @@ DiffusionInverse_A::value_list (const std::vector<Point<3> > &points,
 		values[p].clear ();
 
 		//This is just diagonal
-		values[p][0][0] = 1 / (1.0 - 0.99 * sin( 2 * numbers::PI * k * points.at(p)(0) ));
-		values[p][1][1] = 1 / (1.0 - 0.99 * sin( 2 * numbers::PI * k * points.at(p)(1) ));
-		values[p][2][2] = 1 / (1.0 - 0.99 * sin( 2 * numbers::PI * k * points.at(p)(2) ));
+		values[p][0][0] = 1 / (scale * (1.0 - 0.99 * sin( 2 * numbers::PI * k * points.at(p)(0) )));
+		values[p][1][1] = 1 / (scale * (1.0 - 0.99 * sin( 2 * numbers::PI * k * points.at(p)(1) )));
+		values[p][2][2] = 1 / (scale * (1.0 - 0.99 * sin( 2 * numbers::PI * k * points.at(p)(2) )));
 	}
 
 	if (rotate)

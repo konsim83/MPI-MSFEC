@@ -23,7 +23,8 @@ class Diffusion_B_Data
 {
 public:
 	Diffusion_B_Data ()
-	: k(14)
+	: k (14),
+	  scale (0.1)
 	{
 	}
 
@@ -31,6 +32,11 @@ public:
 	 * Frequency of oscillations
 	 */
 	const int k;
+
+	/**
+	 * Scaling factor
+	 */
+	const double scale;
 };
 
 
