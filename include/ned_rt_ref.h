@@ -58,9 +58,8 @@
 #include <deal.II/lac/petsc_precondition.h>
 #include <deal.II/lac/trilinos_solver.h>
 #include <deal.II/lac/trilinos_precondition.h>
-#include <ned_rt_eqn_data.h>
 
-// std library
+// C++
 #include <cmath>
 #include <fstream>
 #include <iostream>
@@ -72,6 +71,11 @@
 #include "config.h"
 #include "parameters.h"
 #include "ned_rt_post_processor.h"
+#include "ned_rt_eqn_rhs.h"
+#include "ned_rt_eqn_boundary_vals.h"
+#include "ned_rt_eqn_coeff_A.h"
+#include "ned_rt_eqn_coeff_B.h"
+#include "ned_rt_eqn_coeff_R.h"
 
 #include "inverse_matrix.tpp"
 #include "approximate_inverse.tpp"
@@ -136,7 +140,10 @@ private:
 	 */
 	LA::MPI::BlockVector       		system_rhs;
 
-	NedRT_PostProcessor porstprocessor;
+	/*!
+	 * Post processing class.
+	 */
+	NedRT_PostProcessor postprocessor;
 
 	ConditionalOStream 		pcout;
 	TimerOutput        		computing_timer;

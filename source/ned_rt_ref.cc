@@ -177,7 +177,6 @@ void NedRTStd::assemble_system ()
 
 	// equation data
 	const RightHandSide          		right_hand_side;
-	const BoundaryDivergenceValues_u	boundary_divergence_values_u;
 	const DiffusionInverse_A     		a_inverse;
 	const Diffusion_B     				b;
 	const ReactionRate           		reaction_rate;
@@ -450,28 +449,6 @@ NedRTStd::solve_iterative ()
 
 void NedRTStd::output_results () const
 {
-//
-//	{
-//		const ComponentSelectFunction<3> u_mask(std::make_pair(3, 6), 3 + 3);
-//		const ComponentSelectFunction<3> sigma_mask(std::make_pair(0, 3), 3 + 3);
-//	}
-
-//		LA::MPI::BlockVector interpolated;
-//		interpolated.reinit(owned_partitioning, MPI_COMM_WORLD);
-//		VectorTools::interpolate(dof_handler, ExactSolution<3>(), interpolated);
-//
-//		LA::MPI::BlockVector interpolated_relevant(owned_partitioning,
-//											   relevant_partitioning,
-//											   MPI_COMM_WORLD);
-//		interpolated_relevant = interpolated;
-//		{
-//			std::vector<std::string> solution_names(dim, "ref_u");
-//			solution_names.emplace_back("ref_p");
-//			data_out.add_data_vector(interpolated_relevant,
-//								   solution_names,
-//								   DataOut<dim>::type_dof_data,
-//								   data_component_interpretation);
-//		}
 
 	std::vector<std::string> solution_names(3, "sigma");
 	solution_names.emplace_back("u");
@@ -493,6 +470,8 @@ void NedRTStd::output_results () const
 		subdomain(i) = triangulation.locally_owned_subdomain();
 
 	data_out.add_data_vector(subdomain, "subdomain_id");
+	data_out.add_data_vector(locally_relevant_solution, postprocessor);
+
 	data_out.build_patches();
 
 	std::string filename(parameters.filename_output);

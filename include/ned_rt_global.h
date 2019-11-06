@@ -70,6 +70,8 @@
 // my headers
 #include "parameters.h"
 
+#include "ned_rt_post_processor.h"
+
 #include "config.h"
 #include "inverse_matrix.tpp"
 #include "approximate_inverse.tpp"
