@@ -8,7 +8,9 @@ using namespace dealii;
 /**
  * Constructor
  */
-NedRT_PostProcessor::NedRT_PostProcessor()
+NedRT_PostProcessor::NedRT_PostProcessor(const std::string &parameter_filename)
+:
+a_inverse(parameter_filename)
 {}
 
 

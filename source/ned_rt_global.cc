@@ -5,10 +5,12 @@ namespace LaplaceProblem
 
 using namespace dealii;
 
-NedRTMultiscale::NedRTMultiscale (Parameters::NedRT::ParametersMs &parameters_)
+NedRTMultiscale::NedRTMultiscale (Parameters::NedRT::ParametersMs &parameters_,
+		const std::string &parameter_filename_)
 :
 mpi_communicator(MPI_COMM_WORLD),
 parameters(parameters_),
+parameter_filename(parameter_filename_),
 triangulation(mpi_communicator,
 			  typename Triangulation<3>::MeshSmoothing(
 				Triangulation<3>::smoothing_on_refinement |
@@ -61,6 +63,7 @@ void NedRTMultiscale::initialize_and_compute_basis ()
 		if (cell->is_locally_owned())
 		{
 			NedRTBasis current_cell_problem(parameters,
+					parameter_filename,
 					cell,
 					first_cell,
 					triangulation.locally_owned_subdomain(),
@@ -444,7 +447,7 @@ NedRTMultiscale::output_results_coarse () const
 	std::vector<DataComponentInterpretation::DataComponentInterpretation>
 		data_component_interpretation(3+3, DataComponentInterpretation::component_is_part_of_vector);
 
-	NedRT_PostProcessor postprocessor;
+	NedRT_PostProcessor postprocessor(parameter_filename);
 
 	DataOut<3> data_out;
 	data_out.attach_dof_handler(dof_handler);

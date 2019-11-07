@@ -82,6 +82,7 @@ class NedRTBasis
 
 		NedRTBasis () = delete;
 		NedRTBasis (const Parameters::NedRT::ParametersMs &parameters_ms,
+					const std::string &parameter_filename,
 					typename Triangulation<3>::active_cell_iterator& global_cell,
 					CellId first_cell,
 					unsigned int local_subdomain,
@@ -127,6 +128,7 @@ class NedRTBasis
 		MPI_Comm mpi_communicator;
 
 		Parameters::NedRT::ParametersBasis parameters;
+		const std::string &parameter_filename;
 
 		Triangulation<3>   triangulation;
 

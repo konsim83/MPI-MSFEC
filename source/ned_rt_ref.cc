@@ -6,10 +6,12 @@ namespace LaplaceProblem
 using namespace dealii;
 
 
-NedRTStd::NedRTStd (Parameters::NedRT::ParametersStd &parameters_)
+NedRTStd::NedRTStd (Parameters::NedRT::ParametersStd &parameters_,
+		const std::string &parameter_filename_)
 :
 mpi_communicator(MPI_COMM_WORLD),
 parameters(parameters_),
+parameter_filename(parameter_filename_),
 triangulation(mpi_communicator,
 			  typename Triangulation<3>::MeshSmoothing(
 				Triangulation<3>::smoothing_on_refinement |
@@ -177,7 +179,7 @@ void NedRTStd::assemble_system ()
 
 	// equation data
 	const RightHandSide          		right_hand_side;
-	const DiffusionInverse_A     		a_inverse;
+	const DiffusionInverse_A     		a_inverse(parameter_filename);
 	const Diffusion_B     				b;
 	const ReactionRate           		reaction_rate;
 
@@ -457,7 +459,7 @@ void NedRTStd::output_results () const
 	std::vector<DataComponentInterpretation::DataComponentInterpretation>
 		data_component_interpretation(3+3, DataComponentInterpretation::component_is_part_of_vector);
 
-	NedRT_PostProcessor postprocessor;
+	NedRT_PostProcessor postprocessor(parameter_filename);
 
 	DataOut<3> data_out;
 	data_out.attach_dof_handler(dof_handler);

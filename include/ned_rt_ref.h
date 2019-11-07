@@ -91,7 +91,8 @@ class NedRTStd
 {
 public:
 	NedRTStd () = delete;
-	NedRTStd (Parameters::NedRT::ParametersStd &parameters);
+	NedRTStd (Parameters::NedRT::ParametersStd &parameters_,
+			const std::string &parameter_filename_);
 	~NedRTStd ();
 
 	void run ();
@@ -108,6 +109,7 @@ private:
 	MPI_Comm mpi_communicator;
 
 	Parameters::NedRT::ParametersStd &parameters;
+	const std::string &parameter_filename;
 
 	parallel::distributed::Triangulation<3> triangulation;
 

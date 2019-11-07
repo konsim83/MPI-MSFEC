@@ -23,7 +23,7 @@ public:
 	/**
 	 * Constructor.
 	 */
-	NedRT_PostProcessor ();
+	NedRT_PostProcessor (const std::string &parameter_filename);
 
 	/**
 	 * This is the actual evaluation routine of the  post processor.

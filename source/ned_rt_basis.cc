@@ -6,6 +6,7 @@ namespace LaplaceProblem
 using namespace dealii;
 
 NedRTBasis::NedRTBasis (const Parameters::NedRT::ParametersMs &parameters_ms,
+		const std::string &parameter_filename_,
 		typename Triangulation<3>::active_cell_iterator& global_cell,
 		CellId first_cell,
 		unsigned int local_subdomain,
@@ -13,6 +14,7 @@ NedRTBasis::NedRTBasis (const Parameters::NedRT::ParametersMs &parameters_ms,
 :
 mpi_communicator(mpi_communicator),
 parameters(parameters_ms),
+parameter_filename(parameter_filename_),
 triangulation(),
 fe (FE_Nedelec<3>(parameters.degree), 1,
 		FE_RaviartThomas<3>(parameters.degree), 1),
@@ -79,6 +81,7 @@ NedRTBasis::NedRTBasis(const NedRTBasis &other)
 //		ExcMessage ("Object can not be copied after triangulation and other parts are initialized.")),
 mpi_communicator (other.mpi_communicator),
 parameters (other.parameters),
+parameter_filename (other.parameter_filename),
 triangulation (), // must be constructed deliberately, but is empty on copying anyway
 fe (FE_Nedelec<3>(parameters.degree), 1,
 		FE_RaviartThomas<3>(parameters.degree), 1),
@@ -411,7 +414,7 @@ NedRTBasis::assemble_system ()
 
 	// Equation data
 	const RightHandSide				right_hand_side;
-	const DiffusionInverse_A		diffusion_inverse_a;
+	const DiffusionInverse_A		diffusion_inverse_a(parameter_filename);
 	const Diffusion_B				diffusion_b;
 	const ReactionRate				reaction_rate;
 
@@ -1025,7 +1028,7 @@ NedRTBasis::output_global_solution_in_cell () const
 	interpretation.push_back (DataComponentInterpretation::component_is_part_of_vector);
 	interpretation.push_back (DataComponentInterpretation::component_is_part_of_vector);
 
-	NedRT_PostProcessor postprocessor;
+	NedRT_PostProcessor postprocessor(parameter_filename);
 
 	// Build the data out object and add the data
 	DataOut<3> data_out;

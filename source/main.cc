@@ -73,7 +73,7 @@ int main (int argc, char* argv[]){
 
 			// reference solution
 			Parameters::NedRT::ParametersStd parameters(input_file);
-			LaplaceProblem::NedRTStd	 mixed_laplace_std (parameters);
+			LaplaceProblem::NedRTStd	 mixed_laplace_std (parameters, input_file);
 			mixed_laplace_std.run();
 		}
 
@@ -82,7 +82,7 @@ int main (int argc, char* argv[]){
 
 			// multiscale solution
 			Parameters::NedRT::ParametersMs parameters(input_file);
-			LaplaceProblem::NedRTMultiscale mixed_laplace_global (parameters);
+			LaplaceProblem::NedRTMultiscale mixed_laplace_global (parameters, input_file);
 			mixed_laplace_global.run ();
 		}
     } /* try */
