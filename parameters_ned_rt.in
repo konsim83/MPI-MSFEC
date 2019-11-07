@@ -1,0 +1,29 @@
+# Listing of Parameters
+# ---------------------
+subsection Standard method parameters
+  # .
+  set filename output = NED_RT_Std
+
+
+  subsection Control flow
+    # Choose whether to compute the solution or not.
+    set compute solution  = true
+
+    # Dof renumbering reduces bandwidth in system matrices.
+    set dof renumbering   = true
+
+    # Use direct solvers true or false.
+    set use direct solver = true
+
+    # Set runtime output true or false.
+    set verbose           = true
+  end
+
+  subsection Mesh
+    # Number of initial mesh refinements.
+    set refinements = 3
+  end
+
+end
+
+

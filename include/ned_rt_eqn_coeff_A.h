@@ -23,8 +23,8 @@ class Diffusion_A_Data
 {
 public:
 	Diffusion_A_Data ()
-	: k(0),
-	  scale(1.0),
+	: k(15),
+	  scale(2.0),
 	  alpha(numbers::PI/3),
 	  beta(numbers::PI/6),
 	  gamma(numbers::PI/4),

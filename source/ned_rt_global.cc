@@ -444,6 +444,8 @@ NedRTMultiscale::output_results_coarse () const
 	std::vector<DataComponentInterpretation::DataComponentInterpretation>
 		data_component_interpretation(3+3, DataComponentInterpretation::component_is_part_of_vector);
 
+	NedRT_PostProcessor postprocessor;
+
 	DataOut<3> data_out;
 	data_out.attach_dof_handler(dof_handler);
 	data_out.add_data_vector(locally_relevant_solution,
@@ -456,6 +458,8 @@ NedRTMultiscale::output_results_coarse () const
 		subdomain(i) = triangulation.locally_owned_subdomain();
 
 	data_out.add_data_vector(subdomain, "subdomain_id");
+	data_out.add_data_vector(locally_relevant_solution, postprocessor);
+
 	data_out.build_patches();
 
 	std::string filename(parameters.filename_output);
@@ -482,7 +486,7 @@ NedRTMultiscale::output_results_coarse () const
 
 		std::string master_file = parameters.filename_output + "_coarse";
 		master_file += "_refine-" + Utilities::int_to_string(parameters.n_refine_global,2)
-				+ Utilities::int_to_string(parameters.n_refine_local,2) + ".pvtu";
+				+ "-" + Utilities::int_to_string(parameters.n_refine_local,2) + ".pvtu";
 		std::ofstream master_output(master_file.c_str());
 		data_out.write_pvtu_record(master_output, local_filenames);
 	}
@@ -541,14 +545,33 @@ NedRTMultiscale::output_results_fine ()
 		solution_names.push_back ("u");
 		solution_names.push_back ("u");
 		solution_names.push_back ("u");
+		solution_names.push_back ("curl_u");
+		solution_names.push_back ("curl_u");
+		solution_names.push_back ("curl_u");
+		solution_names.emplace_back("div_u");
+		solution_names.emplace_back("B_div_u");
 
 		// Interpretation of solution components
+		// sigma
 		std::vector<DataComponentInterpretation::DataComponentInterpretation>
-		interpretation (3,
+			interpretation (3,
 						DataComponentInterpretation::component_is_part_of_vector);
+
+		// u
 		interpretation.push_back (DataComponentInterpretation::component_is_part_of_vector);
 		interpretation.push_back (DataComponentInterpretation::component_is_part_of_vector);
 		interpretation.push_back (DataComponentInterpretation::component_is_part_of_vector);
+
+		// curl u
+		interpretation.push_back (DataComponentInterpretation::component_is_part_of_vector);
+		interpretation.push_back (DataComponentInterpretation::component_is_part_of_vector);
+		interpretation.push_back (DataComponentInterpretation::component_is_part_of_vector);
+
+		// div u
+		interpretation.push_back(DataComponentInterpretation::component_is_scalar);
+
+		// B div u
+		interpretation.push_back(DataComponentInterpretation::component_is_scalar);
 
 		DataOut<3> data_out;
 //		data_out.attach_dof_handler (dof_handler);

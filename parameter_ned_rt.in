@@ -30,7 +30,7 @@ subsection Multiscale method parameters
   
 	subsection Control flow
 		# compute flag
-	  	set compute solution = false
+	  	set compute solution = true
 	  
 	  	# verbose
 	  	set verbose = true

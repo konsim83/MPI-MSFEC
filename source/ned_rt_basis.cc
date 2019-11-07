@@ -1025,12 +1025,17 @@ NedRTBasis::output_global_solution_in_cell () const
 	interpretation.push_back (DataComponentInterpretation::component_is_part_of_vector);
 	interpretation.push_back (DataComponentInterpretation::component_is_part_of_vector);
 
+	NedRT_PostProcessor postprocessor;
+
 	// Build the data out object and add the data
 	DataOut<3> data_out;
+	data_out.attach_dof_handler(dof_handler);
+
 	data_out.add_data_vector (dof_handler,
 			global_solution,
 			solution_names,
 			interpretation);
+	data_out.add_data_vector(global_solution, postprocessor);
 
 	data_out.build_patches ();
 

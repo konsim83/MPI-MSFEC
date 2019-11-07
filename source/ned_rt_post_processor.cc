@@ -73,9 +73,6 @@ NedRT_PostProcessor::evaluate_vector_field(
 
 	for (unsigned int q = 0; q < n_quadrature_points; ++q)
 	{
-		Tensor<1,3> sigma;
-		for (unsigned int d = 0; d < 3; ++d)
-			sigma[d] = inputs.solution_values[q][d];
 		for (unsigned int d = 0; d < 3; ++d)
 		{
 			computed_quantities[q](d) = 0; // erase old stuff
@@ -84,13 +81,14 @@ NedRT_PostProcessor::evaluate_vector_field(
 		}
 
 		// For the divergence first compute the gradient
-		computed_quantities[q](4) = 0;
-		for (unsigned int d =3; d < 6; ++d)
-			computed_quantities[q](4) += inputs.solution_gradients[q][d][d];
+		computed_quantities[q](3) = 0;
+		for (unsigned int d = 3; d < 6; ++d)
+		{
+			computed_quantities[q](3) += inputs.solution_gradients[q][d][d-3];
+		}
 
 		// Now multiply with B
-		computed_quantities[q](5) = b_values[q] * computed_quantities[q](4);
-
+		computed_quantities[q](4) = b_values[q] * computed_quantities[q](3);
 	}
 }
 

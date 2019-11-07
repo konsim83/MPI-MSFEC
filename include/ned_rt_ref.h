@@ -140,11 +140,6 @@ private:
 	 */
 	LA::MPI::BlockVector       		system_rhs;
 
-	/*!
-	 * Post processing class.
-	 */
-	NedRT_PostProcessor postprocessor;
-
 	ConditionalOStream 		pcout;
 	TimerOutput        		computing_timer;
 

@@ -157,14 +157,14 @@ void NedRTStd::assemble_system ()
 							 update_values    | update_gradients |
 							 update_quadrature_points  | update_JxW_values);
 
-	FEFaceValues<3> fe_face_values (fe, face_quadrature_formula,
-									  update_values    | update_normal_vectors |
-									  update_quadrature_points  | update_JxW_values);
+//	FEFaceValues<3> fe_face_values (fe, face_quadrature_formula,
+//									  update_values    | update_normal_vectors |
+//									  update_quadrature_points  | update_JxW_values);
 
 	// Define some abbreviations
 	const unsigned int   dofs_per_cell   = fe.dofs_per_cell;
 	const unsigned int   n_q_points      = quadrature_formula.size();
-	const unsigned int   n_face_q_points = face_quadrature_formula.size();
+//	const unsigned int   n_face_q_points = face_quadrature_formula.size();
 
 
 	// Declare local contributions and reserve memory
@@ -456,6 +456,8 @@ void NedRTStd::output_results () const
 
 	std::vector<DataComponentInterpretation::DataComponentInterpretation>
 		data_component_interpretation(3+3, DataComponentInterpretation::component_is_part_of_vector);
+
+	NedRT_PostProcessor postprocessor;
 
 	DataOut<3> data_out;
 	data_out.attach_dof_handler(dof_handler);
