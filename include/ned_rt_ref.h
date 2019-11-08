@@ -58,9 +58,8 @@
 #include <deal.II/lac/petsc_precondition.h>
 #include <deal.II/lac/trilinos_solver.h>
 #include <deal.II/lac/trilinos_precondition.h>
-#include <ned_rt_eqn_data.h>
 
-// std library
+// C++
 #include <cmath>
 #include <fstream>
 #include <iostream>
@@ -71,6 +70,12 @@
 // my headers
 #include "config.h"
 #include "parameters.h"
+#include "ned_rt_post_processor.h"
+#include "ned_rt_eqn_rhs.h"
+#include "ned_rt_eqn_boundary_vals.h"
+#include "ned_rt_eqn_coeff_A.h"
+#include "ned_rt_eqn_coeff_B.h"
+#include "ned_rt_eqn_coeff_R.h"
 
 #include "inverse_matrix.tpp"
 #include "approximate_inverse.tpp"
@@ -86,7 +91,8 @@ class NedRTStd
 {
 public:
 	NedRTStd () = delete;
-	NedRTStd (Parameters::NedRT::ParametersStd &parameters);
+	NedRTStd (Parameters::NedRT::ParametersStd &parameters_,
+			const std::string &parameter_filename_);
 	~NedRTStd ();
 
 	void run ();
@@ -103,6 +109,7 @@ private:
 	MPI_Comm mpi_communicator;
 
 	Parameters::NedRT::ParametersStd &parameters;
+	const std::string &parameter_filename;
 
 	parallel::distributed::Triangulation<3> triangulation;
 

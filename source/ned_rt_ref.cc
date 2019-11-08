@@ -1,4 +1,4 @@
-#include <ned_rt_ref.h>
+#include "ned_rt_ref.h"
 
 namespace LaplaceProblem
 {
@@ -6,10 +6,12 @@ namespace LaplaceProblem
 using namespace dealii;
 
 
-NedRTStd::NedRTStd (Parameters::NedRT::ParametersStd &parameters_)
+NedRTStd::NedRTStd (Parameters::NedRT::ParametersStd &parameters_,
+		const std::string &parameter_filename_)
 :
 mpi_communicator(MPI_COMM_WORLD),
 parameters(parameters_),
+parameter_filename(parameter_filename_),
 triangulation(mpi_communicator,
 			  typename Triangulation<3>::MeshSmoothing(
 				Triangulation<3>::smoothing_on_refinement |
@@ -157,14 +159,14 @@ void NedRTStd::assemble_system ()
 							 update_values    | update_gradients |
 							 update_quadrature_points  | update_JxW_values);
 
-	FEFaceValues<3> fe_face_values (fe, face_quadrature_formula,
-									  update_values    | update_normal_vectors |
-									  update_quadrature_points  | update_JxW_values);
+//	FEFaceValues<3> fe_face_values (fe, face_quadrature_formula,
+//									  update_values    | update_normal_vectors |
+//									  update_quadrature_points  | update_JxW_values);
 
 	// Define some abbreviations
 	const unsigned int   dofs_per_cell   = fe.dofs_per_cell;
 	const unsigned int   n_q_points      = quadrature_formula.size();
-	const unsigned int   n_face_q_points = face_quadrature_formula.size();
+//	const unsigned int   n_face_q_points = face_quadrature_formula.size();
 
 
 	// Declare local contributions and reserve memory
@@ -177,16 +179,14 @@ void NedRTStd::assemble_system ()
 
 	// equation data
 	const RightHandSide          		right_hand_side;
-	const BoundaryDivergenceValues_u	boundary_divergence_values_u;
-	const DiffusionInverse_A     		a_inverse;
-	const Diffusion_B     				b;
+	const DiffusionInverse_A     		a_inverse(parameter_filename);
+	const Diffusion_B     				b(parameter_filename);
 	const ReactionRate           		reaction_rate;
 
 
 	// allocate
 	std::vector<Tensor<1,3>> 	rhs_values (n_q_points);
 	std::vector<double> 		reaction_rate_values (n_q_points);
-	std::vector<double> 		boundary_divergence_values_u_values (n_face_q_points);
 	std::vector<Tensor<2,3>> 	a_inverse_values (n_q_points);
 	std::vector<double>		 	b_values (n_q_points);
 
@@ -450,28 +450,6 @@ NedRTStd::solve_iterative ()
 
 void NedRTStd::output_results () const
 {
-//
-//	{
-//		const ComponentSelectFunction<3> u_mask(std::make_pair(3, 6), 3 + 3);
-//		const ComponentSelectFunction<3> sigma_mask(std::make_pair(0, 3), 3 + 3);
-//	}
-
-//		LA::MPI::BlockVector interpolated;
-//		interpolated.reinit(owned_partitioning, MPI_COMM_WORLD);
-//		VectorTools::interpolate(dof_handler, ExactSolution<3>(), interpolated);
-//
-//		LA::MPI::BlockVector interpolated_relevant(owned_partitioning,
-//											   relevant_partitioning,
-//											   MPI_COMM_WORLD);
-//		interpolated_relevant = interpolated;
-//		{
-//			std::vector<std::string> solution_names(dim, "ref_u");
-//			solution_names.emplace_back("ref_p");
-//			data_out.add_data_vector(interpolated_relevant,
-//								   solution_names,
-//								   DataOut<dim>::type_dof_data,
-//								   data_component_interpretation);
-//		}
 
 	std::vector<std::string> solution_names(3, "sigma");
 	solution_names.emplace_back("u");
@@ -480,6 +458,8 @@ void NedRTStd::output_results () const
 
 	std::vector<DataComponentInterpretation::DataComponentInterpretation>
 		data_component_interpretation(3+3, DataComponentInterpretation::component_is_part_of_vector);
+
+	NedRT_PostProcessor postprocessor(parameter_filename);
 
 	DataOut<3> data_out;
 	data_out.attach_dof_handler(dof_handler);
@@ -493,6 +473,8 @@ void NedRTStd::output_results () const
 		subdomain(i) = triangulation.locally_owned_subdomain();
 
 	data_out.add_data_vector(subdomain, "subdomain_id");
+	data_out.add_data_vector(locally_relevant_solution, postprocessor);
+
 	data_out.build_patches();
 
 	std::string filename(parameters.filename_output);

@@ -70,6 +70,8 @@
 // my headers
 #include "parameters.h"
 
+#include "ned_rt_post_processor.h"
+
 #include "config.h"
 #include "inverse_matrix.tpp"
 #include "approximate_inverse.tpp"
@@ -87,7 +89,8 @@ using namespace dealii;
 class NedRTMultiscale
 {
 public:
-	NedRTMultiscale (Parameters::NedRT::ParametersMs &parameters_);
+	NedRTMultiscale (Parameters::NedRT::ParametersMs &parameters_,
+			const std::string &parameter_filename);
 	~NedRTMultiscale ();
 
 	void run ();
@@ -109,6 +112,7 @@ private:
 	MPI_Comm mpi_communicator;
 
 	Parameters::NedRT::ParametersMs &parameters;
+	const std::string &parameter_filename;
 
 	parallel::distributed::Triangulation<3> triangulation;
 

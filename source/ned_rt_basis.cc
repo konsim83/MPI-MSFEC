@@ -6,6 +6,7 @@ namespace LaplaceProblem
 using namespace dealii;
 
 NedRTBasis::NedRTBasis (const Parameters::NedRT::ParametersMs &parameters_ms,
+		const std::string &parameter_filename_,
 		typename Triangulation<3>::active_cell_iterator& global_cell,
 		CellId first_cell,
 		unsigned int local_subdomain,
@@ -13,6 +14,7 @@ NedRTBasis::NedRTBasis (const Parameters::NedRT::ParametersMs &parameters_ms,
 :
 mpi_communicator(mpi_communicator),
 parameters(parameters_ms),
+parameter_filename(parameter_filename_),
 triangulation(),
 fe (FE_Nedelec<3>(parameters.degree), 1,
 		FE_RaviartThomas<3>(parameters.degree), 1),
@@ -79,6 +81,7 @@ NedRTBasis::NedRTBasis(const NedRTBasis &other)
 //		ExcMessage ("Object can not be copied after triangulation and other parts are initialized.")),
 mpi_communicator (other.mpi_communicator),
 parameters (other.parameters),
+parameter_filename (other.parameter_filename),
 triangulation (), // must be constructed deliberately, but is empty on copying anyway
 fe (FE_Nedelec<3>(parameters.degree), 1,
 		FE_RaviartThomas<3>(parameters.degree), 1),
@@ -342,7 +345,7 @@ NedRTBasis::setup_basis_dofs_div ()
 
 		VectorTools::project_boundary_values_curl_conforming_l2(dof_handler,
 					/*first vector component */ 0,
-					ZeroFunction<3>(3),  // This is not so important as long as BCs do not influence u.
+					ZeroFunction<3>(6),  // This is not so important as long as BCs do not influence u.
 					/*boundary id*/ 0,
 					constraints_div_v[n_basis]);
 		VectorTools::project_boundary_values_div_conforming(dof_handler,
@@ -411,8 +414,8 @@ NedRTBasis::assemble_system ()
 
 	// Equation data
 	const RightHandSide				right_hand_side;
-	const DiffusionInverse_A		diffusion_inverse_a;
-	const Diffusion_B				diffusion_b;
+	const DiffusionInverse_A		diffusion_inverse_a(parameter_filename);
+	const Diffusion_B				diffusion_b(parameter_filename);
 	const ReactionRate				reaction_rate;
 
 	// allocate
@@ -948,10 +951,10 @@ NedRTBasis::output_basis ()
 		{
 			basis_ptr = &(basis_curl_v[n_basis]);
 
-			std::vector<std::string> solution_names(3, "sigma-" + Utilities::int_to_string(n_basis,2));
-			solution_names.push_back ("u-aux-" + Utilities::int_to_string(n_basis,2));
-			solution_names.push_back ("u-aux-" + Utilities::int_to_string(n_basis,2));
-			solution_names.push_back ("u-aux-" + Utilities::int_to_string(n_basis,2));
+			std::vector<std::string> solution_names(3, "sigma_" + Utilities::int_to_string(n_basis,2));
+			solution_names.push_back ("u_aux_" + Utilities::int_to_string(n_basis,2));
+			solution_names.push_back ("u_aux_" + Utilities::int_to_string(n_basis,2));
+			solution_names.push_back ("u_aux_" + Utilities::int_to_string(n_basis,2));
 
 			std::vector<DataComponentInterpretation::DataComponentInterpretation>
 				interpretation (3,
@@ -969,10 +972,10 @@ NedRTBasis::output_basis ()
 		{
 			basis_ptr = &(basis_div_v.at(n_basis - GeometryInfo<3>::lines_per_cell));
 
-			std::vector<std::string> solution_names(3, "sigma-aux-" + Utilities::int_to_string(n_basis,2));
-			solution_names.push_back ("u-" + Utilities::int_to_string(n_basis,2));
-			solution_names.push_back ("u-" + Utilities::int_to_string(n_basis,2));
-			solution_names.push_back ("u-" + Utilities::int_to_string(n_basis,2));
+			std::vector<std::string> solution_names(3, "sigma_aux_" + Utilities::int_to_string(n_basis,2));
+			solution_names.push_back ("u_" + Utilities::int_to_string(n_basis,2));
+			solution_names.push_back ("u_" + Utilities::int_to_string(n_basis,2));
+			solution_names.push_back ("u_" + Utilities::int_to_string(n_basis,2));
 
 			std::vector<DataComponentInterpretation::DataComponentInterpretation>
 				interpretation (3,
@@ -1025,12 +1028,17 @@ NedRTBasis::output_global_solution_in_cell () const
 	interpretation.push_back (DataComponentInterpretation::component_is_part_of_vector);
 	interpretation.push_back (DataComponentInterpretation::component_is_part_of_vector);
 
+	NedRT_PostProcessor postprocessor(parameter_filename);
+
 	// Build the data out object and add the data
 	DataOut<3> data_out;
+	data_out.attach_dof_handler(dof_handler);
+
 	data_out.add_data_vector (dof_handler,
 			global_solution,
 			solution_names,
 			interpretation);
+	data_out.add_data_vector(global_solution, postprocessor);
 
 	data_out.build_patches ();
 

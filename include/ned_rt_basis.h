@@ -39,7 +39,6 @@
 #include <deal.II/numerics/vector_tools.h>
 #include <deal.II/numerics/matrix_tools.h>
 #include <deal.II/numerics/data_out.h>
-#include <ned_rt_eqn_data.h>
 
 
 // std library
@@ -53,6 +52,13 @@
 // my headers
 #include "config.h"
 #include "parameters.h"
+
+#include "ned_rt_post_processor.h"
+#include "ned_rt_eqn_rhs.h"
+#include "ned_rt_eqn_boundary_vals.h"
+#include "ned_rt_eqn_coeff_A.h"
+#include "ned_rt_eqn_coeff_B.h"
+#include "ned_rt_eqn_coeff_R.h"
 
 #include "inverse_matrix.tpp"
 #include "approximate_inverse.tpp"
@@ -76,6 +82,7 @@ class NedRTBasis
 
 		NedRTBasis () = delete;
 		NedRTBasis (const Parameters::NedRT::ParametersMs &parameters_ms,
+					const std::string &parameter_filename,
 					typename Triangulation<3>::active_cell_iterator& global_cell,
 					CellId first_cell,
 					unsigned int local_subdomain,
@@ -121,6 +128,7 @@ class NedRTBasis
 		MPI_Comm mpi_communicator;
 
 		Parameters::NedRT::ParametersBasis parameters;
+		const std::string &parameter_filename;
 
 		Triangulation<3>   triangulation;
 
