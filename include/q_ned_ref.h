@@ -1,5 +1,5 @@
-#ifndef NED_RT_REF_H_
-#define NED_RT_REF_H_
+#ifndef Q_NED_REF_H_
+#define Q_NED_REF_H_
 
 // Deal.ii MPI
 #include <deal.II/base/conditional_ostream.h>
@@ -58,11 +58,6 @@
 #include <deal.II/lac/petsc_precondition.h>
 #include <deal.II/lac/trilinos_solver.h>
 #include <deal.II/lac/trilinos_precondition.h>
-#include <eqn_boundary_vals.h>
-#include <eqn_coeff_A.h>
-#include <eqn_coeff_B.h>
-#include <eqn_coeff_R.h>
-#include <eqn_rhs.h>
 
 // C++
 #include <cmath>
@@ -73,26 +68,33 @@
 #include <memory>
 
 // my headers
-#include "config.h"
-#include "parameters.h"
-#include "ned_rt_post_processor.h"
-#include "inverse_matrix.tpp"
-#include "approximate_inverse.tpp"
-#include "schur_complement.tpp"
-#include "approximate_schur_complement.tpp"
-#include "preconditioner.h"
+#include <eqn_boundary_vals.h>
+#include <eqn_coeff_A.h>
+#include <eqn_coeff_B.h>
+#include <eqn_coeff_R.h>
+#include <eqn_rhs.h>
+#include <q_ned_post_processor.h>
+
+#include <config.h>
+#include <parameters.h>
+
+#include <inverse_matrix.tpp>
+#include <approximate_inverse.tpp>
+#include <schur_complement.tpp>
+#include <approximate_schur_complement.tpp>
+#include <preconditioner.h>
 
 namespace LaplaceProblem
 {
 using namespace dealii;
 
-class NedRTStd
+class QNedStd
 {
 public:
-	NedRTStd () = delete;
-	NedRTStd (Parameters::NedRT::ParametersStd &parameters_,
+	QNedStd () = delete;
+	QNedStd (Parameters::QNed::ParametersStd &parameters_,
 			const std::string &parameter_filename_);
-	~NedRTStd ();
+	~QNedStd ();
 
 	void run ();
 
@@ -107,7 +109,7 @@ private:
 
 	MPI_Comm mpi_communicator;
 
-	Parameters::NedRT::ParametersStd &parameters;
+	Parameters::QNed::ParametersStd &parameters;
 	const std::string &parameter_filename;
 
 	parallel::distributed::Triangulation<3> triangulation;
@@ -149,4 +151,4 @@ private:
 
 } // end namespace LaplaceProblem
 
-#endif /* NED_RT_REF_H_ */
+#endif /* Q_NED_REF_H_ */

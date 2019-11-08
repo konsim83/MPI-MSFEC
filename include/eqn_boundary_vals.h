@@ -1,5 +1,5 @@
-#ifndef HELMHOLTZ_EQN_BOUNDARY_VALS_H_
-#define HELMHOLTZ_EQN_BOUNDARY_VALS_H_
+#ifndef EQN_BOUNDARY_VALS_H_
+#define EQN_BOUNDARY_VALS_H_
 
 #include <deal.II/base/point.h>
 #include <deal.II/base/function.h>
@@ -45,4 +45,4 @@ public:
   
 } // end namespace LaplaceProblem
 
-#endif /* HELMHOLTZ_EQN_BOUNDARY_VALS_H_ */
+#endif /* EQN_BOUNDARY_VALS_H_ */

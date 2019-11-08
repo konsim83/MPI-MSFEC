@@ -1,5 +1,5 @@
-#ifndef HELMHOLTZ_GLOBAL_H_
-#define HELMHOLTZ_GLOBAL_H_
+#ifndef NED_RT_GLOBAL_H_
+#define NED_RT_GLOBAL_H_
 
 // Deal.ii MPI
 #include <deal.II/base/conditional_ostream.h>
@@ -162,4 +162,4 @@ private:
 } // end namespace LaplaceProblem
 
 
-#endif /* HELMHOLTZ_GLOBAL_H_ */
+#endif /* NED_RT_GLOBAL_H_ */

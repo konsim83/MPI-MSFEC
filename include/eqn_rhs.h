@@ -1,5 +1,5 @@
-#ifndef HELMHOLTZ_EQN_RHS_H_
-#define HELMHOLTZ_EQN_RHS_H_
+#ifndef EQN_RHS_H_
+#define EQN_RHS_H_
 
 #include <deal.II/base/point.h>
 #include <deal.II/base/function.h>
@@ -30,4 +30,4 @@ public:
   
 } // end namespace LaplaceProblem
 
-#endif /* HELMHOLTZ_EQN_RHS_H_ */
+#endif /* EQN_RHS_H_ */

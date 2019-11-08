@@ -1,5 +1,5 @@
-#ifndef HELMHOLTZ_EQN_COEFF_A_H_
-#define HELMHOLTZ_EQN_COEFF_A_H_
+#ifndef EQN_COEFF_A_H_
+#define EQN_COEFF_A_H_
 
 #include <deal.II/base/point.h>
 #include <deal.II/base/tensor_function.h>
@@ -103,4 +103,4 @@ public:
   
 } // end namespace LaplaceProblem
 
-#endif /* HELMHOLTZ_EQN_COEFF_A_H_ */
+#endif /* EQN_COEFF_A_H_ */

@@ -1,5 +1,5 @@
-#ifndef NED_RT_BASIS_H_
-#define NED_RT_BASIS_H_
+#ifndef Q_NED_BASIS_H_
+#define Q_NED_BASIS_H_
 
 // Deal.ii MPI
 #include <deal.II/base/conditional_ostream.h>
@@ -205,4 +205,4 @@ class NedRTBasis
 
 } // end namespace LaplaceProblem
 
-#endif /* NED_RT_BASIS_H_ */
+#endif /* Q_NED_BASIS_H_ */
