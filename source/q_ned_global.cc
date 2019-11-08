@@ -1,11 +1,11 @@
-#include <ned_rt_global.h>
+#include "q_ned_global.h"
 
 namespace LaplaceProblem
 {
 
 using namespace dealii;
 
-NedRTMultiscale::NedRTMultiscale (Parameters::NedRT::ParametersMs &parameters_,
+QNedMultiscale::QNedMultiscale (Parameters::NedRT::ParametersMs &parameters_,
 		const std::string &parameter_filename_)
 :
 mpi_communicator(MPI_COMM_WORLD),
@@ -29,7 +29,7 @@ cell_basis_map()
 
 
 
-NedRTMultiscale::~NedRTMultiscale ()
+QNedMultiscale::~QNedMultiscale ()
 {
 	system_matrix.clear();
 	constraints.clear();
@@ -38,7 +38,7 @@ NedRTMultiscale::~NedRTMultiscale ()
 
 
 
-void NedRTMultiscale::setup_grid ()
+void QNedMultiscale::setup_grid ()
 {
 	TimerOutput::Scope t(computing_timer, "coarse mesh generation");
 
@@ -49,7 +49,7 @@ void NedRTMultiscale::setup_grid ()
 
 
 
-void NedRTMultiscale::initialize_and_compute_basis ()
+void QNedMultiscale::initialize_and_compute_basis ()
 {
 	TimerOutput::Scope t(computing_timer, "Nedelec-Raviart-Thomas basis initialization and computation");
 
@@ -95,7 +95,7 @@ void NedRTMultiscale::initialize_and_compute_basis ()
 }
 
 
-void NedRTMultiscale::setup_system_matrix ()
+void QNedMultiscale::setup_system_matrix ()
 {
 	TimerOutput::Scope t(computing_timer, "system and constraint setup");
 
@@ -161,7 +161,7 @@ void NedRTMultiscale::setup_system_matrix ()
 }
 
 
-void NedRTMultiscale::setup_constraints ()
+void QNedMultiscale::setup_constraints ()
 {
 	// set constraints (first hanging nodes, then flux)
 	constraints.clear ();
@@ -189,7 +189,7 @@ void NedRTMultiscale::setup_constraints ()
 }
 
 
-void NedRTMultiscale::assemble_system ()
+void QNedMultiscale::assemble_system ()
 {
 	TimerOutput::Scope t(computing_timer, "multiscale assembly");
 
@@ -274,7 +274,7 @@ void NedRTMultiscale::assemble_system ()
 }
 
 
-void NedRTMultiscale::solve_direct ()
+void QNedMultiscale::solve_direct ()
 {
 	TimerOutput::Scope t(computing_timer, " direct solver (MUMPS)");
 
@@ -286,7 +286,7 @@ void NedRTMultiscale::solve_direct ()
 }
 
 
-void NedRTMultiscale::solve_iterative ()
+void QNedMultiscale::solve_iterative ()
 {
 	inner_schur_preconditioner = std::make_shared<typename LinearSolvers::InnerPreconditioner<3>::type>();
 
@@ -411,7 +411,7 @@ void NedRTMultiscale::solve_iterative ()
 
 
 void
-NedRTMultiscale::send_global_weights_to_cell ()
+QNedMultiscale::send_global_weights_to_cell ()
 {
 	// For each cell we get dofs_per_cell values
 	const unsigned int   dofs_per_cell   = fe.dofs_per_cell;
@@ -437,7 +437,7 @@ NedRTMultiscale::send_global_weights_to_cell ()
 
 
 void
-NedRTMultiscale::output_results_coarse () const
+QNedMultiscale::output_results_coarse () const
 {
 	std::vector<std::string> solution_names(3, "sigma");
 	solution_names.emplace_back("u");
@@ -498,7 +498,7 @@ NedRTMultiscale::output_results_coarse () const
 
 
 std::vector<std::string>
-NedRTMultiscale::collect_filenames_on_mpi_process ()
+QNedMultiscale::collect_filenames_on_mpi_process ()
 {
 	std::vector<std::string> filename_list;
 
@@ -517,7 +517,7 @@ NedRTMultiscale::collect_filenames_on_mpi_process ()
 
 
 void
-NedRTMultiscale::output_results_fine ()
+QNedMultiscale::output_results_fine ()
 {
 
 	// write local fine solution
@@ -598,7 +598,7 @@ NedRTMultiscale::output_results_fine ()
 
 
 void
-NedRTMultiscale::run ()
+QNedMultiscale::run ()
 {
 
 	if (parameters.compute_solution == false)

@@ -1,4 +1,4 @@
-#include "ned_rt_eqn_boundary_vals.h"
+#include "eqn_boundary_vals.h"
 
 namespace LaplaceProblem
 {

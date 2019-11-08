@@ -86,12 +86,12 @@ namespace LaplaceProblem
 using namespace dealii;
 
 
-class NedRTMultiscale
+class QNedMultiscale
 {
 public:
-	NedRTMultiscale (Parameters::NedRT::ParametersMs &parameters_,
+	QNedMultiscale (Parameters::NedRT::ParametersMs &parameters_,
 			const std::string &parameter_filename);
-	~NedRTMultiscale ();
+	~QNedMultiscale ();
 
 	void run ();
 

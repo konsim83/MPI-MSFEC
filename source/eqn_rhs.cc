@@ -1,4 +1,4 @@
-#include "ned_rt_eqn_rhs.h"
+#include "eqn_rhs.h"
 
 namespace LaplaceProblem
 {

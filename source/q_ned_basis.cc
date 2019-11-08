@@ -1,11 +1,11 @@
-#include <ned_rt_basis.h>
+#include "q_ned_basis.h"
 
 namespace LaplaceProblem
 {
 
 using namespace dealii;
 
-NedRTBasis::NedRTBasis (const Parameters::NedRT::ParametersMs &parameters_ms,
+QNedBasis::QNedBasis (const Parameters::NedRT::ParametersMs &parameters_ms,
 		const std::string &parameter_filename_,
 		typename Triangulation<3>::active_cell_iterator& global_cell,
 		CellId first_cell,
@@ -74,7 +74,7 @@ is_copyable (true)
 
 
 
-NedRTBasis::NedRTBasis(const NedRTBasis &other)
+QNedBasis::QNedBasis(const QNedBasis &other)
 :
 // guard against copying non copyable objects
 //Assert (is_copyable,
@@ -145,7 +145,7 @@ is_copyable (other.is_copyable)
 
 
 
-NedRTBasis::~NedRTBasis ()
+QNedBasis::~QNedBasis ()
 {
 	system_matrix.clear();
 
@@ -165,7 +165,7 @@ NedRTBasis::~NedRTBasis ()
 
 
 void
-NedRTBasis::setup_grid ()
+QNedBasis::setup_grid ()
 {
 	Assert (is_set_cell_data,
 			ExcMessage ("Cell data must be set first."));
@@ -180,7 +180,7 @@ NedRTBasis::setup_grid ()
 
 
 void
-NedRTBasis::setup_system_matrix ()
+QNedBasis::setup_system_matrix ()
 {
 	dof_handler.distribute_dofs (fe);
 
@@ -231,7 +231,7 @@ NedRTBasis::setup_system_matrix ()
 
 
 void
-NedRTBasis::setup_basis_dofs_curl ()
+QNedBasis::setup_basis_dofs_curl ()
 {
 	Assert (is_set_cell_data,
 					ExcMessage ("Cell data must be set first."));
@@ -308,7 +308,7 @@ NedRTBasis::setup_basis_dofs_curl ()
 
 
 void
-NedRTBasis::setup_basis_dofs_div ()
+QNedBasis::setup_basis_dofs_div ()
 {
 	Assert (is_set_cell_data,
 					ExcMessage ("Cell data must be set first."));
@@ -380,7 +380,7 @@ NedRTBasis::setup_basis_dofs_div ()
 
 
 void
-NedRTBasis::assemble_system ()
+QNedBasis::assemble_system ()
 {
 	Timer timer;
 	if (parameters.verbose)
@@ -567,7 +567,7 @@ NedRTBasis::assemble_system ()
 
 
 void
-NedRTBasis::solve_direct (unsigned int n_basis)
+QNedBasis::solve_direct (unsigned int n_basis)
 {
 	Timer timer;
 	if (parameters.verbose)
@@ -626,7 +626,7 @@ NedRTBasis::solve_direct (unsigned int n_basis)
 
 
 void
-NedRTBasis::solve_iterative (unsigned int n_basis)
+QNedBasis::solve_iterative (unsigned int n_basis)
 {
 	Timer timer;
 	Timer inner_timer;
@@ -830,7 +830,7 @@ NedRTBasis::solve_iterative (unsigned int n_basis)
 
 
 void
-NedRTBasis::assemble_global_element_matrix()
+QNedBasis::assemble_global_element_matrix()
 {
 	// First, reset.
 	global_element_matrix = 0;
@@ -928,7 +928,7 @@ NedRTBasis::assemble_global_element_matrix()
 
 
 void
-NedRTBasis::output_basis ()
+QNedBasis::output_basis ()
 {
 	Timer timer;
 	if (parameters.verbose)
@@ -1012,7 +1012,7 @@ NedRTBasis::output_basis ()
 
 
 void
-NedRTBasis::output_global_solution_in_cell () const
+QNedBasis::output_global_solution_in_cell () const
 {
 	// Names of solution components
 	std::vector<std::string> solution_names(3, "sigma");
@@ -1049,7 +1049,7 @@ NedRTBasis::output_global_solution_in_cell () const
 
 
 void
-NedRTBasis::set_output_flag()
+QNedBasis::set_output_flag()
 {
 	parameters.set_output_flag(global_cell_id, first_cell);
 }
@@ -1057,7 +1057,7 @@ NedRTBasis::set_output_flag()
 
 
 void
-NedRTBasis::set_global_weights (const std::vector<double> &weights)
+QNedBasis::set_global_weights (const std::vector<double> &weights)
 {
 	// Copy assignment of global weights
 	global_weights = weights;
@@ -1086,7 +1086,7 @@ NedRTBasis::set_global_weights (const std::vector<double> &weights)
 
 
 void
-NedRTBasis::set_sigma_to_std ()
+QNedBasis::set_sigma_to_std ()
 {
 	// Quadrature used for projection
 	QGauss<3> 	quad_rule (3);
@@ -1130,7 +1130,7 @@ NedRTBasis::set_sigma_to_std ()
 
 
 void
-NedRTBasis::set_u_to_std ()
+QNedBasis::set_u_to_std ()
 {
 	// Quadrature used for projection
 	QGauss<3> 	quad_rule (3);
@@ -1174,7 +1174,7 @@ NedRTBasis::set_u_to_std ()
 
 
 void
-NedRTBasis::set_filename_global ()
+QNedBasis::set_filename_global ()
 {
 	parameters.filename_global += (parameters.filename_global
 			+ "." + Utilities::int_to_string(local_subdomain, 5)
@@ -1185,7 +1185,7 @@ NedRTBasis::set_filename_global ()
 
 
 const FullMatrix<double>&
-NedRTBasis::get_global_element_matrix () const
+QNedBasis::get_global_element_matrix () const
 {
 	return global_element_matrix;
 }
@@ -1193,7 +1193,7 @@ NedRTBasis::get_global_element_matrix () const
 
 
 const Vector<double>&
-NedRTBasis::get_global_element_rhs () const
+QNedBasis::get_global_element_rhs () const
 {
 	return global_element_rhs;
 }
@@ -1201,14 +1201,14 @@ NedRTBasis::get_global_element_rhs () const
 
 
 const std::string&
-NedRTBasis::get_filename_global () const
+QNedBasis::get_filename_global () const
 {
 	return parameters.filename_global;
 }
 
 
 
-void NedRTBasis::run ()
+void QNedBasis::run ()
 {
 	Timer timer;
 

@@ -75,19 +75,19 @@ namespace LaplaceProblem
 
 using namespace dealii;
 
-class NedRTBasis
+class QNedBasis
 {
 	public:
 
-		NedRTBasis () = delete;
-		NedRTBasis (const Parameters::NedRT::ParametersMs &parameters_ms,
+		QNedBasis () = delete;
+		QNedBasis (const Parameters::NedRT::ParametersMs &parameters_ms,
 					const std::string &parameter_filename,
 					typename Triangulation<3>::active_cell_iterator& global_cell,
 					CellId first_cell,
 					unsigned int local_subdomain,
 					MPI_Comm mpi_communicator);
-		NedRTBasis (const NedRTBasis &other);
-		~NedRTBasis ();
+		QNedBasis (const QNedBasis &other);
+		~QNedBasis ();
 
 		void run ();
 		void output_global_solution_in_cell () const;

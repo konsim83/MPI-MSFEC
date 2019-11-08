@@ -18,7 +18,7 @@ subsection Standard method parameters
   	end
   	
   	# name of outputfile without ending
-  	set filename output = NED-RT-Std
+  	set filename output = Q-NED-Std
 end
 
 
@@ -48,7 +48,7 @@ subsection Multiscale method parameters
   	end
   	
   	# name of outputfile without ending
-  	set filename output = NED-RT-Ms
+  	set filename output = Q-NED-Ms
 end
 
 

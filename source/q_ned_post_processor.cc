@@ -1,4 +1,4 @@
-#include "ned_rt_post_processor.h"
+#include "q_ned_post_processor.h"
 
 namespace LaplaceProblem
 {
@@ -8,7 +8,7 @@ using namespace dealii;
 /**
  * Constructor
  */
-NedRT_PostProcessor::NedRT_PostProcessor(const std::string &parameter_filename)
+QNed_PostProcessor::QNed_PostProcessor(const std::string &parameter_filename)
 :
 a_inverse(parameter_filename),
 b(parameter_filename)
@@ -16,7 +16,7 @@ b(parameter_filename)
 
 
 std::vector<std::string>
-NedRT_PostProcessor::get_names() const
+QNed_PostProcessor::get_names() const
 {
 	std::vector<std::string> solution_names(3, "curl_u");
 	solution_names.emplace_back("div_u");
@@ -27,7 +27,7 @@ NedRT_PostProcessor::get_names() const
 
 
 std::vector<DataComponentInterpretation::DataComponentInterpretation>
-NedRT_PostProcessor::get_data_component_interpretation() const
+QNed_PostProcessor::get_data_component_interpretation() const
 {
 	// curl u = A_inv*sigma
 	std::vector<DataComponentInterpretation::DataComponentInterpretation>
@@ -44,14 +44,14 @@ NedRT_PostProcessor::get_data_component_interpretation() const
 
 
 UpdateFlags
-NedRT_PostProcessor::get_needed_update_flags() const
+QNed_PostProcessor::get_needed_update_flags() const
 {
   return update_values | update_gradients | update_quadrature_points;
 }
 
 
 void
-NedRT_PostProcessor::evaluate_vector_field(
+QNed_PostProcessor::evaluate_vector_field(
 	const DataPostprocessorInputs::Vector<3> &inputs,
 	std::vector<Vector<double>> &computed_quantities) const
 {
