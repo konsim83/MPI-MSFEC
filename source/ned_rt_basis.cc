@@ -415,7 +415,7 @@ NedRTBasis::assemble_system ()
 	// Equation data
 	const RightHandSide				right_hand_side;
 	const DiffusionInverse_A		diffusion_inverse_a(parameter_filename);
-	const Diffusion_B				diffusion_b;
+	const Diffusion_B				diffusion_b(parameter_filename);
 	const ReactionRate				reaction_rate;
 
 	// allocate

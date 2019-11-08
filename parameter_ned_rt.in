@@ -66,9 +66,9 @@ subsection Equation parameters
 	end
 	
 	subsection Diffusion A
-		set frequency x = 15
-		set frequency y = 15
-		set frequency z = 15
+		set frequency x = 0
+		set frequency y = 0
+		set frequency z = 0
 		
 		# scaling parameter
 		set scale x = 1.0
@@ -76,18 +76,32 @@ subsection Equation parameters
 		set scale z = 1.0
 		
 		# Rotate with fixed Euler angles
-		set rotate = true
+		set rotate = false
 	end
 	
 	subsection Diffusion B
-		set Function constants  = 
+		# Separate constants by comma ','
+		set Function constants = k=14, scale=0.1
 		
 		# Separate vector valued expressions by ';' as ',' is used internally by the
 		# function parser.
-		set Function expression = 1
+		set Function expression = scale * (1.0 - 0.99 * sin(2*pi*k*x*))
 		
 		# The name of the variables as they will be used in the function, separated
 		# by ','.
-		set Variable names      = x,y,z
+		set Variable names      = x,y,z,t
+	end
+	
+	subsection Diffusion B inverse
+		# Separate constants by comma ','
+		set Function constants = k=14, scale=0.1
+		
+		# Separate vector valued expressions by ';' as ',' is used internally by the
+		# function parser.
+		set Function expression = 1 / (scale * (1.0 - 0.99 * sin(2*pi*k*x)))
+		
+		# The name of the variables as they will be used in the function, separated
+		# by ','.
+		set Variable names      = x,y,z,t
 	end
 end

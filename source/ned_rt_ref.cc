@@ -180,7 +180,7 @@ void NedRTStd::assemble_system ()
 	// equation data
 	const RightHandSide          		right_hand_side;
 	const DiffusionInverse_A     		a_inverse(parameter_filename);
-	const Diffusion_B     				b;
+	const Diffusion_B     				b(parameter_filename);
 	const ReactionRate           		reaction_rate;
 
 

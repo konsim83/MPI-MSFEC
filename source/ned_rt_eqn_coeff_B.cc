@@ -6,56 +6,72 @@ namespace LaplaceProblem
 using namespace dealii;
 
 /**
- * Implementation of second diffusion tensor. Must be positive definite and uniformly bounded.
- *
- * @param points
- * @param values
+ * Constructor
  */
-void
-Diffusion_B::value_list (const std::vector<Point<3> > &points,
-						 std::vector<double>    &values,
-						 const unsigned int  /* component = 0 */) const
+Diffusion_B::Diffusion_B (const std::string &parameter_filename)
+:
+Functions::ParsedFunction<3>()
 {
-	Assert (points.size() == values.size(),
-			ExcDimensionMismatch (points.size(), values.size()));
+	// A parameter handler
+	ParameterHandler prm;
 
-	for (unsigned int p=0; p<points.size(); ++p)
-	{
-		values[p] = scale * (1.0 - 0.99 * (
-									  sin(2*numbers::PI*k*(  points.at(p)(0)   ))
-//									+ cos(2*numbers::PI*k*(  points.at(p)(1)  ))
-//									+ sin(2*numbers::PI*k*(  points.at(p)(2)  ))
-									)
-					);
-	}
+	// Declare a section for the function we need
+	prm.enter_subsection("Equation parameters");
+		prm.enter_subsection("Diffusion B");
+			Functions::ParsedFunction<3>::declare_parameters(prm, 1);
+		prm.leave_subsection();
+	prm.leave_subsection();
+
+	// open file
+	std::ifstream parameter_file(parameter_filename);
+
+	// Parse an input file.
+	prm.parse_input(parameter_file,
+			/* filename = */ "generated_parameter.in",
+			/* last_line = */ "",
+			/* skip_undefined = */ true);
+
+	// Initialize the ParsedFunction object with the given file
+	prm.enter_subsection("Equation parameters");
+		prm.enter_subsection("Diffusion B");
+			this->parse_parameters(prm);
+		prm.leave_subsection();
+	prm.leave_subsection();
 }
 
 
-
 /**
- * Implementation of inverse of second diffusion tensor. Must
- * be positive definite and uniformly bounded.
- *
- * @param points
- * @param values
+ * Constructor
  */
-void
-DiffusionInverse_B::value_list (const std::vector<Point<3> > &points,
-						 std::vector<double>    &values,
-						 const unsigned int  /* component = 0 */) const
+DiffusionInverse_B::DiffusionInverse_B (const std::string &parameter_filename)
+:
+Functions::ParsedFunction<3>()
 {
-	Assert (points.size() == values.size(),
-			ExcDimensionMismatch (points.size(), values.size()));
+	// A parameter handler
+	ParameterHandler prm;
 
-	for (unsigned int p=0; p<points.size(); ++p)
-	{
-		values[p] = 1 / (scale * (1.0 - 0.99 * (
-									  sin(2*numbers::PI*k*(  points.at(p)(0)   ))
-//									+ cos(2*numbers::PI*k*(  points.at(p)(1)  ))
-//									+ sin(2*numbers::PI*k*(  points.at(p)(2)  ))
-									)
-					));
-	}
+	// Declare a section for the function we need
+	prm.enter_subsection("Equation parameters");
+		prm.enter_subsection("Diffusion B inverse");
+			Functions::ParsedFunction<3>::declare_parameters(prm, 1);
+		prm.leave_subsection();
+	prm.leave_subsection();
+
+	// open file
+	std::ifstream parameter_file(parameter_filename);
+
+	// Parse an input file.
+	prm.parse_input(parameter_file,
+			/* filename = */ "generated_parameter.in",
+			/* last_line = */ "",
+			/* skip_undefined = */ true);
+
+	// Initialize the ParsedFunction object with the given file
+	prm.enter_subsection("Equation parameters");
+		prm.enter_subsection("Diffusion B inverse");
+			this->parse_parameters(prm);
+		prm.leave_subsection();
+	prm.leave_subsection();
 }
 
 } // end namespace LaplaceProblem
