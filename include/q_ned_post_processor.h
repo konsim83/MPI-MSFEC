@@ -50,8 +50,8 @@ public:
 	virtual UpdateFlags get_needed_update_flags() const override;
 
 private:
-	const DiffusionInverse_A	a_inverse;
-	const Diffusion_B     		b;
+	const Diffusion_A	a;
+	const DiffusionInverse_B     		b_inverse;
 };
 
 } // end namespace LaplaceProblem

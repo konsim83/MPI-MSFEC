@@ -1,6 +1,6 @@
 subsection Standard method parameters
 	subsection Mesh
-  		set refinements = 3
+  		set refinements = 6
 	end
   
 	subsection Control flow
@@ -81,11 +81,11 @@ subsection Equation parameters
 	
 	subsection Diffusion B
 		# Separate constants by comma ','
-		set Function constants = k=14, scale=0.1
+		set Function constants = k=2, scale=1
 		
 		# Separate vector valued expressions by ';' as ',' is used internally by the
 		# function parser.
-		set Function expression = scale * (1.0 - 0.99 * sin(2*pi*k*x*))
+		set Function expression = scale * (1.0 - 0.99 * sin(2*pi*k*x))
 		
 		# The name of the variables as they will be used in the function, separated
 		# by ','.
@@ -94,7 +94,7 @@ subsection Equation parameters
 	
 	subsection Diffusion B inverse
 		# Separate constants by comma ','
-		set Function constants = k=14, scale=0.1
+		set Function constants = k=2, scale=1
 		
 		# Separate vector valued expressions by ';' as ',' is used internally by the
 		# function parser.

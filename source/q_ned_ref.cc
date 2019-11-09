@@ -134,7 +134,7 @@ void QNedStd::setup_constraints ()
 							ZeroFunction<3>(4),
 							constraints,
 							q1_mask);
-		VectorTools::project_boundary_values_curl_conforming_l2(dof_handler,
+		VectorTools::project_boundary_values_curl_conforming(dof_handler,
 							/*first vector component */ 1,
 							ZeroFunction<3>(4),
 							/*boundary id*/ i,

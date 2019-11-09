@@ -20,7 +20,7 @@ NedRT_PostProcessor::get_names() const
 {
 	std::vector<std::string> solution_names(3, "curl_u");
 	solution_names.emplace_back("div_u");
-	solution_names.emplace_back("B_div_u");
+	solution_names.emplace_back("minus_B_div_u");
 
 	return solution_names;
 }
@@ -91,7 +91,7 @@ NedRT_PostProcessor::evaluate_vector_field(
 		}
 
 		// Now multiply with B
-		computed_quantities[q](4) = b_values[q] * computed_quantities[q](3);
+		computed_quantities[q](4) = - b_values[q] * computed_quantities[q](3);
 	}
 }
 
