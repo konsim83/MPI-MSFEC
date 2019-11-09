@@ -88,9 +88,9 @@ QNed_PostProcessor::evaluate_vector_field(
 		computed_quantities[q](0) = - b_inverse_values[q] * inputs.solution_values[q][0];
 
 		// curl u
-		computed_quantities[q](1) = inputs.solution_gradients[q][3][2] - inputs.solution_gradients[q][2][3];
-		computed_quantities[q](2) = inputs.solution_gradients[q][3][1] - inputs.solution_gradients[q][1][3];
-		computed_quantities[q](3) = inputs.solution_gradients[q][2][1] - inputs.solution_gradients[q][1][2];
+		computed_quantities[q](1) = inputs.solution_gradients[q][2][1] - inputs.solution_gradients[q][1][2];
+		computed_quantities[q](2) = inputs.solution_gradients[q][2][0] - inputs.solution_gradients[q][0][2];
+		computed_quantities[q](3) = inputs.solution_gradients[q][1][0] - inputs.solution_gradients[q][0][1];
 
 		// A*curl u
 		for (unsigned int d = 4; d < 7; ++d)
