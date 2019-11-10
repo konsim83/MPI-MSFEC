@@ -87,10 +87,17 @@ QNed_PostProcessor::evaluate_vector_field(
 		// div u = -B*sigma
 		computed_quantities[q](0) = - b_inverse_values[q] * inputs.solution_values[q][0];
 
-		// curl u
-		computed_quantities[q](1) = inputs.solution_gradients[q][2][1] - inputs.solution_gradients[q][1][2];
-		computed_quantities[q](2) = inputs.solution_gradients[q][2][0] - inputs.solution_gradients[q][0][2];
-		computed_quantities[q](3) = inputs.solution_gradients[q][1][0] - inputs.solution_gradients[q][0][1];
+		{
+			// curl u
+			Tensor<2,3> grad_u;
+			for (unsigned int d=0; d<3; ++d)
+				grad_u[d] = inputs.solution_gradients[q][d+1]; // assign row-wise
+
+			// row index is function, column is derivative
+			computed_quantities[q](1) = grad_u[2][1] - grad_u[1][2]; // d_2u_3 - d_3u_2
+			computed_quantities[q](2) = grad_u[0][2] - grad_u[2][0]; // d_3u_1 - d_1u_3
+			computed_quantities[q](3) = grad_u[1][0] - grad_u[0][1]; // d_1u_2 - d_2u_1
+		}
 
 		// A*curl u
 		for (unsigned int d = 4; d < 7; ++d)
