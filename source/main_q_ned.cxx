@@ -81,9 +81,9 @@ int main (int argc, char* argv[]){
 			dealii::deallog.depth_console(0);
 
 			// multiscale solution
-//			Parameters::QNed::ParametersMs parameters(input_file);
-//			LaplaceProblem::QNedMultiscale mixed_laplace_global (parameters, input_file);
-//			mixed_laplace_global.run ();
+			Parameters::QNed::ParametersMs parameters(input_file);
+			LaplaceProblem::QNedMultiscale mixed_laplace_global (parameters, input_file);
+			mixed_laplace_global.run ();
 		}
     } /* try */
 

@@ -5,7 +5,7 @@ subsection Standard method parameters
   
 	subsection Control flow
 		# compute flag
-	  	set compute solution = true
+	  	set compute solution = false
 	  
 	  	# verbose
 	  	set verbose = true
@@ -30,7 +30,7 @@ subsection Multiscale method parameters
   
 	subsection Control flow
 		# compute flag
-	  	set compute solution = false
+	  	set compute solution = true
 	  
 	  	# verbose
 	  	set verbose = true
@@ -66,14 +66,14 @@ subsection Equation parameters
 	end
 	
 	subsection Diffusion A
-		set frequency x = 1
-		set frequency y = 2
-		set frequency z = 1
+		set frequency x = 4
+		set frequency y = 5
+		set frequency z = 5
 		
 		# scaling parameter
 		set scale x = 1.0
 		set scale y = 1.0
-		set scale z = .1
+		set scale z = 1.0
 		
 		# Rotate with fixed Euler angles
 		set rotate = false
@@ -81,7 +81,7 @@ subsection Equation parameters
 	
 	subsection Diffusion B
 		# Separate constants by comma ','
-		set Function constants = k=0, scale=.1
+		set Function constants = k=4, scale=.1
 		
 		# Separate vector valued expressions by ';' as ',' is used internally by the
 		# function parser.
@@ -94,7 +94,7 @@ subsection Equation parameters
 	
 	subsection Diffusion B inverse
 		# Separate constants by comma ','
-		set Function constants = k=0, scale=.1
+		set Function constants = k=4, scale=.1
 		
 		# Separate vector valued expressions by ';' as ',' is used internally by the
 		# function parser.
