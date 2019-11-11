@@ -963,9 +963,11 @@ NedRTBasis::output_basis ()
 		NedRT_PostProcessor postprocessor(parameter_filename);
 
 		DataOut<3> data_out;
-		data_out.add_data_vector (dof_handler,
-									*basis_ptr,
+		data_out.attach_dof_handler(dof_handler);
+
+		data_out.add_data_vector (*basis_ptr,
 									solution_names,
+									DataOut<3>::type_dof_data,
 									interpretation);
 		data_out.add_data_vector(*basis_ptr, postprocessor);
 

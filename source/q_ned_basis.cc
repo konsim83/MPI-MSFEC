@@ -50,7 +50,7 @@ is_copyable (true)
 		 vertex_n<GeometryInfo<3>::vertices_per_cell;
 		 ++vertex_n)
 	{
-		corner_points.at(vertex_n) = global_cell_it->vertex(vertex_n);
+		corner_points[vertex_n] = global_cell_it->vertex(vertex_n);
 	}
 
 	volume_measure = global_cell_it->measure ();
@@ -59,14 +59,14 @@ is_copyable (true)
 			j_face<GeometryInfo<3>::faces_per_cell;
 			++j_face)
 	{
-		face_measure.at(j_face) = global_cell_it->face(j_face)->measure ();
+		face_measure[j_face] = global_cell_it->face(j_face)->measure ();
 	}
 
 	for (unsigned int j_egde=0;
 			j_egde<GeometryInfo<3>::lines_per_cell;
 			++j_egde)
 	{
-		edge_measure.at(j_egde) = global_cell_it->line(j_egde)->measure ();
+		edge_measure[j_egde] = global_cell_it->line(j_egde)->measure ();
 	}
 
 	is_set_cell_data = true;
@@ -121,7 +121,7 @@ is_copyable (other.is_copyable)
 		 vertex_n<GeometryInfo<3>::vertices_per_cell;
 		 ++vertex_n)
 	{
-		corner_points.at(vertex_n) = global_cell_it->vertex(vertex_n);
+		corner_points[vertex_n] = global_cell_it->vertex(vertex_n);
 	}
 
 	volume_measure = global_cell_it->measure ();
@@ -130,14 +130,14 @@ is_copyable (other.is_copyable)
 			j_face<GeometryInfo<3>::faces_per_cell;
 			++j_face)
 	{
-		face_measure.at(j_face) = global_cell_it->face(j_face)->measure ();
+		face_measure[j_face] = global_cell_it->face(j_face)->measure ();
 	}
 
 	for (unsigned int j_egde=0;
 			j_egde<GeometryInfo<3>::lines_per_cell;
 			++j_egde)
 	{
-		edge_measure.at(j_egde) = global_cell_it->line(j_egde)->measure ();
+		edge_measure[j_egde] = global_cell_it->line(j_egde)->measure ();
 	}
 
 	is_set_cell_data = true;
@@ -269,9 +269,9 @@ QNedBasis::setup_basis_dofs_h1 ()
 	for (unsigned int n_basis=0; n_basis<basis_h1_v.size(); ++n_basis)
 	{
 		// set constraints (first hanging nodes, then flux)
-		constraints_h1_v.at(n_basis).clear ();
+		constraints_h1_v[n_basis].clear ();
 
-		DoFTools::make_hanging_node_constraints (dof_handler, constraints_h1_v.at(n_basis));
+		DoFTools::make_hanging_node_constraints (dof_handler, constraints_h1_v[n_basis]);
 
 		std_shape_function_h1.set_shape_fun_index(n_basis);
 		std_shape_function_h1_grad.set_shape_fun_index(n_basis);
@@ -283,13 +283,13 @@ QNedBasis::setup_basis_dofs_h1 ()
 			VectorTools::interpolate_boundary_values(dof_handler,
 						/*boundary id*/ i,
 						std_shape_function,
-						constraints_h1_v.at(n_basis),
+						constraints_h1_v[n_basis],
 						q1_mask);
 			VectorTools::project_boundary_values_curl_conforming(dof_handler,
 						/*first vector component */ 1,
 						std_shape_function,
 						/*boundary id*/ i,
-						constraints_h1_v.at(n_basis));
+						constraints_h1_v[n_basis]);
 		}
 
 		constraints_h1_v[n_basis].close ();
@@ -336,8 +336,10 @@ QNedBasis::setup_basis_dofs_curl ()
 			std_shape_function_ned (fe.base_element(1),
 					global_cell_it,
 					/*verbose =*/ false);
+	ZeroFunction<3> 	zero_fun(1); // need this to keep pointer valid
+
 	ShapeFun::ShapeFunctionConcatinateVector<3>
-		std_shape_function(ZeroFunction<3>(1), std_shape_function_ned);
+		std_shape_function(zero_fun, std_shape_function_ned);
 
 	std::vector<types::global_dof_index> dofs_per_block (2);
 	DoFTools::count_dofs_per_block (dof_handler, dofs_per_block);
@@ -349,9 +351,9 @@ QNedBasis::setup_basis_dofs_curl ()
 	for (unsigned int n_basis=0; n_basis<basis_curl_v.size(); ++n_basis)
 	{
 		// set constraints (first hanging nodes, then curl)
-		constraints_curl_v.at(n_basis).clear ();
+		constraints_curl_v[n_basis].clear ();
 
-		DoFTools::make_hanging_node_constraints (dof_handler, constraints_curl_v.at(n_basis));
+		DoFTools::make_hanging_node_constraints (dof_handler, constraints_curl_v[n_basis]);
 
 		std_shape_function_ned.set_shape_fun_index(n_basis);
 
@@ -359,20 +361,22 @@ QNedBasis::setup_basis_dofs_curl ()
 		ComponentMask q1_mask = fe.component_mask (q1);
 
 		for (unsigned int i=0;
-				i<GeometryInfo<3>::lines_per_cell;
+				i<GeometryInfo<3>::faces_per_cell;
 				++i)
 		{
 			VectorTools::interpolate_boundary_values(dof_handler,
 								/*boundary id*/ i,
 								ZeroFunction<3>(4),
-								constraints_curl_v.at(n_basis),
+								constraints_curl_v[n_basis],
 								q1_mask);
 			VectorTools::project_boundary_values_curl_conforming(dof_handler,
 								/*first vector component */ 1,
 								std_shape_function,
 								/*boundary id*/ i,
-								constraints_curl_v.at(n_basis));
+								constraints_curl_v[n_basis]);
 		}
+
+		constraints_curl_v[n_basis].close();
 	}
 
 //	DoFTools::make_sparsity_pattern(dof_handler,
@@ -854,7 +858,7 @@ QNedBasis::assemble_global_element_matrix()
 	global_element_matrix = 0;
 
 	// Get lengths of tmp vectors for assembly
-	std::vector<types::global_dof_index> dofs_per_component (3+3);
+	std::vector<types::global_dof_index> dofs_per_component (1+3);
 		DoFTools::count_dofs_per_component (dof_handler, dofs_per_component);
 		const unsigned int 	n_sigma = dofs_per_component[0],
 							n_u = dofs_per_component[3];
@@ -877,12 +881,12 @@ QNedBasis::assemble_global_element_matrix()
 		if (i_test<GeometryInfo<3>::vertices_per_cell)
 		{
 			block_row = 0;
-			test_vec_ptr = &(basis_h1_v.at(i_test));
+			test_vec_ptr = &(basis_h1_v[i_test]);
 		}
 		else
 		{
 			block_row = 1;
-			test_vec_ptr = &(basis_curl_v.at(i_test-offset_index));
+			test_vec_ptr = &(basis_curl_v[i_test-offset_index]);
 		}
 
 		for (unsigned int i_trial=0;
@@ -892,12 +896,12 @@ QNedBasis::assemble_global_element_matrix()
 			if (i_trial<GeometryInfo<3>::vertices_per_cell)
 			{
 				block_col = 0;
-				trial_vec_ptr = &(basis_h1_v.at(i_trial));
+				trial_vec_ptr = &(basis_h1_v[i_trial]);
 			}
 			else
 			{
 				block_col = 1;
-				trial_vec_ptr = &(basis_curl_v.at(i_trial-offset_index));
+				trial_vec_ptr = &(basis_curl_v[i_trial-offset_index]);
 			}
 
 			if (block_row==0) /* This means we are testing with sigma. */
@@ -962,9 +966,9 @@ QNedBasis::output_basis ()
 	{
 		BlockVector<double> *basis_ptr = NULL;
 		if (n_basis<GeometryInfo<3>::vertices_per_cell)
-			basis_ptr = &(basis_h1_v.at(n_basis));
+			basis_ptr = &(basis_h1_v[n_basis]);
 		else
-			basis_ptr = &(basis_curl_v.at(n_basis - GeometryInfo<3>::vertices_per_cell));
+			basis_ptr = &(basis_curl_v[n_basis - GeometryInfo<3>::vertices_per_cell]);
 
 		std::vector<std::string> solution_names(1, "sigma");
 		solution_names.push_back ("u");
@@ -981,9 +985,11 @@ QNedBasis::output_basis ()
 		QNed_PostProcessor postprocessor(parameter_filename);
 
 		DataOut<3> data_out;
-		data_out.add_data_vector (dof_handler,
-									*basis_ptr,
+		data_out.attach_dof_handler(dof_handler);
+
+		data_out.add_data_vector (*basis_ptr,
 									solution_names,
+									DataOut<3>::type_dof_data,
 									interpretation);
 		data_out.add_data_vector(*basis_ptr, postprocessor);
 
@@ -1124,8 +1130,8 @@ QNedBasis::set_sigma_to_std ()
 
 	for (unsigned int i=0; i<basis_h1_v.size(); ++i)
 	{
-		basis_h1_v.at(i).block(0).reinit (dof_handler_fake.n_dofs());
-		basis_h1_v.at(i).block(1) = 0;
+		basis_h1_v[i].block(0).reinit (dof_handler_fake.n_dofs());
+		basis_h1_v[i].block(1) = 0;
 
 		std_shape_function_h1.set_shape_fun_index (i);
 
@@ -1133,7 +1139,7 @@ QNedBasis::set_sigma_to_std ()
 				constraints,
 				quad_rule,
 				std_shape_function_h1,
-				basis_h1_v.at(i).block(0));
+				basis_h1_v[i].block(0));
 	}
 
 	dof_handler_fake.clear ();
@@ -1168,8 +1174,8 @@ QNedBasis::set_u_to_std ()
 
 	for (unsigned int i=0; i<basis_curl_v.size(); ++i)
 	{
-		basis_curl_v.at(i).block(0) = 0;
-		basis_curl_v.at(i).block(1).reinit (dof_handler_fake.n_dofs());
+		basis_curl_v[i].block(0) = 0;
+		basis_curl_v[i].block(1).reinit (dof_handler_fake.n_dofs());
 
 		std_shape_function_curl.set_shape_fun_index (i);
 
@@ -1177,7 +1183,7 @@ QNedBasis::set_u_to_std ()
 				constraints,
 				quad_rule,
 				std_shape_function_curl,
-				basis_curl_v.at(i).block(1));
+				basis_curl_v[i].block(1));
 	}
 
 	dof_handler_fake.clear ();

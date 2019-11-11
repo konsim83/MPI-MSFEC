@@ -1,6 +1,6 @@
 subsection Standard method parameters
 	subsection Mesh
-  		set refinements = 7
+  		set refinements = 6
 	end
   
 	subsection Control flow
@@ -25,7 +25,7 @@ end
 subsection Multiscale method parameters
 	subsection Mesh
   		set global refinements = 2
-  		set local refinements = 2
+  		set local refinements = 3
 	end
   
 	subsection Control flow
@@ -66,9 +66,9 @@ subsection Equation parameters
 	end
 	
 	subsection Diffusion A
-		set frequency x = 0
-		set frequency y = 0
-		set frequency z = 0
+		set frequency x = 4
+		set frequency y = 5
+		set frequency z = 5
 		
 		# scaling parameter
 		set scale x = 1.0
@@ -81,7 +81,7 @@ subsection Equation parameters
 	
 	subsection Diffusion B
 		# Separate constants by comma ','
-		set Function constants = k=3, scale=.1
+		set Function constants = k=4, scale=.1
 		
 		# Separate vector valued expressions by ';' as ',' is used internally by the
 		# function parser.
@@ -94,7 +94,7 @@ subsection Equation parameters
 	
 	subsection Diffusion B inverse
 		# Separate constants by comma ','
-		set Function constants = k=3, scale=.1
+		set Function constants = k=4, scale=.1
 		
 		# Separate vector valued expressions by ';' as ',' is used internally by the
 		# function parser.
