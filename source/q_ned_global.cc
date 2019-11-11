@@ -5,7 +5,7 @@ namespace LaplaceProblem
 
 using namespace dealii;
 
-QNedMultiscale::QNedMultiscale (Parameters::NedRT::ParametersMs &parameters_,
+QNedMultiscale::QNedMultiscale (Parameters::QNed::ParametersMs &parameters_,
 		const std::string &parameter_filename_)
 :
 mpi_communicator(MPI_COMM_WORLD),
@@ -15,8 +15,8 @@ triangulation(mpi_communicator,
 			  typename Triangulation<3>::MeshSmoothing(
 				Triangulation<3>::smoothing_on_refinement |
 				Triangulation<3>::smoothing_on_coarsening)),
-fe (FE_Nedelec<3>(0), 1,
-	FE_RaviartThomas<3>(0), 1),
+fe (FE_Q<3>(1), 1,
+	FE_Nedelec<3>(0), 1),
 dof_handler (triangulation),
 pcout(std::cout, (Utilities::MPI::this_mpi_process(MPI_COMM_WORLD) == 0)),
 computing_timer(mpi_communicator,
@@ -51,7 +51,7 @@ void QNedMultiscale::setup_grid ()
 
 void QNedMultiscale::initialize_and_compute_basis ()
 {
-	TimerOutput::Scope t(computing_timer, "Nedelec-Raviart-Thomas basis initialization and computation");
+	TimerOutput::Scope t(computing_timer, "Q1-Nedelec basis initialization and computation");
 
 	typename Triangulation<3>::active_cell_iterator
 									cell = dof_handler.begin_active(),
@@ -62,7 +62,7 @@ void QNedMultiscale::initialize_and_compute_basis ()
 	{
 		if (cell->is_locally_owned())
 		{
-			NedRTBasis current_cell_problem(parameters,
+			QNedBasis current_cell_problem(parameters,
 					parameter_filename,
 					cell,
 					first_cell,
@@ -70,7 +70,7 @@ void QNedMultiscale::initialize_and_compute_basis ()
 					mpi_communicator);
 			CellId current_cell_id(cell->id());
 
-			std::pair<typename std::map<CellId, NedRTBasis>::iterator, bool > result;
+			std::pair<typename std::map<CellId, QNedBasis>::iterator, bool > result;
 			result = cell_basis_map.insert(std::make_pair(cell->id(), current_cell_problem));
 
 			Assert(result.second,
@@ -85,7 +85,7 @@ void QNedMultiscale::initialize_and_compute_basis ()
 	 * We need to compute them on each node and do so in
 	 * a locally threaded way.
 	 */
-	typename std::map<CellId, NedRTBasis>::iterator
+	typename std::map<CellId, QNedBasis>::iterator
 												it_basis = cell_basis_map.begin(),
 												it_endbasis = cell_basis_map.end();
 	for (; it_basis != it_endbasis; ++it_basis)
@@ -169,21 +169,23 @@ void QNedMultiscale::setup_constraints ()
 
 	DoFTools::make_hanging_node_constraints (dof_handler, constraints);
 
-//	for (unsigned int i=0;
-//			i<GeometryInfo<3>::faces_per_cell;
-//			++i)
-//	{
-//		VectorTools::project_boundary_values_curl_conforming(dof_handler,
-//					/*first vector component */ 0,
-//					ZeroFunction<3>(6),
-//					/*boundary id*/ i,
-//					constraints);
-//		VectorTools::project_boundary_values_div_conforming(dof_handler,
-//							/*first vector component */ 3,
-//							ZeroFunction<3>(6),
-//							/*boundary id*/ i,
-//							constraints);
-//	}
+	FEValuesExtractors::Scalar q1 (0);
+	ComponentMask q1_mask = fe.component_mask (q1);
+	for (unsigned int i=0;
+			i<GeometryInfo<3>::faces_per_cell;
+			++i)
+	{
+		VectorTools::interpolate_boundary_values(dof_handler,
+							/*boundary id*/ i,
+							ZeroFunction<3>(4),
+							constraints,
+							q1_mask);
+		VectorTools::project_boundary_values_curl_conforming(dof_handler,
+							/*first vector component */ 1,
+							ZeroFunction<3>(4),
+							/*boundary id*/ i,
+							constraints);
+	}
 
 	constraints.close();
 }
@@ -196,12 +198,12 @@ void QNedMultiscale::assemble_system ()
 	system_matrix         = 0;
 	system_rhs            = 0;
 
-	QGauss<2> 	face_quadrature_formula(3);
+//	QGauss<2> 	face_quadrature_formula(3);
 
 	// Get relevant quantities to be updated from finite element
-	FEFaceValues<3> fe_face_values (fe, face_quadrature_formula,
-									  update_values    | update_normal_vectors |
-									  update_quadrature_points  | update_JxW_values);
+//	FEFaceValues<3> fe_face_values (fe, face_quadrature_formula,
+//									  update_values    | update_normal_vectors |
+//									  update_quadrature_points  | update_JxW_values);
 
 	// Define some abbreviations
 	const unsigned int   dofs_per_cell   = fe.dofs_per_cell;
@@ -224,7 +226,7 @@ void QNedMultiscale::assemble_system ()
 	{
 		if (cell->is_locally_owned())
 		{
-			typename std::map<CellId, NedRTBasis>::iterator it_basis =
+			typename std::map<CellId, QNedBasis>::iterator it_basis =
 					cell_basis_map.find(cell->id());
 
 			local_matrix = 0;
@@ -429,7 +431,7 @@ QNedMultiscale::send_global_weights_to_cell ()
 			std::vector<double> extracted_weights (dofs_per_cell, 0);
 			locally_relevant_solution.extract_subvector_to (local_dof_indices, extracted_weights);
 
-			typename std::map<CellId, NedRTBasis>::iterator it_basis = cell_basis_map.find(cell->id());
+			typename std::map<CellId, QNedBasis>::iterator it_basis = cell_basis_map.find(cell->id());
 			(it_basis->second).set_global_weights (extracted_weights);
 		}
 	} // end ++cell
@@ -439,15 +441,18 @@ QNedMultiscale::send_global_weights_to_cell ()
 void
 QNedMultiscale::output_results_coarse () const
 {
-	std::vector<std::string> solution_names(3, "sigma");
+	std::vector<std::string> solution_names(1, "sigma");
 	solution_names.emplace_back("u");
 	solution_names.emplace_back("u");
 	solution_names.emplace_back("u");
 
 	std::vector<DataComponentInterpretation::DataComponentInterpretation>
-		data_component_interpretation(3+3, DataComponentInterpretation::component_is_part_of_vector);
+		data_component_interpretation (1, DataComponentInterpretation::component_is_scalar);
+	data_component_interpretation.push_back (DataComponentInterpretation::component_is_part_of_vector);
+	data_component_interpretation.push_back (DataComponentInterpretation::component_is_part_of_vector);
+	data_component_interpretation.push_back (DataComponentInterpretation::component_is_part_of_vector);
 
-	NedRT_PostProcessor postprocessor(parameter_filename);
+	QNed_PostProcessor postprocessor(parameter_filename);
 
 	DataOut<3> data_out;
 	data_out.attach_dof_handler(dof_handler);
@@ -502,7 +507,7 @@ QNedMultiscale::collect_filenames_on_mpi_process ()
 {
 	std::vector<std::string> filename_list;
 
-	typename std::map<CellId, NedRTBasis>::iterator
+	typename std::map<CellId, QNedBasis>::iterator
 		it_basis = cell_basis_map.begin(),
 		it_endbasis = cell_basis_map.end();
 
@@ -521,7 +526,7 @@ QNedMultiscale::output_results_fine ()
 {
 
 	// write local fine solution
-	typename std::map<CellId, NedRTBasis>::iterator
+	typename std::map<CellId, QNedBasis>::iterator
 		it_basis = cell_basis_map.begin(),
 		it_endbasis = cell_basis_map.end();
 
@@ -544,28 +549,24 @@ QNedMultiscale::output_results_fine ()
 	// write a pvtu record
 	if (Utilities::MPI::this_mpi_process(mpi_communicator) == 0)
 	{
-		std::vector<std::string> solution_names(3, "sigma");
+		std::vector<std::string> solution_names(1, "sigma");
 		solution_names.push_back ("u");
 		solution_names.push_back ("u");
 		solution_names.push_back ("u");
-		solution_names.push_back ("curl_u");
-		solution_names.push_back ("curl_u");
-		solution_names.push_back ("curl_u");
 		solution_names.emplace_back("div_u");
-		solution_names.emplace_back("B_div_u");
+		solution_names.push_back ("curl_u");
+		solution_names.push_back ("curl_u");
+		solution_names.push_back ("curl_u");
+		solution_names.push_back ("A_curl_u");
+		solution_names.push_back ("A_curl_u");
+		solution_names.push_back ("A_curl_u");
 
 		// Interpretation of solution components
 		// sigma
 		std::vector<DataComponentInterpretation::DataComponentInterpretation>
-			interpretation (3,
-						DataComponentInterpretation::component_is_part_of_vector);
+			interpretation (1, DataComponentInterpretation::component_is_scalar);
 
 		// u
-		interpretation.push_back (DataComponentInterpretation::component_is_part_of_vector);
-		interpretation.push_back (DataComponentInterpretation::component_is_part_of_vector);
-		interpretation.push_back (DataComponentInterpretation::component_is_part_of_vector);
-
-		// curl u
 		interpretation.push_back (DataComponentInterpretation::component_is_part_of_vector);
 		interpretation.push_back (DataComponentInterpretation::component_is_part_of_vector);
 		interpretation.push_back (DataComponentInterpretation::component_is_part_of_vector);
@@ -573,8 +574,15 @@ QNedMultiscale::output_results_fine ()
 		// div u
 		interpretation.push_back(DataComponentInterpretation::component_is_scalar);
 
-		// B div u
-		interpretation.push_back(DataComponentInterpretation::component_is_scalar);
+		// curl u
+		interpretation.push_back (DataComponentInterpretation::component_is_part_of_vector);
+		interpretation.push_back (DataComponentInterpretation::component_is_part_of_vector);
+		interpretation.push_back (DataComponentInterpretation::component_is_part_of_vector);
+
+		// A curl u
+		interpretation.push_back (DataComponentInterpretation::component_is_part_of_vector);
+		interpretation.push_back (DataComponentInterpretation::component_is_part_of_vector);
+		interpretation.push_back (DataComponentInterpretation::component_is_part_of_vector);
 
 		DataOut<3> data_out;
 //		data_out.attach_dof_handler (dof_handler);

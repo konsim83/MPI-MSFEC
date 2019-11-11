@@ -940,67 +940,60 @@ NedRTBasis::output_basis ()
 		timer.restart ();
 	}
 
-	BlockVector<double> *basis_ptr = NULL;
-	DataOut<3> data_out;
-
-	for (unsigned int n_basis=0;
-					n_basis<length_system_basis;
-					++n_basis)
+	for (unsigned int n_basis = 0; n_basis < length_system_basis; ++n_basis)
 	{
+		BlockVector<double> *basis_ptr = NULL;
+		if (n_basis<GeometryInfo<3>::lines_per_cell)
+			basis_ptr = &(basis_curl_v.at(n_basis));
+		else
+			basis_ptr = &(basis_div_v.at(n_basis - GeometryInfo<3>::lines_per_cell));
+
+		std::vector<std::string> solution_names(3, "sigma");
+		solution_names.push_back ("u");
+		solution_names.push_back ("u");
+		solution_names.push_back ("u");
+
+		std::vector<DataComponentInterpretation::DataComponentInterpretation>
+		interpretation (3,
+						DataComponentInterpretation::component_is_part_of_vector);
+		interpretation.push_back (DataComponentInterpretation::component_is_part_of_vector);
+		interpretation.push_back (DataComponentInterpretation::component_is_part_of_vector);
+		interpretation.push_back (DataComponentInterpretation::component_is_part_of_vector);
+
+		NedRT_PostProcessor postprocessor(parameter_filename);
+
+		DataOut<3> data_out;
+		data_out.add_data_vector (dof_handler,
+									*basis_ptr,
+									solution_names,
+									interpretation);
+		data_out.add_data_vector(*basis_ptr, postprocessor);
+
+		data_out.build_patches (parameters.degree+1);
+
+		// filename
+		std::string filename = "basis_ned-rt";
 		if (n_basis<GeometryInfo<3>::lines_per_cell)
 		{
-			basis_ptr = &(basis_curl_v[n_basis]);
-
-			std::vector<std::string> solution_names(3, "sigma_" + Utilities::int_to_string(n_basis,2));
-			solution_names.push_back ("u_aux_" + Utilities::int_to_string(n_basis,2));
-			solution_names.push_back ("u_aux_" + Utilities::int_to_string(n_basis,2));
-			solution_names.push_back ("u_aux_" + Utilities::int_to_string(n_basis,2));
-
-			std::vector<DataComponentInterpretation::DataComponentInterpretation>
-				interpretation (3,
-							DataComponentInterpretation::component_is_part_of_vector);
-			interpretation.push_back (DataComponentInterpretation::component_is_part_of_vector);
-			interpretation.push_back (DataComponentInterpretation::component_is_part_of_vector);
-			interpretation.push_back (DataComponentInterpretation::component_is_part_of_vector);
-
-			data_out.add_data_vector (dof_handler,
-										*basis_ptr,
-										solution_names,
-										interpretation);
+			filename += ".curl";
+			filename += "." + Utilities::int_to_string(local_subdomain, 5);
+			filename += ".cell-" + global_cell_id.to_string();
+			filename += ".index-";
+			filename += Utilities::int_to_string (n_basis, 2);
 		}
 		else
 		{
-			basis_ptr = &(basis_div_v.at(n_basis - GeometryInfo<3>::lines_per_cell));
-
-			std::vector<std::string> solution_names(3, "sigma_aux_" + Utilities::int_to_string(n_basis,2));
-			solution_names.push_back ("u_" + Utilities::int_to_string(n_basis,2));
-			solution_names.push_back ("u_" + Utilities::int_to_string(n_basis,2));
-			solution_names.push_back ("u_" + Utilities::int_to_string(n_basis,2));
-
-			std::vector<DataComponentInterpretation::DataComponentInterpretation>
-				interpretation (3,
-							DataComponentInterpretation::component_is_part_of_vector);
-			interpretation.push_back (DataComponentInterpretation::component_is_part_of_vector);
-			interpretation.push_back (DataComponentInterpretation::component_is_part_of_vector);
-			interpretation.push_back (DataComponentInterpretation::component_is_part_of_vector);
-
-			data_out.add_data_vector (dof_handler,
-										*basis_ptr,
-										solution_names,
-										interpretation);
+			filename += ".div";
+			filename += "." + Utilities::int_to_string(local_subdomain, 5);
+			filename += ".cell-" + global_cell_id.to_string();
+			filename += ".index-";
+			filename += Utilities::int_to_string (n_basis - GeometryInfo<3>::lines_per_cell, 2);
 		}
+		filename += ".vtu";
+
+		std::ofstream output (filename);
+		data_out.write_vtu (output);
 	}
-
-	data_out.build_patches (parameters.degree + 1);
-
-	std::string filename = "basis";
-
-	filename += "." + Utilities::int_to_string(local_subdomain, 5);
-	filename += ".cell-" + global_cell_id.to_string();
-	filename += ".vtu";
-
-	std::ofstream output (filename);
-	data_out.write_vtu (output);
 
 	if (parameters.verbose)
 	{

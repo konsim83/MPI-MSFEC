@@ -5,7 +5,7 @@ namespace LaplaceProblem
 
 using namespace dealii;
 
-QNedBasis::QNedBasis (const Parameters::NedRT::ParametersMs &parameters_ms,
+QNedBasis::QNedBasis (const Parameters::QNed::ParametersMs &parameters_ms,
 		const std::string &parameter_filename_,
 		typename Triangulation<3>::active_cell_iterator& global_cell,
 		CellId first_cell,
@@ -16,16 +16,16 @@ mpi_communicator(mpi_communicator),
 parameters(parameters_ms),
 parameter_filename(parameter_filename_),
 triangulation(),
-fe (FE_Nedelec<3>(parameters.degree), 1,
-		FE_RaviartThomas<3>(parameters.degree), 1),
+fe (FE_Q<3>(parameters.degree+1), 1,
+		FE_Nedelec<3>(parameters.degree), 1),
 dof_handler (triangulation),
 constraints_curl_v(GeometryInfo<3>::lines_per_cell),
-constraints_div_v(GeometryInfo<3>::faces_per_cell),
+constraints_h1_v(GeometryInfo<3>::vertices_per_cell),
 sparsity_pattern(),
 basis_curl_v(GeometryInfo<3>::lines_per_cell),
-basis_div_v(GeometryInfo<3>::faces_per_cell),
+basis_h1_v(GeometryInfo<3>::vertices_per_cell),
 system_rhs_curl_v(GeometryInfo<3>::lines_per_cell),
-system_rhs_div_v(GeometryInfo<3>::faces_per_cell),
+system_rhs_h1_v(GeometryInfo<3>::vertices_per_cell),
 global_element_matrix(fe.dofs_per_cell,
 		fe.dofs_per_cell),
 global_element_rhs(fe.dofs_per_cell),
@@ -40,7 +40,7 @@ edge_measure(GeometryInfo<3>::lines_per_cell, 0),
 corner_points(GeometryInfo<3>::vertices_per_cell,
 		Point<3>()),
 length_system_basis(GeometryInfo<3>::lines_per_cell
-		+ GeometryInfo<3>::faces_per_cell),
+		+ GeometryInfo<3>::vertices_per_cell),
 is_built_global_element_matrix(false),
 is_set_global_weights(false),
 is_set_cell_data(false),
@@ -83,18 +83,18 @@ mpi_communicator (other.mpi_communicator),
 parameters (other.parameters),
 parameter_filename (other.parameter_filename),
 triangulation (), // must be constructed deliberately, but is empty on copying anyway
-fe (FE_Nedelec<3>(parameters.degree), 1,
-		FE_RaviartThomas<3>(parameters.degree), 1),
+fe (FE_Q<3>(parameters.degree+1), 1,
+		FE_Nedelec<3>(parameters.degree), 1),
 dof_handler (triangulation),
 constraints_curl_v (other.constraints_curl_v),
-constraints_div_v (other.constraints_div_v),
+constraints_h1_v (other.constraints_h1_v),
 sparsity_pattern (other.sparsity_pattern), // only possible if object is empty
 assembled_matrix (other.assembled_matrix), // only possible if object is empty
 system_matrix (other.system_matrix), // only possible if object is empty
 basis_curl_v (other.basis_curl_v),
-basis_div_v (other.basis_div_v),
+basis_h1_v (other.basis_h1_v),
 system_rhs_curl_v (other.system_rhs_curl_v),
-system_rhs_div_v (other.system_rhs_div_v),
+system_rhs_h1_v (other.system_rhs_h1_v),
 global_rhs (other.global_rhs),
 global_element_matrix (other.global_element_matrix),
 global_element_rhs (other.global_element_rhs),
@@ -154,9 +154,9 @@ QNedBasis::~QNedBasis ()
 		constraints_curl_v[n_basis].clear();
 	}
 
-	for (unsigned int n_basis=0; n_basis<basis_div_v.size(); ++n_basis)
+	for (unsigned int n_basis=0; n_basis<basis_h1_v.size(); ++n_basis)
 	{
-		constraints_div_v[n_basis].clear();
+		constraints_h1_v[n_basis].clear();
 	}
 
 	dof_handler.clear ();
@@ -231,6 +231,93 @@ QNedBasis::setup_system_matrix ()
 
 
 void
+QNedBasis::setup_basis_dofs_h1 ()
+{
+	Assert (is_set_cell_data,
+					ExcMessage ("Cell data must be set first."));
+
+	Timer timer;
+
+	if (parameters.verbose)
+	{
+		std::cout << "	Setting up dofs for H(div) part.....";
+
+		timer.restart ();
+	}
+
+	ShapeFun::ShapeFunctionScalar<3>
+			std_shape_function_h1 (fe.base_element(0),
+					global_cell_it,
+					/*verbose =*/ false);
+	ShapeFun::ShapeFunctionScalarGrad<3>
+				std_shape_function_h1_grad (fe.base_element(0),
+						global_cell_it,
+						/*verbose =*/ false);
+
+	ShapeFun::ShapeFunctionConcatinateVector<3>
+		std_shape_function(std_shape_function_h1, std_shape_function_h1_grad);
+
+	FEValuesExtractors::Scalar q1 (0);
+	ComponentMask q1_mask = fe.component_mask (q1);
+
+	std::vector<types::global_dof_index> dofs_per_block (2);
+	DoFTools::count_dofs_per_block (dof_handler, dofs_per_block);
+
+	// Allocate memory
+//	BlockDynamicSparsityPattern dsp(dofs_per_block, dofs_per_block);
+
+	for (unsigned int n_basis=0; n_basis<basis_h1_v.size(); ++n_basis)
+	{
+		// set constraints (first hanging nodes, then flux)
+		constraints_h1_v.at(n_basis).clear ();
+
+		DoFTools::make_hanging_node_constraints (dof_handler, constraints_h1_v.at(n_basis));
+
+		std_shape_function_h1.set_shape_fun_index(n_basis);
+		std_shape_function_h1_grad.set_shape_fun_index(n_basis);
+
+		for (unsigned int i=0;
+				i<GeometryInfo<3>::faces_per_cell;
+				++i)
+		{
+			VectorTools::interpolate_boundary_values(dof_handler,
+						/*boundary id*/ i,
+						std_shape_function,
+						constraints_h1_v.at(n_basis),
+						q1_mask);
+			VectorTools::project_boundary_values_curl_conforming(dof_handler,
+						/*first vector component */ 1,
+						std_shape_function,
+						/*boundary id*/ i,
+						constraints_h1_v.at(n_basis));
+		}
+
+		constraints_h1_v[n_basis].close ();
+	}
+
+//	DoFTools::make_sparsity_pattern(dof_handler,
+//									  dsp,
+//									  constraints_h1_v[0], // do not write into constraint dofs (same dofs for all problems)
+//									  /*keep_constrained_dofs = */ true); // must condense constraints later
+
+//	sparsity_pattern_div.copy_from(dsp);
+
+	for (unsigned int n_basis=0; n_basis<basis_h1_v.size(); ++n_basis)
+	{
+		basis_h1_v[n_basis].reinit (dofs_per_block);
+		system_rhs_h1_v[n_basis].reinit (dofs_per_block);
+	}
+
+	if (parameters.verbose)
+	{
+		timer.stop ();
+		std::cout << "done in   " << timer.cpu_time() << "   seconds." << std::endl;
+	}
+}
+
+
+
+void
 QNedBasis::setup_basis_dofs_curl ()
 {
 	Assert (is_set_cell_data,
@@ -246,13 +333,11 @@ QNedBasis::setup_basis_dofs_curl ()
 	}
 
 	ShapeFun::ShapeFunctionVector<3>
-			std_shape_function_Ned (fe.base_element(0),
+			std_shape_function_ned (fe.base_element(1),
 					global_cell_it,
 					/*verbose =*/ false);
-	ShapeFun::ShapeFunctionVectorCurl<3>
-			std_shape_function_Ned_curl (fe.base_element(0),
-					global_cell_it,
-					/*verbose =*/ false);
+	ShapeFun::ShapeFunctionConcatinateVector<3>
+		std_shape_function(ZeroFunction<3>(1), std_shape_function_ned);
 
 	std::vector<types::global_dof_index> dofs_per_block (2);
 	DoFTools::count_dofs_per_block (dof_handler, dofs_per_block);
@@ -263,26 +348,31 @@ QNedBasis::setup_basis_dofs_curl ()
 	// set constraints (first hanging nodes, then boundary conditions)
 	for (unsigned int n_basis=0; n_basis<basis_curl_v.size(); ++n_basis)
 	{
-		std_shape_function_Ned.set_shape_fun_index(n_basis);
-		std_shape_function_Ned_curl.set_shape_fun_index(n_basis);
+		// set constraints (first hanging nodes, then curl)
+		constraints_curl_v.at(n_basis).clear ();
 
-		constraints_curl_v[n_basis].clear ();
+		DoFTools::make_hanging_node_constraints (dof_handler, constraints_curl_v.at(n_basis));
 
-		DoFTools::make_hanging_node_constraints (dof_handler, constraints_curl_v[n_basis]);
+		std_shape_function_ned.set_shape_fun_index(n_basis);
 
-		VectorTools::project_boundary_values_curl_conforming_l2(dof_handler,
-					/*first vector component */ 0,
-					std_shape_function_Ned, // This is important!!!
-//					ZeroFunction<3>(3),
-					/*boundary id*/ 0,
-					constraints_curl_v[n_basis]);
-		VectorTools::project_boundary_values_div_conforming(dof_handler,
-					/*first vector component */ 3,
-					std_shape_function_Ned_curl, // This is important!!!
-					/*boundary id*/ 0,
-					constraints_curl_v[n_basis]);
+		FEValuesExtractors::Scalar q1 (0);
+		ComponentMask q1_mask = fe.component_mask (q1);
 
-		constraints_curl_v[n_basis].close ();
+		for (unsigned int i=0;
+				i<GeometryInfo<3>::lines_per_cell;
+				++i)
+		{
+			VectorTools::interpolate_boundary_values(dof_handler,
+								/*boundary id*/ i,
+								ZeroFunction<3>(4),
+								constraints_curl_v.at(n_basis),
+								q1_mask);
+			VectorTools::project_boundary_values_curl_conforming(dof_handler,
+								/*first vector component */ 1,
+								std_shape_function,
+								/*boundary id*/ i,
+								constraints_curl_v.at(n_basis));
+		}
 	}
 
 //	DoFTools::make_sparsity_pattern(dof_handler,
@@ -296,78 +386,6 @@ QNedBasis::setup_basis_dofs_curl ()
 	{
 		basis_curl_v[n_basis].reinit (dofs_per_block);
 		system_rhs_curl_v[n_basis].reinit (dofs_per_block);
-	}
-
-	if (parameters.verbose)
-	{
-		timer.stop ();
-		std::cout << "done in   " << timer.cpu_time() << "   seconds." << std::endl;
-	}
-}
-
-
-
-void
-QNedBasis::setup_basis_dofs_div ()
-{
-	Assert (is_set_cell_data,
-					ExcMessage ("Cell data must be set first."));
-
-	Timer timer;
-
-	if (parameters.verbose)
-	{
-		std::cout << "	Setting up dofs for H(div) part.....";
-
-		timer.restart ();
-	}
-
-	ShapeFun::ShapeFunctionVector<3>
-			std_shape_function_RT (fe.base_element(1),
-					global_cell_it,
-					/*verbose =*/ false);
-
-	std::vector<types::global_dof_index> dofs_per_block (2);
-	DoFTools::count_dofs_per_block (dof_handler, dofs_per_block);
-
-	// Allocate memory
-//	BlockDynamicSparsityPattern dsp(dofs_per_block, dofs_per_block);
-
-	for (unsigned int n_basis=0; n_basis<basis_div_v.size(); ++n_basis)
-	{
-		std_shape_function_RT.set_shape_fun_index(n_basis);
-//		std_shape_function_curl.set_shape_fun_index(n_basis);
-
-		// set constraints (first hanging nodes, then flux)
-		constraints_div_v[n_basis].clear ();
-
-		DoFTools::make_hanging_node_constraints (dof_handler, constraints_div_v[n_basis]);
-
-		VectorTools::project_boundary_values_curl_conforming_l2(dof_handler,
-					/*first vector component */ 0,
-					ZeroFunction<3>(6),  // This is not so important as long as BCs do not influence u.
-					/*boundary id*/ 0,
-					constraints_div_v[n_basis]);
-		VectorTools::project_boundary_values_div_conforming(dof_handler,
-					/*first vector component */ 3,
-					std_shape_function_RT, // This is important
-					/*boundary id*/ 0,
-					constraints_div_v[n_basis]);
-
-		constraints_div_v[n_basis].close ();
-	}
-
-//	DoFTools::make_sparsity_pattern(dof_handler,
-//									  dsp,
-//									  constraints_div_v[0], // do not write into constraint dofs (same dofs for all problems)
-//									  /*keep_constrained_dofs = */ true); // must condense constraints later
-
-//	sparsity_pattern_div.copy_from(dsp);
-
-	for (unsigned int n_basis=0; n_basis<basis_div_v.size(); ++n_basis)
-	{
-		basis_div_v[n_basis].reinit (dofs_per_block);
-		system_rhs_div_v[n_basis].reinit (dofs_per_block);
 	}
 
 	if (parameters.verbose)
@@ -407,25 +425,25 @@ QNedBasis::assemble_system ()
 	FullMatrix<double>   		local_matrix (dofs_per_cell, dofs_per_cell);
 	Vector<double>       		local_rhs (dofs_per_cell);
 	std::vector<Vector<double>> local_rhs_v(GeometryInfo<3>::lines_per_cell
-											+ GeometryInfo<3>::faces_per_cell,
+											+ GeometryInfo<3>::vertices_per_cell,
 											Vector<double> (dofs_per_cell));
 
 	std::vector<types::global_dof_index> local_dof_indices (dofs_per_cell);
 
 	// Equation data
 	const RightHandSide				right_hand_side;
-	const DiffusionInverse_A		diffusion_inverse_a(parameter_filename);
-	const Diffusion_B				diffusion_b(parameter_filename);
+	const Diffusion_A				diffusion_a(parameter_filename);
+	const DiffusionInverse_B		diffusion_inverse_b(parameter_filename);
 	const ReactionRate				reaction_rate;
 
 	// allocate
 	std::vector<Tensor<1,3>> 	rhs_values (n_q_points);
-	std::vector<Tensor<2,3> > 	diffusion_inverse_a_values (n_q_points);
-	std::vector<double>		 	diffusion_b_values (n_q_points);
+	std::vector<Tensor<2,3> > 	diffusion_a_values (n_q_points);
+	std::vector<double>		 	diffusion_inverse_b_values (n_q_points);
 	std::vector<double> 		reaction_rate_values (n_q_points);
 
-	const FEValuesExtractors::Vector curl (/* first_vector_component */ 0);
-	const FEValuesExtractors::Vector flux (/* first_vector_component */ 3);
+	const FEValuesExtractors::Scalar q1 (/* first_vector_component */ 0);
+	const FEValuesExtractors::Vector curl (/* first_vector_component */ 1);
 
 	// ------------------------------------------------------------------
 	// loop over cells
@@ -450,41 +468,41 @@ QNedBasis::assemble_system ()
 									rhs_values);
 		reaction_rate.value_list(fe_values.get_quadrature_points(),
 									reaction_rate_values);
-		diffusion_inverse_a.value_list (fe_values.get_quadrature_points(),
-							  diffusion_inverse_a_values);
-		diffusion_b.value_list (fe_values.get_quadrature_points(),
-									  diffusion_b_values);
+		diffusion_a.value_list (fe_values.get_quadrature_points(),
+							  diffusion_a_values);
+		diffusion_inverse_b.value_list (fe_values.get_quadrature_points(),
+									  diffusion_inverse_b_values);
 
 		// loop over quad points
 		for (unsigned int q=0; q<n_q_points; ++q)
 		{
 			for (unsigned int i=0; i<dofs_per_cell; ++i)
 			{
-				// Test functions
-				const Tensor<1,3> 		tau_i = fe_values[curl].value (i, q);
-				const Tensor<1,3>      	curl_tau_i = fe_values[curl].curl (i, q);
-				const double 	     	div_v_i = fe_values[flux].divergence (i, q);
-				const Tensor<1,3>      	v_i = fe_values[flux].value (i, q);
+				// test functions
+				const double	 		tau_i = fe_values[q1].value (i, q);
+				const Tensor<1,3>      	grad_tau_i = fe_values[q1].gradient (i, q);
+				const Tensor<1,3> 	   	curl_v_i = fe_values[curl].curl (i, q);
+				const Tensor<1,3>      	v_i = fe_values[curl].value (i, q);
 
 				for (unsigned int j=0; j<dofs_per_cell; ++j)
 				{
 					// trial functions
-					const Tensor<1,3> 		sigma_j = fe_values[curl].value (j, q);
-					const Tensor<1,3>      	curl_sigma_j = fe_values[curl].curl (j, q);
-					const double 	     	div_u_j = fe_values[flux].divergence (j, q);
-					const Tensor<1,3>      	u_j = fe_values[flux].value (j, q);
+					const double	 		sigma_j = fe_values[q1].value (j, q);
+					const Tensor<1,3>      	grad_sigma_j = fe_values[q1].gradient (j, q);
+					const Tensor<1,3>      	curl_u_j = fe_values[curl].curl (j, q);
+					const Tensor<1,3>      	u_j = fe_values[curl].value (j, q);
 
 					/*
 					 * Discretize
-					 * A^{-1}sigma - curl(u) = 0
-					 * curl(sigma) - grad(B*div(u)) + alpha u = f , where alpha>0.
+					 * B^{-1}sigma - div(u) = 0
+					 * grad(sigma) + curl(A*curl(u)) + alpha u = f
 					 */
-					local_matrix(i,j) += (tau_i * diffusion_inverse_a_values[q] * sigma_j /* block (0,0) */
-											- curl_tau_i * u_j /* block (0,1) */
-											+ v_i * curl_sigma_j /* block (1,0) */
-											+ div_v_i * diffusion_b_values[q] * div_u_j /* block (1,1) */
-											+ v_i * reaction_rate_values[q] * u_j) /* block (1,1) */
-											* fe_values.JxW(q);
+					local_matrix(i,j) += (tau_i * diffusion_inverse_b_values[q] * sigma_j /* block (0,0) */
+																	- grad_tau_i * u_j /* block (0,1) */
+																	+ v_i * grad_sigma_j /* block (1,0) */
+																	+ curl_v_i * diffusion_a_values[q] * curl_u_j /* block (1,1) */
+																	+ v_i * reaction_rate_values[q] * u_j) /* block (1,1) */
+																	* fe_values.JxW(q);
 				} // end for ++j
 
 				// Only for use in global assembly
@@ -541,16 +559,16 @@ QNedBasis::assemble_system ()
 							n_basis<length_system_basis;
 							++n_basis)
 			{
-				if (n_basis<GeometryInfo<3>::lines_per_cell)
+				if (n_basis<GeometryInfo<3>::vertices_per_cell)
 				{
-					// This is for curl.
-					system_rhs_curl_v[n_basis](local_dof_indices[i]) += local_rhs_v[n_basis](i);
+					// This is for h1.
+					system_rhs_h1_v[n_basis](local_dof_indices[i]) += local_rhs_v[n_basis](i);
 				}
 				else
 				{
 					// This is for curl.
-					const unsigned int offset_index = n_basis - GeometryInfo<3>::lines_per_cell;
-					system_rhs_div_v[offset_index](local_dof_indices[i]) += local_rhs_v[n_basis](i);
+					const unsigned int offset_index = n_basis - GeometryInfo<3>::vertices_per_cell;
+					system_rhs_curl_v[offset_index](local_dof_indices[i]) += local_rhs_v[n_basis](i);
 				}
 			}
 		}
@@ -583,16 +601,16 @@ QNedBasis::solve_direct (unsigned int n_basis)
 
 	BlockVector<double> *system_rhs_ptr = NULL;
 	BlockVector<double> *solution_ptr = NULL;
-	if (n_basis < GeometryInfo<3>::lines_per_cell)
+	if (n_basis < GeometryInfo<3>::vertices_per_cell)
 	{
-		system_rhs_ptr = &(system_rhs_curl_v[n_basis]);
-		solution_ptr = &(basis_curl_v[n_basis]);
+		system_rhs_ptr = &(system_rhs_h1_v[n_basis]);
+		solution_ptr = &(basis_h1_v[n_basis]);
 	}
 	else
 	{
-		const unsigned int offset_index = n_basis - GeometryInfo<3>::lines_per_cell;
-		system_rhs_ptr = &(system_rhs_div_v[offset_index]);
-		solution_ptr = &(basis_div_v[offset_index]);
+		const unsigned int offset_index = n_basis - GeometryInfo<3>::vertices_per_cell;
+		system_rhs_ptr = &(system_rhs_curl_v[offset_index]);
+		solution_ptr = &(basis_curl_v[offset_index]);
 	}
 
 	// for convenience
@@ -605,15 +623,15 @@ QNedBasis::solve_direct (unsigned int n_basis)
 
 	A_inv.vmult(solution, system_rhs);
 
-	if (n_basis < GeometryInfo<3>::lines_per_cell)
+	if (n_basis < GeometryInfo<3>::vertices_per_cell)
 	{
-		constraints_curl_v[n_basis].distribute(solution);
+		constraints_h1_v[n_basis].distribute(solution);
 	}
 	else
 	{
-		const unsigned int offset_index = n_basis - GeometryInfo<3>::lines_per_cell;
+		const unsigned int offset_index = n_basis - GeometryInfo<3>::vertices_per_cell;
 
-		constraints_div_v[offset_index].distribute(solution);
+		constraints_curl_v[offset_index].distribute(solution);
 	}
 
 	if (parameters.verbose)
@@ -646,16 +664,16 @@ QNedBasis::solve_iterative (unsigned int n_basis)
 
 	BlockVector<double> *system_rhs_ptr = NULL;
 	BlockVector<double> *solution_ptr = NULL;
-	if (n_basis < GeometryInfo<3>::lines_per_cell)
+	if (n_basis < GeometryInfo<3>::vertices_per_cell)
 	{
-		system_rhs_ptr = &(system_rhs_curl_v[n_basis]);
-		solution_ptr = &(basis_curl_v[n_basis]);
+		system_rhs_ptr = &(system_rhs_h1_v[n_basis]);
+		solution_ptr = &(basis_h1_v[n_basis]);
 	}
 	else
 	{
-		const unsigned int offset_index = n_basis - GeometryInfo<3>::lines_per_cell;
-		system_rhs_ptr = &(system_rhs_div_v[offset_index]);
-		solution_ptr = &(basis_div_v[offset_index]);
+		const unsigned int offset_index = n_basis - GeometryInfo<3>::vertices_per_cell;
+		system_rhs_ptr = &(system_rhs_curl_v[offset_index]);
+		solution_ptr = &(basis_curl_v[offset_index]);
 	}
 
 	// for convenience
@@ -756,15 +774,15 @@ QNedBasis::solve_iterative (unsigned int n_basis)
 						schur_rhs,
 						preconditioner);
 
-			if (n_basis < GeometryInfo<3>::lines_per_cell)
+			if (n_basis < GeometryInfo<3>::vertices_per_cell)
 			{
-				constraints_curl_v[n_basis].distribute(solution);
+				constraints_h1_v[n_basis].distribute(solution);
 			}
 			else
 			{
-				const unsigned int offset_index = n_basis - GeometryInfo<3>::lines_per_cell;
+				const unsigned int offset_index = n_basis - GeometryInfo<3>::vertices_per_cell;
 
-				constraints_div_v[offset_index].distribute(solution);
+				constraints_curl_v[offset_index].distribute(solution);
 			}
 
 			if (parameters.verbose)
@@ -808,15 +826,15 @@ QNedBasis::solve_iterative (unsigned int n_basis)
 			}
 		}
 
-		if (n_basis < GeometryInfo<3>::lines_per_cell)
+		if (n_basis < GeometryInfo<3>::vertices_per_cell)
 		{
-			constraints_curl_v[n_basis].distribute(solution);
+			constraints_h1_v[n_basis].distribute(solution);
 		}
 		else
 		{
-			const unsigned int offset_index = n_basis - GeometryInfo<3>::lines_per_cell;
+			const unsigned int offset_index = n_basis - GeometryInfo<3>::vertices_per_cell;
 
-			constraints_div_v[offset_index].distribute(solution);
+			constraints_curl_v[offset_index].distribute(solution);
 		}
 	}
 
@@ -850,36 +868,36 @@ QNedBasis::assemble_global_element_matrix()
 
 
 	BlockVector<double> *test_vec_ptr, *trial_vec_ptr;
-	unsigned int offset_index = GeometryInfo<3>::lines_per_cell;
+	unsigned int offset_index = GeometryInfo<3>::vertices_per_cell;
 
 	for (unsigned int i_test=0;
 			i_test < length_system_basis;
 			++i_test)
 	{
-		if (i_test<GeometryInfo<3>::lines_per_cell)
+		if (i_test<GeometryInfo<3>::vertices_per_cell)
 		{
 			block_row = 0;
-			test_vec_ptr = &(basis_curl_v.at(i_test));
+			test_vec_ptr = &(basis_h1_v.at(i_test));
 		}
 		else
 		{
 			block_row = 1;
-			test_vec_ptr = &(basis_div_v.at(i_test-offset_index));
+			test_vec_ptr = &(basis_curl_v.at(i_test-offset_index));
 		}
 
 		for (unsigned int i_trial=0;
 				i_trial<length_system_basis;
 				++i_trial)
 		{
-			if (i_trial<GeometryInfo<3>::lines_per_cell)
+			if (i_trial<GeometryInfo<3>::vertices_per_cell)
 			{
 				block_col = 0;
-				trial_vec_ptr = &(basis_curl_v.at(i_trial));
+				trial_vec_ptr = &(basis_h1_v.at(i_trial));
 			}
 			else
 			{
 				block_col = 1;
-				trial_vec_ptr = &(basis_div_v.at(i_trial-offset_index));
+				trial_vec_ptr = &(basis_curl_v.at(i_trial-offset_index));
 			}
 
 			if (block_row==0) /* This means we are testing with sigma. */
@@ -914,7 +932,7 @@ QNedBasis::assemble_global_element_matrix()
 			} // end else
 		} // end for i_trial
 
-		if (i_test>=GeometryInfo<3>::lines_per_cell)
+		if (i_test>=GeometryInfo<3>::vertices_per_cell)
 		{
 			block_row = 1;
 			// If we are testing with u we possibly have a right-hand side.
@@ -940,67 +958,61 @@ QNedBasis::output_basis ()
 		timer.restart ();
 	}
 
-	BlockVector<double> *basis_ptr = NULL;
-	DataOut<3> data_out;
-
-	for (unsigned int n_basis=0;
-					n_basis<length_system_basis;
-					++n_basis)
+	for (unsigned int n_basis = 0; n_basis < length_system_basis; ++n_basis)
 	{
-		if (n_basis<GeometryInfo<3>::lines_per_cell)
+		BlockVector<double> *basis_ptr = NULL;
+		if (n_basis<GeometryInfo<3>::vertices_per_cell)
+			basis_ptr = &(basis_h1_v.at(n_basis));
+		else
+			basis_ptr = &(basis_curl_v.at(n_basis - GeometryInfo<3>::vertices_per_cell));
+
+		std::vector<std::string> solution_names(1, "sigma");
+		solution_names.push_back ("u");
+		solution_names.push_back ("u");
+		solution_names.push_back ("u");
+
+		std::vector<DataComponentInterpretation::DataComponentInterpretation>
+		interpretation (1,
+						DataComponentInterpretation::component_is_scalar);
+		interpretation.push_back (DataComponentInterpretation::component_is_part_of_vector);
+		interpretation.push_back (DataComponentInterpretation::component_is_part_of_vector);
+		interpretation.push_back (DataComponentInterpretation::component_is_part_of_vector);
+
+		QNed_PostProcessor postprocessor(parameter_filename);
+
+		DataOut<3> data_out;
+		data_out.add_data_vector (dof_handler,
+									*basis_ptr,
+									solution_names,
+									interpretation);
+		data_out.add_data_vector(*basis_ptr, postprocessor);
+
+		data_out.build_patches (parameters.degree+1);
+
+		// filename
+		std::string filename = "basis_q-ned";
+		if (n_basis<GeometryInfo<3>::vertices_per_cell)
 		{
-			basis_ptr = &(basis_curl_v[n_basis]);
-
-			std::vector<std::string> solution_names(3, "sigma_" + Utilities::int_to_string(n_basis,2));
-			solution_names.push_back ("u_aux_" + Utilities::int_to_string(n_basis,2));
-			solution_names.push_back ("u_aux_" + Utilities::int_to_string(n_basis,2));
-			solution_names.push_back ("u_aux_" + Utilities::int_to_string(n_basis,2));
-
-			std::vector<DataComponentInterpretation::DataComponentInterpretation>
-				interpretation (3,
-							DataComponentInterpretation::component_is_part_of_vector);
-			interpretation.push_back (DataComponentInterpretation::component_is_part_of_vector);
-			interpretation.push_back (DataComponentInterpretation::component_is_part_of_vector);
-			interpretation.push_back (DataComponentInterpretation::component_is_part_of_vector);
-
-			data_out.add_data_vector (dof_handler,
-										*basis_ptr,
-										solution_names,
-										interpretation);
+			filename += ".h1";
+			filename += "." + Utilities::int_to_string(local_subdomain, 5);
+			filename += ".cell-" + global_cell_id.to_string();
+			filename += ".index-";
+			filename += Utilities::int_to_string (n_basis, 2);
 		}
 		else
 		{
-			basis_ptr = &(basis_div_v.at(n_basis - GeometryInfo<3>::lines_per_cell));
-
-			std::vector<std::string> solution_names(3, "sigma_aux_" + Utilities::int_to_string(n_basis,2));
-			solution_names.push_back ("u_" + Utilities::int_to_string(n_basis,2));
-			solution_names.push_back ("u_" + Utilities::int_to_string(n_basis,2));
-			solution_names.push_back ("u_" + Utilities::int_to_string(n_basis,2));
-
-			std::vector<DataComponentInterpretation::DataComponentInterpretation>
-				interpretation (3,
-							DataComponentInterpretation::component_is_part_of_vector);
-			interpretation.push_back (DataComponentInterpretation::component_is_part_of_vector);
-			interpretation.push_back (DataComponentInterpretation::component_is_part_of_vector);
-			interpretation.push_back (DataComponentInterpretation::component_is_part_of_vector);
-
-			data_out.add_data_vector (dof_handler,
-										*basis_ptr,
-										solution_names,
-										interpretation);
+			filename += ".curl";
+			filename += "." + Utilities::int_to_string(local_subdomain, 5);
+			filename += ".cell-" + global_cell_id.to_string();
+			filename += ".index-";
+			filename += Utilities::int_to_string (n_basis - GeometryInfo<3>::vertices_per_cell, 2);
 		}
+		filename += ".vtu";
+
+		std::ofstream output (filename);
+		data_out.write_vtu (output);
 	}
 
-	data_out.build_patches (parameters.degree + 1);
-
-	std::string filename = "basis";
-
-	filename += "." + Utilities::int_to_string(local_subdomain, 5);
-	filename += ".cell-" + global_cell_id.to_string();
-	filename += ".vtu";
-
-	std::ofstream output (filename);
-	data_out.write_vtu (output);
 
 	if (parameters.verbose)
 	{
@@ -1015,20 +1027,20 @@ void
 QNedBasis::output_global_solution_in_cell () const
 {
 	// Names of solution components
-	std::vector<std::string> solution_names(3, "sigma");
+	std::vector<std::string> solution_names(1, "sigma");
 	solution_names.push_back ("u");
 	solution_names.push_back ("u");
 	solution_names.push_back ("u");
 
 	// Interpretation of solution components
 	std::vector<DataComponentInterpretation::DataComponentInterpretation>
-	interpretation (3,
-					DataComponentInterpretation::component_is_part_of_vector);
+	interpretation (1,
+					DataComponentInterpretation::component_is_scalar);
 	interpretation.push_back (DataComponentInterpretation::component_is_part_of_vector);
 	interpretation.push_back (DataComponentInterpretation::component_is_part_of_vector);
 	interpretation.push_back (DataComponentInterpretation::component_is_part_of_vector);
 
-	NedRT_PostProcessor postprocessor(parameter_filename);
+	QNed_PostProcessor postprocessor(parameter_filename);
 
 	// Build the data out object and add the data
 	DataOut<3> data_out;
@@ -1072,13 +1084,13 @@ QNedBasis::set_global_weights (const std::vector<double> &weights)
 	for (unsigned int i=0;
 			i<dofs_per_cell_sigma;
 			++i)
-		global_solution.block(0).sadd (1, global_weights[i], basis_curl_v[i].block(0));
+		global_solution.block(0).sadd (1, global_weights[i], basis_h1_v[i].block(0));
 
 	// Then set block 1
 	for (unsigned int i=0;
 			i<dofs_per_cell_u;
 			++i)
-		global_solution.block(1).sadd (1, global_weights[i+dofs_per_cell_sigma], basis_div_v[i].block(1));
+		global_solution.block(1).sadd (1, global_weights[i+dofs_per_cell_sigma], basis_curl_v[i].block(1));
 
 	is_set_global_weights = true;
 }
@@ -1092,8 +1104,8 @@ QNedBasis::set_sigma_to_std ()
 	QGauss<3> 	quad_rule (3);
 
 	// Set up vector shape function from finite element on current cell
-	ShapeFun::ShapeFunctionVector<3>
-		std_shape_function_curl (fe.base_element(0),
+	ShapeFun::ShapeFunctionScalar<3>
+		std_shape_function_h1 (fe.base_element(0),
 				global_cell_it,
 				/*verbose =*/ false);
 
@@ -1105,23 +1117,23 @@ QNedBasis::set_sigma_to_std ()
 		DoFRenumbering::Cuthill_McKee (dof_handler_fake);
 	}
 
-	AffineConstraints<double>	constraints;
+	ConstraintMatrix	constraints;
 	constraints.clear ();
 	DoFTools::make_hanging_node_constraints (dof_handler_fake, constraints);
 	constraints.close();
 
-	for (unsigned int i=0; i<basis_curl_v.size(); ++i)
+	for (unsigned int i=0; i<basis_h1_v.size(); ++i)
 	{
-		basis_curl_v[i].block(0).reinit (dof_handler_fake.n_dofs());
-		basis_curl_v[i].block(1) = 0;
+		basis_h1_v.at(i).block(0).reinit (dof_handler_fake.n_dofs());
+		basis_h1_v.at(i).block(1) = 0;
 
-		std_shape_function_curl.set_shape_fun_index (i);
+		std_shape_function_h1.set_shape_fun_index (i);
 
 		VectorTools::project (dof_handler_fake,
 				constraints,
 				quad_rule,
-				std_shape_function_curl,
-				basis_curl_v[i].block(0));
+				std_shape_function_h1,
+				basis_h1_v.at(i).block(0));
 	}
 
 	dof_handler_fake.clear ();
@@ -1137,7 +1149,7 @@ QNedBasis::set_u_to_std ()
 
 	// Set up vector shape function from finite element on current cell
 	ShapeFun::ShapeFunctionVector<3>
-			std_shape_function_div (fe.base_element(1),
+			std_shape_function_curl (fe.base_element(1),
 					global_cell_it,
 					/*verbose =*/ false);
 
@@ -1149,23 +1161,23 @@ QNedBasis::set_u_to_std ()
 		DoFRenumbering::Cuthill_McKee (dof_handler_fake);
 	}
 
-	AffineConstraints<double>	constraints;
+	ConstraintMatrix	constraints;
 	constraints.clear ();
 	DoFTools::make_hanging_node_constraints (dof_handler_fake, constraints);
 	constraints.close();
 
-	for (unsigned int i=0; i<basis_div_v.size(); ++i)
+	for (unsigned int i=0; i<basis_curl_v.size(); ++i)
 	{
-		basis_div_v[i].block(0) = 0;
-		basis_div_v[i].block(1).reinit (dof_handler_fake.n_dofs());
+		basis_curl_v.at(i).block(0) = 0;
+		basis_curl_v.at(i).block(1).reinit (dof_handler_fake.n_dofs());
 
-		std_shape_function_div.set_shape_fun_index (i);
+		std_shape_function_curl.set_shape_fun_index (i);
 
 		VectorTools::project (dof_handler_fake,
 				constraints,
 				quad_rule,
-				std_shape_function_div,
-				basis_div_v[i].block(1));
+				std_shape_function_curl,
+				basis_curl_v.at(i).block(1));
 	}
 
 	dof_handler_fake.clear ();
@@ -1227,8 +1239,8 @@ void QNedBasis::run ()
 	setup_system_matrix ();
 
 	// Set up boundary conditions and other constraints
+	setup_basis_dofs_h1 ();
 	setup_basis_dofs_curl ();
-	setup_basis_dofs_div ();
 
 	// Assemble
 	assemble_system ();
@@ -1261,7 +1273,7 @@ void QNedBasis::run ()
 						n_basis<length_system_basis;
 						++n_basis)
 		{
-			if (n_basis<GeometryInfo<3>::lines_per_cell)
+			if (n_basis<GeometryInfo<3>::vertices_per_cell)
 			{
 				// This is for curl.
 				system_matrix.reinit (sparsity_pattern);
@@ -1269,7 +1281,7 @@ void QNedBasis::run ()
 				system_matrix.copy_from(assembled_matrix);
 
 				// Now take care of constraints
-				constraints_curl_v[n_basis].condense(system_matrix, system_rhs_curl_v[n_basis]);
+				constraints_h1_v[n_basis].condense(system_matrix, system_rhs_h1_v[n_basis]);
 
 				// Now solve
 				if (parameters.use_direct_solver)
@@ -1281,15 +1293,15 @@ void QNedBasis::run ()
 			}
 			else
 			{
-				// This is for div.
-				const unsigned int offset_index = n_basis - GeometryInfo<3>::lines_per_cell;
+				// This is for curl.
+				const unsigned int offset_index = n_basis - GeometryInfo<3>::vertices_per_cell;
 
 				system_matrix.reinit (sparsity_pattern);
 
 				system_matrix.copy_from(assembled_matrix);
 
 				// Now take care of constraints
-				constraints_div_v[offset_index].condense(system_matrix, system_rhs_div_v[offset_index]);
+				constraints_curl_v[offset_index].condense(system_matrix, system_rhs_curl_v[offset_index]);
 
 				// Now solve
 				if (parameters.use_direct_solver)
@@ -1308,13 +1320,13 @@ void QNedBasis::run ()
 		// Free memory as much as possible
 		system_matrix.clear ();
 		sparsity_pattern.reinit (0,0);
+		for (unsigned int i=0; i<basis_h1_v.size(); ++i)
+		{
+			constraints_h1_v[i].clear ();
+		}
 		for (unsigned int i=0; i<basis_curl_v.size(); ++i)
 		{
 			constraints_curl_v[i].clear ();
-		}
-		for (unsigned int i=0; i<basis_div_v.size(); ++i)
-		{
-			constraints_div_v[i].clear ();
 		}
 	}
 

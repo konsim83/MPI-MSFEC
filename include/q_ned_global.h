@@ -70,7 +70,7 @@
 // my headers
 #include "parameters.h"
 
-#include "ned_rt_post_processor.h"
+#include "q_ned_post_processor.h"
 
 #include "config.h"
 #include "inverse_matrix.tpp"
@@ -78,7 +78,7 @@
 #include "schur_complement.tpp"
 #include "approximate_schur_complement.tpp"
 #include "preconditioner.h"
-#include "ned_rt_basis.h"
+#include "q_ned_basis.h"
 
 
 namespace LaplaceProblem
@@ -89,7 +89,7 @@ using namespace dealii;
 class QNedMultiscale
 {
 public:
-	QNedMultiscale (Parameters::NedRT::ParametersMs &parameters_,
+	QNedMultiscale (Parameters::QNed::ParametersMs &parameters_,
 			const std::string &parameter_filename);
 	~QNedMultiscale ();
 
@@ -111,7 +111,7 @@ private:
 
 	MPI_Comm mpi_communicator;
 
-	Parameters::NedRT::ParametersMs &parameters;
+	Parameters::QNed::ParametersMs &parameters;
 	const std::string &parameter_filename;
 
 	parallel::distributed::Triangulation<3> triangulation;
@@ -153,7 +153,7 @@ private:
 	/*!
 	 * STL Vector holding basis functions for each coarse cell.
 	 */
-	using BasisMap = std::map<CellId, NedRTBasis>;
+	using BasisMap = std::map<CellId, QNedBasis>;
 	BasisMap cell_basis_map;
 
 	CellId first_cell;

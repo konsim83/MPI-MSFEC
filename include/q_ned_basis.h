@@ -55,19 +55,26 @@
 #include <memory>
 
 // my headers
-#include "config.h"
-#include "parameters.h"
+#include <eqn_boundary_vals.h>
+#include <eqn_coeff_A.h>
+#include <eqn_coeff_B.h>
+#include <eqn_coeff_R.h>
+#include <eqn_rhs.h>
+#include <q_ned_post_processor.h>
 
-#include "ned_rt_post_processor.h"
-#include "inverse_matrix.tpp"
-#include "approximate_inverse.tpp"
-#include "schur_complement.tpp"
-#include "approximate_schur_complement.tpp"
-#include "preconditioner.h"
+#include <config.h>
+#include <parameters.h>
+
+#include <inverse_matrix.tpp>
+#include <approximate_inverse.tpp>
+#include <schur_complement.tpp>
+#include <approximate_schur_complement.tpp>
+#include <preconditioner.h>
 
 #include "shape_fun_vector.tpp"
-#include "shape_fun_vector_curl.tpp"
-#include "shape_fun_vector_div.tpp"
+#include "shape_fun_scalar.tpp"
+#include "shape_fun_scalar_grad.tpp"
+#include "shape_fun_concatinate_functions.tpp"
 
 
 namespace LaplaceProblem
@@ -80,7 +87,7 @@ class QNedBasis
 	public:
 
 		QNedBasis () = delete;
-		QNedBasis (const Parameters::NedRT::ParametersMs &parameters_ms,
+		QNedBasis (const Parameters::QNed::ParametersMs &parameters_ms,
 					const std::string &parameter_filename,
 					typename Triangulation<3>::active_cell_iterator& global_cell,
 					CellId first_cell,
@@ -106,7 +113,7 @@ class QNedBasis
 		void setup_system_matrix ();
 
 		void setup_basis_dofs_curl ();
-		void setup_basis_dofs_div ();
+		void setup_basis_dofs_h1 ();
 
 		void assemble_system ();
 		void assemble_global_element_matrix ();
@@ -126,7 +133,7 @@ class QNedBasis
 
 		MPI_Comm mpi_communicator;
 
-		Parameters::NedRT::ParametersBasis parameters;
+		Parameters::QNed::ParametersBasis parameters;
 		const std::string &parameter_filename;
 
 		Triangulation<3>   triangulation;
@@ -137,7 +144,7 @@ class QNedBasis
 
 		// Constraints for each basis
 		std::vector<AffineConstraints<double>> 		  	constraints_curl_v;
-		std::vector<AffineConstraints<double>> 		  	constraints_div_v;
+		std::vector<AffineConstraints<double>> 		  	constraints_h1_v;
 
 		// Sparsity patterns and system matrices for each basis
 		BlockSparsityPattern     sparsity_pattern;
@@ -149,10 +156,10 @@ class QNedBasis
 
 
 		std::vector<BlockVector<double>>       basis_curl_v;
-		std::vector<BlockVector<double>>       basis_div_v;
+		std::vector<BlockVector<double>>       basis_h1_v;
 
 		std::vector<BlockVector<double>>       system_rhs_curl_v;
-		std::vector<BlockVector<double>>       system_rhs_div_v;
+		std::vector<BlockVector<double>>       system_rhs_h1_v;
 		BlockVector<double>       global_rhs;
 
 
