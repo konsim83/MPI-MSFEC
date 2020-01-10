@@ -5,7 +5,7 @@ subsection Standard method parameters
   
 	subsection Control flow
 		# compute flag
-	  	set compute solution = false
+	  	set compute solution = true
 	  
 	  	# verbose
 	  	set verbose = true
@@ -14,18 +14,21 @@ subsection Standard method parameters
 	  	set use direct solver = false
 	  
 	  	# renumbering to reduce bandwidth
-	  	set dof renumbering = true
+	  	set dof renumbering = false
   	end
   	
   	# name of outputfile without ending
   	set filename output = Q-NED-Std
+  	
+  	# compare to exact solution
+  	set use exact solution = false
 end
 
 
 subsection Multiscale method parameters
 	subsection Mesh
   		set global refinements = 2
-  		set local refinements = 3
+  		set local refinements = 4
 	end
   
 	subsection Control flow
@@ -34,14 +37,14 @@ subsection Multiscale method parameters
 	  
 	  	# verbose
 	  	set verbose = true
-	  	set verbose basis = true
+	  	set verbose basis = false
 	  
 	  	# what solver to use
 	  	set use direct solver = false
 	  	set use direct solver basis = false
 	  
 	  	# renumbering to reduce bandwidth
-	  	set dof renumbering = true
+	  	set dof renumbering = false
 	  	
 	  	# write first basis
 	  	set write first basis = true 
@@ -49,6 +52,9 @@ subsection Multiscale method parameters
   	
   	# name of outputfile without ending
   	set filename output = Q-NED-Ms
+  	
+  	# compare to exact solution
+  	set use exact solution = false
 end
 
 
@@ -65,43 +71,56 @@ subsection Equation parameters
 		set Variable names      = x,y,z
 	end
 	
+	# Note that the exact solution is only there 
+	# to verify the standard method
+	subsection Exact solution
+		# The exact solution is just a linear function.
+		# The right hand side is computed automatically
+		set a_00 = 1
+		set a_01 = 1
+		set a_02 = 0
+		
+		set a_10 = 0.5
+		set a_11 = 2
+		set a_12 = -1
+		
+		set a_20 = 0
+		set a_21 = -1
+		set a_22 = -1
+		
+		set b_0 = 1
+		set b_1 = 1
+		set b_2 = 1		
+	end
+	
 	subsection Diffusion A
-		set frequency x = 4
-		set frequency y = 5
-		set frequency z = 5
+		set frequency x = 12
+		set frequency y = 10
+		set frequency z = 9
 		
 		# scaling parameter
 		set scale x = 1.0
 		set scale y = 1.0
 		set scale z = 1.0
 		
+		# scaling parameter to set the contrast
+		set alpha x = 0.99
+		set alpha y = 0.99
+		set alpha z = 0.99
+		
 		# Rotate with fixed Euler angles
 		set rotate = false
 	end
 	
 	subsection Diffusion B
-		# Separate constants by comma ','
-		set Function constants = k=4, scale=.1
+		# We need to set some quantities twice if we 
+		# want to use the exact solution class
+		set frequency = 9
+		set scale = 1
+		set alpha = 0.99
 		
 		# Separate vector valued expressions by ';' as ',' is used internally by the
 		# function parser.
-		set Function expression = scale * (1.0 - 0.99 * sin(2*pi*k*x))
-		
-		# The name of the variables as they will be used in the function, separated
-		# by ','.
-		set Variable names      = x,y,z,t
-	end
-	
-	subsection Diffusion B inverse
-		# Separate constants by comma ','
-		set Function constants = k=4, scale=.1
-		
-		# Separate vector valued expressions by ';' as ',' is used internally by the
-		# function parser.
-		set Function expression = 1 / (scale * (1.0 - 0.99 * sin(2*pi*k*x)))
-		
-		# The name of the variables as they will be used in the function, separated
-		# by ','.
-		set Variable names      = x,y,z,t
+		set Function expression = scale * (1.0 - alpha * sin(2*pi*frequency*x))
 	end
 end
