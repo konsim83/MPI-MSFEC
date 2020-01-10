@@ -3,205 +3,298 @@
 
 // Deal.ii MPI
 #include <deal.II/base/conditional_ostream.h>
-#include <deal.II/base/mpi.h>
-
-#include <deal.II/base/utilities.h>
-#include <deal.II/base/quadrature_lib.h>
 #include <deal.II/base/logstream.h>
-#include <deal.II/base/timer.h>
-
+#include <deal.II/base/mpi.h>
 #include <deal.II/base/point.h>
-#include <deal.II/lac/block_vector.h>
-#include <deal.II/lac/full_matrix.h>
-#include <deal.II/lac/block_sparse_matrix.h>
-#include <deal.II/lac/solver_cg.h>
-#include <deal.II/lac/sparse_direct.h>
-#include <deal.II/lac/precondition.h>
+#include <deal.II/base/quadrature_lib.h>
+#include <deal.II/base/timer.h>
+#include <deal.II/base/utilities.h>
 
-#include <deal.II/grid/tria.h>
-#include <deal.II/grid/grid_generator.h>
-#include <deal.II/grid/tria_accessor.h>
-#include <deal.II/grid/tria_iterator.h>
-
+#include <deal.II/dofs/dof_accessor.h>
 #include <deal.II/dofs/dof_handler.h>
 #include <deal.II/dofs/dof_renumbering.h>
-#include <deal.II/dofs/dof_accessor.h>
 #include <deal.II/dofs/dof_tools.h>
 
-#include <deal.II/fe/fe_dgq.h>
-#include <deal.II/fe/fe_dgp.h>
-#include <deal.II/fe/fe_raviart_thomas.h>
 #include <deal.II/fe/fe_bdm.h>
+#include <deal.II/fe/fe_dgp.h>
+#include <deal.II/fe/fe_dgq.h>
 #include <deal.II/fe/fe_nedelec.h>
+#include <deal.II/fe/fe_raviart_thomas.h>
 #include <deal.II/fe/fe_system.h>
 #include <deal.II/fe/fe_values.h>
 
-#include <deal.II/numerics/vector_tools.h>
-#include <deal.II/numerics/matrix_tools.h>
-#include <deal.II/numerics/data_out.h>
-#include <eqn_boundary_vals.h>
-#include <eqn_coeff_A.h>
-#include <eqn_coeff_B.h>
-#include <eqn_coeff_R.h>
-#include <eqn_rhs.h>
+#include <deal.II/grid/grid_generator.h>
+#include <deal.II/grid/tria.h>
+#include <deal.II/grid/tria_accessor.h>
+#include <deal.II/grid/tria_iterator.h>
 
+#include <deal.II/lac/block_sparse_matrix.h>
+#include <deal.II/lac/block_vector.h>
+#include <deal.II/lac/full_matrix.h>
+#include <deal.II/lac/precondition.h>
+#include <deal.II/lac/solver_cg.h>
+#include <deal.II/lac/sparse_direct.h>
+
+#include <deal.II/numerics/data_out.h>
+#include <deal.II/numerics/matrix_tools.h>
+#include <deal.II/numerics/vector_tools.h>
 
 // std library
 #include <cmath>
 #include <fstream>
 #include <iostream>
-#include <vector>
 #include <map>
 #include <memory>
+#include <vector>
 
 // my headers
-#include "config.h"
-#include "parameters.h"
-
-#include "ned_rt_post_processor.h"
-#include "inverse_matrix.tpp"
 #include "approximate_inverse.tpp"
-#include "schur_complement.tpp"
 #include "approximate_schur_complement.tpp"
+#include "config.h"
+#include "inverse_matrix.tpp"
+#include "my_vector_tools.h"
+#include "ned_rt_post_processor.h"
+#include "parameters.h"
 #include "preconditioner.h"
-
+#include "schur_complement.tpp"
+#include "shape_fun_concatinate_functions.tpp"
 #include "shape_fun_vector.tpp"
 #include "shape_fun_vector_curl.tpp"
 #include "shape_fun_vector_div.tpp"
 
+#include <eqn_boundary_vals.h>
+#include <eqn_coeff_A.h>
+#include <eqn_coeff_B.h>
+#include <eqn_coeff_R.h>
+#include <eqn_rhs.h>
+#include <eqn_exact_solution_lin.h>
+
 
 namespace LaplaceProblem
 {
+  using namespace dealii;
 
-using namespace dealii;
+  class NedRTBasis
+  {
+  public:
+    /*
+     * Constructor.
+     */
+    NedRTBasis() = delete;
 
-class NedRTBasis
-{
-	public:
+    /**
+     * Constructor.
+     *
+     * @param parameters_ms
+     * @param parameter_filename
+     * @param global_cell
+     * @param first_cell
+     * @param local_subdomain
+     * @param mpi_communicator
+     */
+    NedRTBasis(const Parameters::NedRT::ParametersMs &parameters_ms,
+               const std::string &                    parameter_filename,
+               typename Triangulation<3>::active_cell_iterator &global_cell,
+               CellId                                           first_cell,
+               unsigned int                                     local_subdomain,
+               MPI_Comm mpi_communicator);
 
-		NedRTBasis () = delete;
-		NedRTBasis (const Parameters::NedRT::ParametersMs &parameters_ms,
-					const std::string &parameter_filename,
-					typename Triangulation<3>::active_cell_iterator& global_cell,
-					CellId first_cell,
-					unsigned int local_subdomain,
-					MPI_Comm mpi_communicator);
-		NedRTBasis (const NedRTBasis &other);
-		~NedRTBasis ();
+    /**
+     * Copy constructor.
+     *
+     * @param other
+     */
+    NedRTBasis(const NedRTBasis &other);
+    ~NedRTBasis();
 
-		void run ();
-		void output_global_solution_in_cell () const;
+    /**
+     * Compute the basis.
+     */
+    void
+    run();
 
-		// Getter
+    /**
+     * Write vtu file for solution in cell.
+     */
+    void
+    output_global_solution_in_cell();
 
-		const FullMatrix<double>& get_global_element_matrix () const;
-		const Vector<double>& get_global_element_rhs () const;
-		const std::string& get_filename_global () const;
+    /**
+     * Get reference to global multiscale element matrix.
+     *
+     * @return
+     */
+    const FullMatrix<double> &
+    get_global_element_matrix() const;
 
-		// Setter
-		void set_global_weights (const std::vector<double> &global_weights);
+    /**
+     * * Get reference to global multiscale element rhs.
+     *
+     * @return
+     */
+    const Vector<double> &
+    get_global_element_rhs() const;
 
-	private:
-		void setup_grid ();
-		void setup_system_matrix ();
+    /**
+     * Get global filename.
+     * @return
+     */
+    const std::string &
+    get_filename_global() const;
 
-		void setup_basis_dofs_curl ();
-		void setup_basis_dofs_div ();
+    /**
+     * Set the global (coarse) weight after coarse solution is
+     * computed.
+     *
+     * @param global_weights
+     */
+    void
+    set_global_weights(const std::vector<double> &global_weights);
 
-		void assemble_system ();
-		void assemble_global_element_matrix ();
+  private:
+    void
+    setup_grid();
+    void
+    setup_system_matrix();
 
-		// Private setters
-		void set_output_flag ();
-		void set_u_to_std ();
-		void set_sigma_to_std ();
-		void set_filename_global ();
-		void set_cell_data ();
+    /**
+     * Setup the constraints for H(curl)-basis.
+     */
+    void
+    setup_basis_dofs_curl();
 
-		// Solver routines
-		void solve_direct (unsigned int n_basis);
-		void solve_iterative (unsigned int n_basis);
+    /**
+     * Setup the constraints for H(div)-basis.
+     */
+    void
+    setup_basis_dofs_div();
 
-		void output_basis ();
+    /**
+     * Assemble local system.
+     */
+    void
+    assemble_system();
 
-		MPI_Comm mpi_communicator;
+    /**
+     * Build the global multiscale element matrix.
+     */
+    void
+    assemble_global_element_matrix();
 
-		Parameters::NedRT::ParametersBasis parameters;
-		const std::string &parameter_filename;
+    // Private setters
+    void
+    set_output_flag();
+    void
+    set_u_to_std();
+    void
+    set_sigma_to_std();
+    void
+    set_filename_global();
+    void
+    set_cell_data();
 
-		Triangulation<3>   triangulation;
+    /**
+     * Can not be used yet since ther is no TrilinosWrapper for the direct
+     * solver for block matrices. Does not scale well anyway for large problems.
+     *
+     * @param n_basis
+     */
+    void
+    solve_direct(unsigned int n_basis);
 
-		FESystem<3>        fe;
+    /**
+     * Schur complement solver with inner and outer preconditioner.
+     *
+     * @param n_basis
+     */
+    void
+    solve_iterative(unsigned int n_basis);
 
-		DoFHandler<3>      dof_handler;
+    /**
+     * Project the exact solution onto the local fe space.
+     */
+    void
+    write_exact_solution_in_cell();
 
-		// Constraints for each basis
-		std::vector<AffineConstraints<double>> 		  	constraints_curl_v;
-		std::vector<AffineConstraints<double>> 		  	constraints_div_v;
+    /**
+     * Write the multiscale basis as vtu.
+     */
+    void
+    output_basis();
 
-		// Sparsity patterns and system matrices for each basis
-		BlockSparsityPattern     sparsity_pattern;
-//		BlockSparsityPattern     sparsity_pattern_curl;
-//		BlockSparsityPattern     sparsity_pattern_div;
+    MPI_Comm mpi_communicator;
 
-		BlockSparseMatrix<double> 	assembled_matrix;
-		BlockSparseMatrix<double> 	system_matrix;
+    Parameters::NedRT::ParametersBasis parameters;
+    const std::string &                parameter_filename;
 
+    Triangulation<3> triangulation;
 
-		std::vector<BlockVector<double>>       basis_curl_v;
-		std::vector<BlockVector<double>>       basis_div_v;
+    FESystem<3> fe;
 
-		std::vector<BlockVector<double>>       system_rhs_curl_v;
-		std::vector<BlockVector<double>>       system_rhs_div_v;
-		BlockVector<double>       global_rhs;
+    DoFHandler<3> dof_handler;
 
+    // Constraints for each basis
+    std::vector<AffineConstraints<double>> constraints_curl_v;
+    std::vector<AffineConstraints<double>> constraints_div_v;
 
-		// These are only the sparsity pattern and system_matrix for later use
+    // Sparsity patterns and system matrices for each basis
+    BlockSparsityPattern sparsity_pattern;
 
-		FullMatrix<double>   		global_element_matrix;
-		Vector<double>   			global_element_rhs;
-		std::vector<double> 		global_weights;
+    BlockSparseMatrix<double> assembled_matrix;
+    BlockSparseMatrix<double> system_matrix;
 
-		BlockVector<double>			global_solution;
+    std::vector<BlockVector<double>> basis_curl_v;
+    std::vector<BlockVector<double>> basis_div_v;
 
-		// Shared pointer to preconditioner type for each system matrix
-		std::shared_ptr<typename LinearSolvers::LocalInnerPreconditioner<3>::type> inner_schur_preconditioner;
+    std::vector<BlockVector<double>> system_rhs_curl_v;
+    std::vector<BlockVector<double>> system_rhs_div_v;
+    BlockVector<double>              global_rhs;
 
-		/*!
-		 * Global cell number.
-		 */
-		CellId global_cell_id;
+    FullMatrix<double>  global_element_matrix;
+    Vector<double>      global_element_rhs;
+    std::vector<double> global_weights;
 
-		/*!
-		 * Global cell number of first cell.
-		 */
-		CellId first_cell;
+    BlockVector<double> global_solution;
+    BlockVector<double> exact_solution_in_cell;
 
-		/*!
-		 * Global cell iterator.
-		 */
-		typename Triangulation<3>::active_cell_iterator  global_cell_it;
+    // Shared pointer to preconditioner type for each system matrix
+    std::shared_ptr<typename LinearSolvers::LocalInnerPreconditioner<3>::type>
+      inner_schur_preconditioner;
 
-		/*!
-		 * Global subdomain number.
-		 */
-		const unsigned int local_subdomain;
+    /**
+     * Global cell identifier.
+     */
+    CellId global_cell_id;
 
-		// Geometry info
-		double volume_measure;
-		std::vector<double> face_measure;
-		std::vector<double> edge_measure;
+    /**
+     * Global cell identifier of first cell.
+     */
+    CellId first_cell;
 
-		std::vector<Point<3>> corner_points;
+    /**
+     * Global cell iterator.
+     */
+    typename Triangulation<3>::active_cell_iterator global_cell_it;
 
-		unsigned int length_system_basis;
+    /**
+     * Global subdomain number.
+     */
+    const unsigned int local_subdomain;
 
-		bool is_built_global_element_matrix;
-		bool is_set_global_weights;
-		bool is_set_cell_data;
+    // Geometry info
+    double                volume_measure;
+    std::vector<double>   face_measure;
+    std::vector<double>   edge_measure;
+    std::vector<Point<3>> corner_points;
 
-		bool is_copyable;
-};
+    unsigned int length_system_basis;
+
+    bool is_built_global_element_matrix;
+    bool is_set_global_weights;
+    bool is_set_cell_data;
+
+    bool is_copyable;
+  };
 
 } // end namespace LaplaceProblem
 

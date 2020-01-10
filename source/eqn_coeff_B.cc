@@ -2,76 +2,102 @@
 
 namespace LaplaceProblem
 {
+  using namespace dealii;
 
-using namespace dealii;
+  Diffusion_B_Data::Diffusion_B_Data(const std::string &parameter_filename)
+  {
+    ParameterHandler prm;
 
-/**
- * Constructor
- */
-Diffusion_B::Diffusion_B (const std::string &parameter_filename)
-:
-Functions::ParsedFunction<3>()
-{
-	// A parameter handler
-	ParameterHandler prm;
+    declare_parameters(prm);
 
-	// Declare a section for the function we need
-	prm.enter_subsection("Equation parameters");
-		prm.enter_subsection("Diffusion B");
-			Functions::ParsedFunction<3>::declare_parameters(prm, 1);
-		prm.leave_subsection();
-	prm.leave_subsection();
+    // open file
+    std::ifstream parameter_file(parameter_filename);
 
-	// open file
-	std::ifstream parameter_file(parameter_filename);
-
-	// Parse an input file.
-	prm.parse_input(parameter_file,
-			/* filename = */ "generated_parameter.in",
-			/* last_line = */ "",
-			/* skip_undefined = */ true);
-
-	// Initialize the ParsedFunction object with the given file
-	prm.enter_subsection("Equation parameters");
-		prm.enter_subsection("Diffusion B");
-			this->parse_parameters(prm);
-		prm.leave_subsection();
-	prm.leave_subsection();
-}
+    prm.parse_input(parameter_file,
+                    /* filename = */ "generated_parameter.in",
+                    /* last_line = */ "",
+                    /* skip_undefined = */ true);
+    parse_parameters(prm);
+  }
 
 
-/**
- * Constructor
- */
-DiffusionInverse_B::DiffusionInverse_B (const std::string &parameter_filename)
-:
-Functions::ParsedFunction<3>()
-{
-	// A parameter handler
-	ParameterHandler prm;
+  void
+  Diffusion_B_Data::declare_parameters(ParameterHandler &prm)
+  {
+    prm.enter_subsection("Equation parameters");
+    {
+      prm.enter_subsection("Diffusion B");
+      {
+        prm.declare_entry("frequency",
+                          "0",
+                          Patterns::Integer(0, 100),
+                          "Frequency of coefficient.");
+        prm.declare_entry("scale",
+                          "1",
+                          Patterns::Double(0.0001, 10000),
+                          "Scaling parameter.");
+        prm.declare_entry("alpha",
+                          "1",
+                          Patterns::Double(0.000, 10000),
+                          "Scaling parameter for oscillatory part.");
+        prm.declare_entry("Function expression",
+                          "0",
+                          Patterns::Anything(),
+                          "Function expression as a string.");
+      }
+      prm.leave_subsection();
+    }
+    prm.leave_subsection();
+  }
 
-	// Declare a section for the function we need
-	prm.enter_subsection("Equation parameters");
-		prm.enter_subsection("Diffusion B inverse");
-			Functions::ParsedFunction<3>::declare_parameters(prm, 1);
-		prm.leave_subsection();
-	prm.leave_subsection();
 
-	// open file
-	std::ifstream parameter_file(parameter_filename);
+  void
+  Diffusion_B_Data::parse_parameters(ParameterHandler &prm)
+  {
+    prm.enter_subsection("Equation parameters");
+    {
+      prm.enter_subsection("Diffusion B");
+      {
+        k = prm.get_integer("frequency");
 
-	// Parse an input file.
-	prm.parse_input(parameter_file,
-			/* filename = */ "generated_parameter.in",
-			/* last_line = */ "",
-			/* skip_undefined = */ true);
+        scale = prm.get_double("scale");
 
-	// Initialize the ParsedFunction object with the given file
-	prm.enter_subsection("Equation parameters");
-		prm.enter_subsection("Diffusion B inverse");
-			this->parse_parameters(prm);
-		prm.leave_subsection();
-	prm.leave_subsection();
-}
+        alpha = prm.get_double("alpha");
+
+        expression = prm.get("Function expression");
+      }
+      prm.leave_subsection();
+    }
+    prm.leave_subsection();
+  }
+
+
+  Diffusion_B::Diffusion_B(const std::string &parameter_filename)
+    : FunctionParser<3>()
+    , Diffusion_B_Data(parameter_filename)
+    , fnc_expression(expression)
+  {
+    constants["pi"]        = numbers::PI;
+    constants["frequency"] = k;
+    constants["scale"]     = scale;
+    constants["alpha"]     = alpha;
+
+    this->initialize(variables, fnc_expression, constants);
+  }
+
+
+  DiffusionInverse_B::DiffusionInverse_B(const std::string &parameter_filename)
+    : FunctionParser<3>()
+    , Diffusion_B_Data(parameter_filename)
+  {
+    inverse_fnc_expression = "1/(" + expression + ")";
+
+    constants["pi"]        = numbers::PI;
+    constants["frequency"] = k;
+    constants["scale"]     = scale;
+    constants["alpha"]     = alpha;
+
+    this->initialize(variables, inverse_fnc_expression, constants);
+  }
 
 } // end namespace LaplaceProblem
