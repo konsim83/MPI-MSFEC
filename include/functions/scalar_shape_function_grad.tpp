@@ -24,7 +24,8 @@ namespace ShapeFun
            ExcDimensionMismatch(1, fe_ptr->n_components()));
     if (verbose)
       {
-        std::cout << "		Constructed scalar shape function gradient for   "
+        std::cout << "		Constructed scalar shape function gradient for "
+                     "  "
                   << fe_ptr->get_name() << "   on cell   [";
         for (unsigned int i = 0; i < (std::pow(2, dim) - 1); ++i)
           {
@@ -34,28 +35,25 @@ namespace ShapeFun
       }
   }
 
-
   template <int dim>
   void
-  ShapeFunctionScalarGrad<dim>::set_current_cell(
-    const typename Triangulation<dim>::cell_iterator &cell)
+    ShapeFunctionScalarGrad<dim>::set_current_cell(
+      const typename Triangulation<dim>::cell_iterator &cell)
   {
     current_cell_ptr = &cell;
   }
 
-
   template <int dim>
   void
-  ShapeFunctionScalarGrad<dim>::set_shape_fun_index(unsigned int index)
+    ShapeFunctionScalarGrad<dim>::set_shape_fun_index(unsigned int index)
   {
     shape_fun_index = index;
   }
 
-
   template <int dim>
   void
-  ShapeFunctionScalarGrad<dim>::vector_value(const Point<dim> &p,
-                                             Vector<double> &  value) const
+    ShapeFunctionScalarGrad<dim>::vector_value(const Point<dim> &p,
+                                               Vector<double> &  value) const
   {
     // Map physical points to reference cell
     Point<dim> point_on_ref_cell(
@@ -75,12 +73,11 @@ namespace ShapeFun
     (fe_values[grad].gradient(shape_fun_index, /* q_index */ 0)).unroll(value);
   }
 
-
   template <int dim>
   void
-  ShapeFunctionScalarGrad<dim>::vector_value_list(
-    const std::vector<Point<dim>> &points,
-    std::vector<Vector<double>> &  values) const
+    ShapeFunctionScalarGrad<dim>::vector_value_list(
+      const std::vector<Point<dim>> &points,
+      std::vector<Vector<double>> &  values) const
   {
     Assert(points.size() == values.size(),
            ExcDimensionMismatch(points.size(), values.size()));
@@ -115,6 +112,5 @@ namespace ShapeFun
   }
 
 } // namespace ShapeFun
-
 
 #endif /* INCLUDE_FUNCTIONS_SCALAR_SHAPE_FUNCTION_GRAD_TPP_ */

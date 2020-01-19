@@ -2,7 +2,6 @@
 #define INCLUDE_LINEAR_ALGEBRA_INVERSE_MATRIX_H_
 
 #include <deal.II/base/subscriptor.h>
-
 #include <deal.II/lac/petsc_precondition.h>
 #include <deal.II/lac/petsc_solver.h>
 #include <deal.II/lac/solver.h>
@@ -18,7 +17,6 @@
 // my headers
 #include <config.h>
 
-
 namespace LinearSolvers
 {
   using namespace dealii;
@@ -32,7 +30,7 @@ namespace LinearSolvers
 
     template <typename VectorType>
     void
-    vmult(VectorType &dst, const VectorType &src) const;
+      vmult(VectorType &dst, const VectorType &src) const;
 
   private:
     const SmartPointer<const MatrixType> matrix;

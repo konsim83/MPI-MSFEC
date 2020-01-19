@@ -25,8 +25,6 @@ namespace RTDQ
                       TimerOutput::wall_times)
   {}
 
-
-
   RTDQStd::~RTDQStd()
   {
     system_matrix.clear();
@@ -34,10 +32,8 @@ namespace RTDQ
     dof_handler.clear();
   }
 
-
-
   void
-  RTDQStd::setup_grid()
+    RTDQStd::setup_grid()
   {
     TimerOutput::Scope t(computing_timer, "mesh generation");
 
@@ -46,10 +42,8 @@ namespace RTDQ
     triangulation.refine_global(parameters.n_refine);
   }
 
-
-
   void
-  RTDQStd::setup_system_matrix()
+    RTDQStd::setup_system_matrix()
   {
     TimerOutput::Scope t(computing_timer, "system (incl. constraint) setup");
 
@@ -109,10 +103,8 @@ namespace RTDQ
     system_rhs.reinit(owned_partitioning, mpi_communicator);
   }
 
-
-
   void
-  RTDQStd::setup_constraints()
+    RTDQStd::setup_constraints()
   {
     TimerOutput::Scope t(computing_timer, "constraint setup");
 
@@ -204,18 +196,16 @@ namespace RTDQ
          * This is the mean value constraint
          * (slower for large problems).
          */
-        //		for (unsigned int i=first_dof_u+1; i<dof_handler.n_dofs(); ++i)
-        //			if (concentration_dofs[i] == true)
-        //				constraints.add_entry (first_dof_u, i, -1);
+        //		for (unsigned int i=first_dof_u+1; i<dof_handler.n_dofs();
+        //++i) 			if (concentration_dofs[i] == true)
+        // constraints.add_entry (first_dof_u, i, -1);
       }
 
     constraints.close();
   }
 
-
-
   void
-  RTDQStd::assemble_system()
+    RTDQStd::assemble_system()
   {
     TimerOutput::Scope t(computing_timer, "assembly");
 
@@ -239,21 +229,17 @@ namespace RTDQ
     const unsigned int n_q_points      = quadrature_formula.size();
     const unsigned int n_face_q_points = face_quadrature_formula.size();
 
-
     // Declare local contributions and reserve memory
     FullMatrix<double> local_matrix(dofs_per_cell, dofs_per_cell);
     Vector<double>     local_rhs(dofs_per_cell);
 
-
     std::vector<types::global_dof_index> local_dof_indices(dofs_per_cell);
-
 
     // equation data
     const EquationData::RightHandSideScalarParsed right_hand_side;
     const EquationData::BoundaryValues_u          boundary_values_u;
     const EquationData::DiffusionInverse_A        a_inverse(parameter_filename);
     const EquationData::ReactionRate              reaction_rate;
-
 
     // allocate
     std::vector<double>       rhs_values(n_q_points);
@@ -264,7 +250,6 @@ namespace RTDQ
     // define extractors
     const FEValuesExtractors::Vector flux(0);
     const FEValuesExtractors::Scalar concentration(3);
-
 
     // ------------------------------------------------------------------
     // loop over cells
@@ -310,11 +295,15 @@ namespace RTDQ
                         /*
                          * Discretize
                          * K^{-1}sigma + grad(u) = 0
-                         * div(sigma) + alpha*u = f , where alpha>=0 (this is
-                         * important) This is the simplest form of a
-                         * diffusion-reaction equation where an anisotropic
-                         * diffusion and reaction are in balance in a
-                         * heterogeneous medium.
+                         * div(sigma) + alpha*u = f ,
+                         * where alpha>=0 (this is
+                         * important) This is the
+                         * simplest form of a
+                         * diffusion-reaction equation
+                         * where an anisotropic
+                         * diffusion and reaction are in
+                         * balance in a heterogeneous
+                         * medium.
                          */
                         local_matrix(i, j) +=
                           (tau_i * a_inverse_values[q] * sigma_j -
@@ -327,17 +316,21 @@ namespace RTDQ
                   } // end for ++i
               }     // end for ++q
 
-
-            // line integral over boundary faces for for natural conditions on u
+            // line integral over boundary faces for for natural
+            // conditions on u
             for (unsigned int face_n = 0;
                  face_n < GeometryInfo<3>::faces_per_cell;
                  ++face_n)
               {
                 if (cell->at_boundary(face_n)
-                    //                && cell->face(face_n)->boundary_id()!=0 /*
-                    //                Select only certain faces. */
-                    //                && cell->face(face_n)->boundary_id()!=2 /*
-                    //                Select only certain faces. */
+                    //                &&
+                    //                cell->face(face_n)->boundary_id()!=0
+                    //                /* Select only certain
+                    //                faces. */
+                    //                &&
+                    //                cell->face(face_n)->boundary_id()!=2
+                    //                /* Select only certain
+                    //                faces. */
                 )
                   {
                     fe_face_values.reinit(cell, face_n);
@@ -366,22 +359,21 @@ namespace RTDQ
               /* use inhomogeneities for rhs */ true);
           }
       } // end for ++cell
-    // ------------------------------------------------------------------
-  } // end assemble()
-
+        // ------------------------------------------------------------------
+  }     // end assemble()
 
   void
-  RTDQStd::solve_direct()
+    RTDQStd::solve_direct()
   {
     TimerOutput::Scope t(computing_timer, " direct solver (MUMPS)");
 
     throw std::runtime_error(
-      "Solver not implemented: MUMPS does not work on TrilinosWrappers::MPI::BlockSparseMatrix classes.");
+      "Solver not implemented: MUMPS does not work on "
+      "TrilinosWrappers::MPI::BlockSparseMatrix classes.");
   }
 
-
   void
-  RTDQStd::solve_iterative()
+    RTDQStd::solve_iterative()
   {
     inner_schur_preconditioner =
       std::make_shared<typename LinearSolvers::InnerPreconditioner<3>::type>();
@@ -446,7 +438,8 @@ namespace RTDQ
       //              LinearSolvers::SchurComplementMPI<
       //                LA::MPI::BlockSparseMatrix,
       //                LA::MPI::Vector,
-      //                typename LinearSolvers::InnerPreconditioner<3>::type>,
+      //                typename
+      //                LinearSolvers::InnerPreconditioner<3>::type>,
       //              PreconditionIdentity>
       //              preconditioner(schur_complement,
       //            		  PreconditionIdentity(),
@@ -495,7 +488,8 @@ namespace RTDQ
       TimerOutput::Scope t(computing_timer, "outer CG solver (for sigma)");
 
       //	SolverControl                    outer_solver_control;
-      //	PETScWrappers::SparseDirectMUMPS outer_solver(outer_solver_control,
+      //	PETScWrappers::SparseDirectMUMPS
+      // outer_solver(outer_solver_control,
       // mpi_communicator); 	outer_solver.set_symmetric_mode(true);
 
       // use computed u to solve for sigma
@@ -516,12 +510,11 @@ namespace RTDQ
     locally_relevant_solution = distributed_solution;
   }
 
-
   /**
    * Write *.vtk outut.
    */
   void
-  RTDQStd::output_results() const
+    RTDQStd::output_results() const
   {
     std::vector<std::string> solution_names(3, "sigma");
     solution_names.push_back("u");
@@ -546,7 +539,6 @@ namespace RTDQ
     data_out.add_data_vector(subdomain, "subdomain_id");
 
     data_out.build_patches();
-
 
     std::string filename(parameters.filename_output);
     filename += "_n_refine-" + Utilities::int_to_string(parameters.n_refine, 2);
@@ -581,18 +573,17 @@ namespace RTDQ
       }
   }
 
-
   /**
    * Solve problem with all input parameters.
    */
   void
-  RTDQStd::run()
+    RTDQStd::run()
   {
     if (parameters.compute_solution == false)
       {
-        deallog
-          << "Run of standard problem is explicitly disabled in parameter file. "
-          << std::endl;
+        deallog << "Run of standard problem is explicitly disabled in "
+                   "parameter file. "
+                << std::endl;
         return;
       }
 
@@ -601,7 +592,6 @@ namespace RTDQ
 #else
     pcout << "Running using Trilinos." << std::endl;
 #endif
-
 
     setup_grid();
 
@@ -620,7 +610,6 @@ namespace RTDQ
       TimerOutput::Scope t(computing_timer, "vtu output");
       output_results();
     }
-
 
     if (parameters.verbose)
       {

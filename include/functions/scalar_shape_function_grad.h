@@ -6,28 +6,22 @@
 #include <deal.II/base/point.h>
 #include <deal.II/base/quadrature_lib.h>
 #include <deal.II/base/tensor.h>
-
 #include <deal.II/dofs/dof_accessor.h>
 #include <deal.II/dofs/dof_handler.h>
 #include <deal.II/dofs/dof_tools.h>
-
 #include <deal.II/fe/fe_tools.h>
 #include <deal.II/fe/fe_values.h>
 #include <deal.II/fe/mapping_q.h>
-
 #include <deal.II/grid/tria.h>
 #include <deal.II/grid/tria_accessor.h>
 #include <deal.II/grid/tria_iterator.h>
-
 #include <deal.II/lac/vector.h>
-
 #include <deal.II/numerics/matrix_tools.h>
 #include <deal.II/numerics/vector_tools.h>
 
 #include <fstream>
 #include <iostream>
 #include <vector>
-
 
 namespace ShapeFun
 {
@@ -62,7 +56,7 @@ namespace ShapeFun
      * @param[out] value
      */
     virtual void
-    vector_value(const Point<dim> &p, Vector<double> &value) const override;
+      vector_value(const Point<dim> &p, Vector<double> &value) const override;
 
     /**
      * Evaluate shape function at point list <code> points <\code>
@@ -71,8 +65,8 @@ namespace ShapeFun
      * @param[out] values
      */
     virtual void
-    vector_value_list(const std::vector<Point<dim>> &points,
-                      std::vector<Vector<double>> &  values) const override;
+      vector_value_list(const std::vector<Point<dim>> &points,
+                        std::vector<Vector<double>> &  values) const override;
 
     /**
      * Set pointer to current cell (actually and iterator).
@@ -80,7 +74,7 @@ namespace ShapeFun
      * @param cell
      */
     void
-    set_current_cell(const typename Triangulation<dim>::cell_iterator &cell);
+      set_current_cell(const typename Triangulation<dim>::cell_iterator &cell);
 
     /**
      * Set shape function index.
@@ -88,7 +82,7 @@ namespace ShapeFun
      * @param index
      */
     void
-    set_shape_fun_index(unsigned int index);
+      set_shape_fun_index(unsigned int index);
 
   private:
     SmartPointer<const FiniteElement<dim>> fe_ptr;

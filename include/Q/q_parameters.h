@@ -2,7 +2,6 @@
 #define INCLUDE_Q_PARAMETERS_H_
 
 #include <deal.II/base/parameter_handler.h>
-
 #include <deal.II/grid/cell_id.h>
 
 #include <fstream>

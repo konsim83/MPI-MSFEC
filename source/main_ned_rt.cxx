@@ -1,10 +1,9 @@
 // deal.ii parameter files
+#include <Ned_RT/ned_rt_global.h>
+#include <Ned_RT/ned_rt_ref.h>
 #include <deal.II/base/mpi.h>
 #include <deal.II/base/numbers.h>
 #include <deal.II/base/utilities.h>
-
-#include <Ned_RT/ned_rt_global.h>
-#include <Ned_RT/ned_rt_ref.h>
 
 // Std C++
 #include <fstream>
@@ -14,7 +13,7 @@
  * Main file. Call ./main and see instructions for command lie parameters.
  */
 int
-main(int argc, char *argv[])
+  main(int argc, char *argv[])
 {
   // Very simple way of input handling.
   if (argc < 2)
@@ -56,7 +55,6 @@ main(int argc, char *argv[])
           exit(1);
         }
     } // end while
-
 
   try
     {

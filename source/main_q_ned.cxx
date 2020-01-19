@@ -15,7 +15,7 @@
  * Main file. Call ./main and see instructions for command lie parameters.
  */
 int
-main(int argc, char *argv[])
+  main(int argc, char *argv[])
 {
   // Very simple way of input handling.
   if (argc < 2)
@@ -57,7 +57,6 @@ main(int argc, char *argv[])
           exit(1);
         }
     } // end while
-
 
   try
     {

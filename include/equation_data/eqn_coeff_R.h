@@ -14,7 +14,6 @@ namespace EquationData
 {
   using namespace dealii;
 
-
   /**
    * This lower order term can regularize the weak form. If it vanishes
    * we have a Darcy problem (in the last element of the de Rham complex).
@@ -36,9 +35,9 @@ namespace EquationData
      * @param component = 0
      */
     virtual void
-    value_list(const std::vector<Point<3>> &points,
-               std::vector<double> &        values,
-               const unsigned int           component = 0) const override;
+      value_list(const std::vector<Point<3>> &points,
+                 std::vector<double> &        values,
+                 const unsigned int           component = 0) const override;
   };
 
 } // end namespace EquationData

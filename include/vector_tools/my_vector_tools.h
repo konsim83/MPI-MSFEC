@@ -14,26 +14,21 @@
 #include <deal.II/base/timer.h>
 #include <deal.II/base/utilities.h>
 #include <deal.II/base/work_stream.h>
-
 #include <deal.II/distributed/grid_refinement.h>
 #include <deal.II/distributed/tria.h>
-
 #include <deal.II/dofs/dof_accessor.h>
 #include <deal.II/dofs/dof_handler.h>
 #include <deal.II/dofs/dof_renumbering.h>
 #include <deal.II/dofs/dof_tools.h>
-
 #include <deal.II/fe/fe_system.h>
 #include <deal.II/fe/fe_values.h>
 #include <deal.II/fe/fe_values_extractors.h>
-
 #include <deal.II/grid/grid_generator.h>
 #include <deal.II/grid/grid_refinement.h>
 #include <deal.II/grid/grid_tools.h>
 #include <deal.II/grid/tria.h>
 #include <deal.II/grid/tria_accessor.h>
 #include <deal.II/grid/tria_iterator.h>
-
 #include <deal.II/lac/affine_constraints.h>
 #include <deal.II/lac/dynamic_sparsity_pattern.h>
 #include <deal.II/lac/full_matrix.h>
@@ -46,7 +41,6 @@
 #include <deal.II/lac/trilinos_sparse_matrix.h>
 #include <deal.II/lac/trilinos_vector.h>
 #include <deal.II/lac/vector.h>
-
 #include <deal.II/numerics/matrix_tools.h>
 #include <deal.II/numerics/vector_tools.h>
 
@@ -78,7 +72,8 @@ namespace MyVectorTools
   namespace internal
   {
     /**
-     * Parallel assembly function for non-matrix-free projections onto fe space.
+     * Parallel assembly function for non-matrix-free projections onto fe
+     * space.
      *
      * @param dof_handler
      * @param constraints
@@ -90,16 +85,17 @@ namespace MyVectorTools
      */
     template <int dim, typename FunctionType>
     void
-    assemble_projection(const DoFHandler<dim> &          dof_handler,
-                        const AffineConstraints<double> &constraints,
-                        const Quadrature<dim> &          quad_rule,
-                        const FunctionType &             my_function,
-                        TrilinosWrappers::SparseMatrix & system_matrix,
-                        TrilinosWrappers::MPI::Vector &  system_rhs,
-                        const MPI_Comm & /* mpi_communicator */);
+      assemble_projection(const DoFHandler<dim> &          dof_handler,
+                          const AffineConstraints<double> &constraints,
+                          const Quadrature<dim> &          quad_rule,
+                          const FunctionType &             my_function,
+                          TrilinosWrappers::SparseMatrix & system_matrix,
+                          TrilinosWrappers::MPI::Vector &  system_rhs,
+                          const MPI_Comm & /* mpi_communicator */);
 
     /**
-     * Serial assembly function for non-matrix-free projections onto fe space.
+     * Serial assembly function for non-matrix-free projections onto fe
+     * space.
      *
      * @param dof_handler
      * @param constraints
@@ -110,12 +106,12 @@ namespace MyVectorTools
      */
     template <int dim, typename FunctionType>
     void
-    assemble_projection(const DoFHandler<dim> &          dof_handler,
-                        const AffineConstraints<double> &constraints,
-                        const Quadrature<dim> &          quad_rule,
-                        const FunctionType &             my_function,
-                        SparseMatrix<double> &           system_matrix,
-                        Vector<double> &                 system_rhs);
+      assemble_projection(const DoFHandler<dim> &          dof_handler,
+                          const AffineConstraints<double> &constraints,
+                          const Quadrature<dim> &          quad_rule,
+                          const FunctionType &             my_function,
+                          SparseMatrix<double> &           system_matrix,
+                          Vector<double> &                 system_rhs);
 
     /**
      * Parallel solver for projection problems. These problems are not
@@ -130,12 +126,12 @@ namespace MyVectorTools
      * @param mpi_communicator
      */
     void
-    solve(const AffineConstraints<double> &     constraints,
-          const IndexSet &                      locally_owned_dofs,
-          const TrilinosWrappers::SparseMatrix &system_matrix,
-          const TrilinosWrappers::MPI::Vector & system_rhs,
-          TrilinosWrappers::MPI::Vector &       vec,
-          const MPI_Comm &                      mpi_communicator);
+      solve(const AffineConstraints<double> &     constraints,
+            const IndexSet &                      locally_owned_dofs,
+            const TrilinosWrappers::SparseMatrix &system_matrix,
+            const TrilinosWrappers::MPI::Vector & system_rhs,
+            TrilinosWrappers::MPI::Vector &       vec,
+            const MPI_Comm &                      mpi_communicator);
 
     /**
      * Serial solver for projection problems. These problems are not
@@ -148,11 +144,10 @@ namespace MyVectorTools
      * @param vec
      */
     void
-    solve(const AffineConstraints<double> &constraints,
-          const SparseMatrix<double> &     system_matrix,
-          const Vector<double> &           system_rhs,
-          Vector<double> &                 vec);
-
+      solve(const AffineConstraints<double> &constraints,
+            const SparseMatrix<double> &     system_matrix,
+            const Vector<double> &           system_rhs,
+            Vector<double> &                 vec);
 
     /**
      * Fast dynamic cast. Be careful, this is not safe.
@@ -162,7 +157,7 @@ namespace MyVectorTools
      */
     template <typename Dest, typename Src>
     Dest *
-    most_derived_fast_dynamic_cast(Src *src)
+      most_derived_fast_dynamic_cast(Src *src)
     {
       if (typeid(*src) == typeid(Dest))
         {
@@ -190,12 +185,12 @@ namespace MyVectorTools
    */
   template <int dim, typename FunctionType>
   void
-  project_on_fe_space(const DoFHandler<dim> &          dof_handler,
-                      const AffineConstraints<double> &constraints,
-                      const Quadrature<dim> &          quad_rule,
-                      const FunctionType &             my_function,
-                      TrilinosWrappers::MPI::Vector &  vec,
-                      const MPI_Comm &                 mpi_communicator);
+    project_on_fe_space(const DoFHandler<dim> &          dof_handler,
+                        const AffineConstraints<double> &constraints,
+                        const Quadrature<dim> &          quad_rule,
+                        const FunctionType &             my_function,
+                        TrilinosWrappers::MPI::Vector &  vec,
+                        const MPI_Comm &                 mpi_communicator);
   /**
    * Serial projection method on finite element space. There may be
    * some redundancy with deal.ii.
@@ -208,14 +203,13 @@ namespace MyVectorTools
    */
   template <int dim, typename FunctionType>
   void
-  project_on_fe_space(const DoFHandler<dim> &          dof_handler,
-                      const AffineConstraints<double> &constraints,
-                      const Quadrature<dim> &          quad_rule,
-                      const FunctionType &             my_function,
-                      Vector<double> &                 vec);
+    project_on_fe_space(const DoFHandler<dim> &          dof_handler,
+                        const AffineConstraints<double> &constraints,
+                        const Quadrature<dim> &          quad_rule,
+                        const FunctionType &             my_function,
+                        Vector<double> &                 vec);
 
 } // namespace MyVectorTools
-
 
 ///////////////////////////////////////////
 ///////   External Instatiations     //////
@@ -232,82 +226,82 @@ namespace MyVectorTools
     ////////////////////////
 
     extern template void
-    assemble_projection<2, TensorFunction<1, 2>>(
-      const DoFHandler<2> &            dof_handler,
-      const AffineConstraints<double> &constraints,
-      const Quadrature<2> &            quad_rule,
-      const TensorFunction<1, 2> &     my_function,
-      TrilinosWrappers::SparseMatrix & system_matrix,
-      TrilinosWrappers::MPI::Vector &  system_rhs,
-      const MPI_Comm & /* mpi_communicator */);
+      assemble_projection<2, TensorFunction<1, 2>>(
+        const DoFHandler<2> &            dof_handler,
+        const AffineConstraints<double> &constraints,
+        const Quadrature<2> &            quad_rule,
+        const TensorFunction<1, 2> &     my_function,
+        TrilinosWrappers::SparseMatrix & system_matrix,
+        TrilinosWrappers::MPI::Vector &  system_rhs,
+        const MPI_Comm & /* mpi_communicator */);
 
     extern template void
-    assemble_projection<3, TensorFunction<1, 3>>(
-      const DoFHandler<3> &            dof_handler,
-      const AffineConstraints<double> &constraints,
-      const Quadrature<3> &            quad_rule,
-      const TensorFunction<1, 3> &     my_function,
-      TrilinosWrappers::SparseMatrix & system_matrix,
-      TrilinosWrappers::MPI::Vector &  system_rhs,
-      const MPI_Comm & /* mpi_communicator */);
+      assemble_projection<3, TensorFunction<1, 3>>(
+        const DoFHandler<3> &            dof_handler,
+        const AffineConstraints<double> &constraints,
+        const Quadrature<3> &            quad_rule,
+        const TensorFunction<1, 3> &     my_function,
+        TrilinosWrappers::SparseMatrix & system_matrix,
+        TrilinosWrappers::MPI::Vector &  system_rhs,
+        const MPI_Comm & /* mpi_communicator */);
 
     extern template void
-    assemble_projection<2, TensorFunction<1, 2>>(
-      const DoFHandler<2> &            dof_handler,
-      const AffineConstraints<double> &constraints,
-      const Quadrature<2> &            quad_rule,
-      const TensorFunction<1, 2> &     my_function,
-      SparseMatrix<double> &           system_matrix,
-      Vector<double> &                 system_rhs);
+      assemble_projection<2, TensorFunction<1, 2>>(
+        const DoFHandler<2> &            dof_handler,
+        const AffineConstraints<double> &constraints,
+        const Quadrature<2> &            quad_rule,
+        const TensorFunction<1, 2> &     my_function,
+        SparseMatrix<double> &           system_matrix,
+        Vector<double> &                 system_rhs);
 
     extern template void
-    assemble_projection<3, TensorFunction<1, 3>>(
-      const DoFHandler<3> &            dof_handler,
-      const AffineConstraints<double> &constraints,
-      const Quadrature<3> &            quad_rule,
-      const TensorFunction<1, 3> &     my_function,
-      SparseMatrix<double> &           system_matrix,
-      Vector<double> &                 system_rhs);
+      assemble_projection<3, TensorFunction<1, 3>>(
+        const DoFHandler<3> &            dof_handler,
+        const AffineConstraints<double> &constraints,
+        const Quadrature<3> &            quad_rule,
+        const TensorFunction<1, 3> &     my_function,
+        SparseMatrix<double> &           system_matrix,
+        Vector<double> &                 system_rhs);
 
     ////////////////////////
 
     extern template void
-    assemble_projection<2, Function<2>>(
-      const DoFHandler<2> &            dof_handler,
-      const AffineConstraints<double> &constraints,
-      const Quadrature<2> &            quad_rule,
-      const Function<2> &              my_function,
-      TrilinosWrappers::SparseMatrix & system_matrix,
-      TrilinosWrappers::MPI::Vector &  system_rhs,
-      const MPI_Comm & /* mpi_communicator */);
+      assemble_projection<2, Function<2>>(
+        const DoFHandler<2> &            dof_handler,
+        const AffineConstraints<double> &constraints,
+        const Quadrature<2> &            quad_rule,
+        const Function<2> &              my_function,
+        TrilinosWrappers::SparseMatrix & system_matrix,
+        TrilinosWrappers::MPI::Vector &  system_rhs,
+        const MPI_Comm & /* mpi_communicator */);
 
     extern template void
-    assemble_projection<2, Function<2>>(
-      const DoFHandler<2> &            dof_handler,
-      const AffineConstraints<double> &constraints,
-      const Quadrature<2> &            quad_rule,
-      const Function<2> &              my_function,
-      SparseMatrix<double> &           system_matrix,
-      Vector<double> &                 system_rhs);
+      assemble_projection<2, Function<2>>(
+        const DoFHandler<2> &            dof_handler,
+        const AffineConstraints<double> &constraints,
+        const Quadrature<2> &            quad_rule,
+        const Function<2> &              my_function,
+        SparseMatrix<double> &           system_matrix,
+        Vector<double> &                 system_rhs);
 
     extern template void
-    assemble_projection<3, Function<3>>(
-      const DoFHandler<3> &            dof_handler,
-      const AffineConstraints<double> &constraints,
-      const Quadrature<3> &            quad_rule,
-      const Function<3> &              my_function,
-      TrilinosWrappers::SparseMatrix & system_matrix,
-      TrilinosWrappers::MPI::Vector &  system_rhs,
-      const MPI_Comm & /* mpi_communicator */);
+      assemble_projection<3, Function<3>>(
+        const DoFHandler<3> &            dof_handler,
+        const AffineConstraints<double> &constraints,
+        const Quadrature<3> &            quad_rule,
+        const Function<3> &              my_function,
+        TrilinosWrappers::SparseMatrix & system_matrix,
+        TrilinosWrappers::MPI::Vector &  system_rhs,
+        const MPI_Comm & /* mpi_communicator */);
 
     extern template void
-    assemble_projection<3, Function<3>>(
-      const DoFHandler<3> &            dof_handler,
-      const AffineConstraints<double> &constraints,
-      const Quadrature<3> &            quad_rule,
-      const Function<3> &              my_function,
-      SparseMatrix<double> &           system_matrix,
-      Vector<double> &                 system_rhs);
+      assemble_projection<3, Function<3>>(
+        const DoFHandler<3> &            dof_handler,
+        const AffineConstraints<double> &constraints,
+        const Quadrature<3> &            quad_rule,
+        const Function<3> &              my_function,
+        SparseMatrix<double> &           system_matrix,
+        Vector<double> &                 system_rhs);
 
   } // namespace internal
 
@@ -319,176 +313,174 @@ namespace MyVectorTools
   ////////////////////////
 
   extern template void
-  project_on_fe_space<2, TensorFunction<1, 2>>(
-    const DoFHandler<2> &            dof_handler,
-    const AffineConstraints<double> &constraints,
-    const Quadrature<2> &            quad_rule,
-    const TensorFunction<1, 2> &     my_function,
-    TrilinosWrappers::MPI::Vector &  vec,
-    const MPI_Comm &                 mpi_communicator);
+    project_on_fe_space<2, TensorFunction<1, 2>>(
+      const DoFHandler<2> &            dof_handler,
+      const AffineConstraints<double> &constraints,
+      const Quadrature<2> &            quad_rule,
+      const TensorFunction<1, 2> &     my_function,
+      TrilinosWrappers::MPI::Vector &  vec,
+      const MPI_Comm &                 mpi_communicator);
 
   extern template void
-  project_on_fe_space<2, TensorFunction<1, 2>>(
-    const DoFHandler<2> &            dof_handler,
-    const AffineConstraints<double> &constraints,
-    const Quadrature<2> &            quad_rule,
-    const TensorFunction<1, 2> &     my_function,
-    Vector<double> &                 vec);
+    project_on_fe_space<2, TensorFunction<1, 2>>(
+      const DoFHandler<2> &            dof_handler,
+      const AffineConstraints<double> &constraints,
+      const Quadrature<2> &            quad_rule,
+      const TensorFunction<1, 2> &     my_function,
+      Vector<double> &                 vec);
 
   extern template void
-  project_on_fe_space<3, TensorFunction<1, 3>>(
-    const DoFHandler<3> &            dof_handler,
-    const AffineConstraints<double> &constraints,
-    const Quadrature<3> &            quad_rule,
-    const TensorFunction<1, 3> &     my_function,
-    TrilinosWrappers::MPI::Vector &  vec,
-    const MPI_Comm &                 mpi_communicator);
+    project_on_fe_space<3, TensorFunction<1, 3>>(
+      const DoFHandler<3> &            dof_handler,
+      const AffineConstraints<double> &constraints,
+      const Quadrature<3> &            quad_rule,
+      const TensorFunction<1, 3> &     my_function,
+      TrilinosWrappers::MPI::Vector &  vec,
+      const MPI_Comm &                 mpi_communicator);
 
   extern template void
-  project_on_fe_space<3, TensorFunction<1, 3>>(
-    const DoFHandler<3> &            dof_handler,
-    const AffineConstraints<double> &constraints,
-    const Quadrature<3> &            quad_rule,
-    const TensorFunction<1, 3> &     my_function,
-    Vector<double> &                 vec);
+    project_on_fe_space<3, TensorFunction<1, 3>>(
+      const DoFHandler<3> &            dof_handler,
+      const AffineConstraints<double> &constraints,
+      const Quadrature<3> &            quad_rule,
+      const TensorFunction<1, 3> &     my_function,
+      Vector<double> &                 vec);
 
   ////////////////////////
 
   extern template void
-  project_on_fe_space<2, Function<2>>(
-    const DoFHandler<2> &            dof_handler,
-    const AffineConstraints<double> &constraints,
-    const Quadrature<2> &            quad_rule,
-    const Function<2> &              my_function,
-    TrilinosWrappers::MPI::Vector &  vec,
-    const MPI_Comm &                 mpi_communicator);
+    project_on_fe_space<2, Function<2>>(
+      const DoFHandler<2> &            dof_handler,
+      const AffineConstraints<double> &constraints,
+      const Quadrature<2> &            quad_rule,
+      const Function<2> &              my_function,
+      TrilinosWrappers::MPI::Vector &  vec,
+      const MPI_Comm &                 mpi_communicator);
 
   extern template void
-  project_on_fe_space<2, Function<2>>(
-    const DoFHandler<2> &            dof_handler,
-    const AffineConstraints<double> &constraints,
-    const Quadrature<2> &            quad_rule,
-    const Function<2> &              my_function,
-    Vector<double> &                 vec);
+    project_on_fe_space<2, Function<2>>(
+      const DoFHandler<2> &            dof_handler,
+      const AffineConstraints<double> &constraints,
+      const Quadrature<2> &            quad_rule,
+      const Function<2> &              my_function,
+      Vector<double> &                 vec);
 
   extern template void
-  project_on_fe_space<3, Function<3>>(
-    const DoFHandler<3> &            dof_handler,
-    const AffineConstraints<double> &constraints,
-    const Quadrature<3> &            quad_rule,
-    const Function<3> &              my_function,
-    TrilinosWrappers::MPI::Vector &  vec,
-    const MPI_Comm &                 mpi_communicator);
+    project_on_fe_space<3, Function<3>>(
+      const DoFHandler<3> &            dof_handler,
+      const AffineConstraints<double> &constraints,
+      const Quadrature<3> &            quad_rule,
+      const Function<3> &              my_function,
+      TrilinosWrappers::MPI::Vector &  vec,
+      const MPI_Comm &                 mpi_communicator);
 
   extern template void
-  project_on_fe_space<3, Function<3>>(
-    const DoFHandler<3> &            dof_handler,
-    const AffineConstraints<double> &constraints,
-    const Quadrature<3> &            quad_rule,
-    const Function<3> &              my_function,
-    Vector<double> &                 vec);
+    project_on_fe_space<3, Function<3>>(
+      const DoFHandler<3> &            dof_handler,
+      const AffineConstraints<double> &constraints,
+      const Quadrature<3> &            quad_rule,
+      const Function<3> &              my_function,
+      Vector<double> &                 vec);
 
   ////////////////////////
   ////////////////////////
   ////////////////////////
-
 
   namespace internal
   {
     extern template void
-    assemble_projection<3, EquationData::ExactSolutionLin_B_div>(
-      const DoFHandler<3> &                       dof_handler,
-      const AffineConstraints<double> &           constraints,
-      const Quadrature<3> &                       quad_rule,
-      const EquationData::ExactSolutionLin_B_div &my_function,
-      TrilinosWrappers::SparseMatrix &            system_matrix,
-      TrilinosWrappers::MPI::Vector &             system_rhs,
-      const MPI_Comm & /* mpi_communicator */);
+      assemble_projection<3, EquationData::ExactSolutionLin_B_div>(
+        const DoFHandler<3> &                       dof_handler,
+        const AffineConstraints<double> &           constraints,
+        const Quadrature<3> &                       quad_rule,
+        const EquationData::ExactSolutionLin_B_div &my_function,
+        TrilinosWrappers::SparseMatrix &            system_matrix,
+        TrilinosWrappers::MPI::Vector &             system_rhs,
+        const MPI_Comm & /* mpi_communicator */);
 
     extern template void
-    assemble_projection<3, EquationData::ExactSolutionLin>(
-      const DoFHandler<3> &                 dof_handler,
-      const AffineConstraints<double> &     constraints,
-      const Quadrature<3> &                 quad_rule,
-      const EquationData::ExactSolutionLin &my_function,
-      TrilinosWrappers::SparseMatrix &      system_matrix,
-      TrilinosWrappers::MPI::Vector &       system_rhs,
-      const MPI_Comm & /* mpi_communicator */);
+      assemble_projection<3, EquationData::ExactSolutionLin>(
+        const DoFHandler<3> &                 dof_handler,
+        const AffineConstraints<double> &     constraints,
+        const Quadrature<3> &                 quad_rule,
+        const EquationData::ExactSolutionLin &my_function,
+        TrilinosWrappers::SparseMatrix &      system_matrix,
+        TrilinosWrappers::MPI::Vector &       system_rhs,
+        const MPI_Comm & /* mpi_communicator */);
 
     extern template void
-    assemble_projection<3, EquationData::ExactSolutionLin>(
-      const DoFHandler<3> &                 dof_handler,
-      const AffineConstraints<double> &     constraints,
-      const Quadrature<3> &                 quad_rule,
-      const EquationData::ExactSolutionLin &my_function,
-      SparseMatrix<double> &                system_matrix,
-      Vector<double> &                      system_rhs);
+      assemble_projection<3, EquationData::ExactSolutionLin>(
+        const DoFHandler<3> &                 dof_handler,
+        const AffineConstraints<double> &     constraints,
+        const Quadrature<3> &                 quad_rule,
+        const EquationData::ExactSolutionLin &my_function,
+        SparseMatrix<double> &                system_matrix,
+        Vector<double> &                      system_rhs);
 
     extern template void
-    assemble_projection<3, EquationData::ExactSolutionLin_A_curl>(
-      const DoFHandler<3> &                        dof_handler,
-      const AffineConstraints<double> &            constraints,
-      const Quadrature<3> &                        quad_rule,
-      const EquationData::ExactSolutionLin_A_curl &my_function,
-      TrilinosWrappers::SparseMatrix &             system_matrix,
-      TrilinosWrappers::MPI::Vector &              system_rhs,
-      const MPI_Comm & /* mpi_communicator */);
+      assemble_projection<3, EquationData::ExactSolutionLin_A_curl>(
+        const DoFHandler<3> &                        dof_handler,
+        const AffineConstraints<double> &            constraints,
+        const Quadrature<3> &                        quad_rule,
+        const EquationData::ExactSolutionLin_A_curl &my_function,
+        TrilinosWrappers::SparseMatrix &             system_matrix,
+        TrilinosWrappers::MPI::Vector &              system_rhs,
+        const MPI_Comm & /* mpi_communicator */);
 
     extern template void
-    assemble_projection<3, EquationData::ExactSolutionLin_A_curl>(
-      const DoFHandler<3> &                        dof_handler,
-      const AffineConstraints<double> &            constraints,
-      const Quadrature<3> &                        quad_rule,
-      const EquationData::ExactSolutionLin_A_curl &my_function,
-      SparseMatrix<double> &                       system_matrix,
-      Vector<double> &                             system_rhs);
+      assemble_projection<3, EquationData::ExactSolutionLin_A_curl>(
+        const DoFHandler<3> &                        dof_handler,
+        const AffineConstraints<double> &            constraints,
+        const Quadrature<3> &                        quad_rule,
+        const EquationData::ExactSolutionLin_A_curl &my_function,
+        SparseMatrix<double> &                       system_matrix,
+        Vector<double> &                             system_rhs);
 
   } // namespace internal
 
   extern template void
-  project_on_fe_space<3, EquationData::ExactSolutionLin_B_div>(
-    const DoFHandler<3> &                       dof_handler,
-    const AffineConstraints<double> &           constraints,
-    const Quadrature<3> &                       quad_rule,
-    const EquationData::ExactSolutionLin_B_div &my_function,
-    TrilinosWrappers::MPI::Vector &             vec,
-    const MPI_Comm &                            mpi_communicator);
+    project_on_fe_space<3, EquationData::ExactSolutionLin_B_div>(
+      const DoFHandler<3> &                       dof_handler,
+      const AffineConstraints<double> &           constraints,
+      const Quadrature<3> &                       quad_rule,
+      const EquationData::ExactSolutionLin_B_div &my_function,
+      TrilinosWrappers::MPI::Vector &             vec,
+      const MPI_Comm &                            mpi_communicator);
 
   extern template void
-  project_on_fe_space<3, EquationData::ExactSolutionLin>(
-    const DoFHandler<3> &                 dof_handler,
-    const AffineConstraints<double> &     constraints,
-    const Quadrature<3> &                 quad_rule,
-    const EquationData::ExactSolutionLin &my_function,
-    TrilinosWrappers::MPI::Vector &       vec,
-    const MPI_Comm &                      mpi_communicator);
+    project_on_fe_space<3, EquationData::ExactSolutionLin>(
+      const DoFHandler<3> &                 dof_handler,
+      const AffineConstraints<double> &     constraints,
+      const Quadrature<3> &                 quad_rule,
+      const EquationData::ExactSolutionLin &my_function,
+      TrilinosWrappers::MPI::Vector &       vec,
+      const MPI_Comm &                      mpi_communicator);
 
   extern template void
-  project_on_fe_space<3, EquationData::ExactSolutionLin>(
-    const DoFHandler<3> &                 dof_handler,
-    const AffineConstraints<double> &     constraints,
-    const Quadrature<3> &                 quad_rule,
-    const EquationData::ExactSolutionLin &my_function,
-    Vector<double> &                      vec);
+    project_on_fe_space<3, EquationData::ExactSolutionLin>(
+      const DoFHandler<3> &                 dof_handler,
+      const AffineConstraints<double> &     constraints,
+      const Quadrature<3> &                 quad_rule,
+      const EquationData::ExactSolutionLin &my_function,
+      Vector<double> &                      vec);
 
   extern template void
-  project_on_fe_space<3, EquationData::ExactSolutionLin_A_curl>(
-    const DoFHandler<3> &                        dof_handler,
-    const AffineConstraints<double> &            constraints,
-    const Quadrature<3> &                        quad_rule,
-    const EquationData::ExactSolutionLin_A_curl &my_function,
-    TrilinosWrappers::MPI::Vector &              vec,
-    const MPI_Comm &                             mpi_communicator);
+    project_on_fe_space<3, EquationData::ExactSolutionLin_A_curl>(
+      const DoFHandler<3> &                        dof_handler,
+      const AffineConstraints<double> &            constraints,
+      const Quadrature<3> &                        quad_rule,
+      const EquationData::ExactSolutionLin_A_curl &my_function,
+      TrilinosWrappers::MPI::Vector &              vec,
+      const MPI_Comm &                             mpi_communicator);
 
   extern template void
-  project_on_fe_space<3, EquationData::ExactSolutionLin_A_curl>(
-    const DoFHandler<3> &                        dof_handler,
-    const AffineConstraints<double> &            constraints,
-    const Quadrature<3> &                        quad_rule,
-    const EquationData::ExactSolutionLin_A_curl &my_function,
-    Vector<double> &                             vec);
+    project_on_fe_space<3, EquationData::ExactSolutionLin_A_curl>(
+      const DoFHandler<3> &                        dof_handler,
+      const AffineConstraints<double> &            constraints,
+      const Quadrature<3> &                        quad_rule,
+      const EquationData::ExactSolutionLin_A_curl &my_function,
+      Vector<double> &                             vec);
 
 } // namespace MyVectorTools
-
 
 #endif /* INCLUDE_VECTOR_TOOLS_MY_VECTOR_TOOLS_H_ */

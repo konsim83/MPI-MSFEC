@@ -1,7 +1,6 @@
 #ifndef INCLUDE_LINEAR_ALGEBRA_INVERSE_MATRIX_TPP_
 #define INCLUDE_LINEAR_ALGEBRA_INVERSE_MATRIX_TPP_
 
-
 //#include <linear_algebra/inverse_matrix.h>
 
 namespace LinearSolvers
@@ -16,13 +15,12 @@ namespace LinearSolvers
     , preconditioner(preconditioner)
   {}
 
-
   template <typename MatrixType, typename PreconditionerType>
   template <typename VectorType>
   void
-  InverseMatrix<MatrixType, PreconditionerType>::vmult(
-    VectorType &      dst,
-    const VectorType &src) const
+    InverseMatrix<MatrixType, PreconditionerType>::vmult(
+      VectorType &      dst,
+      const VectorType &src) const
   {
     SolverControl solver_control(std::max(static_cast<std::size_t>(src.size()),
                                           static_cast<std::size_t>(1000)),
@@ -41,9 +39,6 @@ namespace LinearSolvers
       }
   }
 
-
-
 } // end namespace LinearSolvers
-
 
 #endif /* INCLUDE_LINEAR_ALGEBRA_INVERSE_MATRIX_TPP_ */

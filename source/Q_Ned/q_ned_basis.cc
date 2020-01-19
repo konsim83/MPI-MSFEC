@@ -44,7 +44,8 @@ namespace QNed
   {
     if ((parameters.renumber_dofs) && (parameters.use_exact_solution))
       throw std::runtime_error(
-        "When using the exact solution dof renumbering must be disabled in parameter file.");
+        "When using the exact solution dof renumbering must be disabled in "
+        "parameter file.");
 
     for (unsigned int vertex_n = 0;
          vertex_n < GeometryInfo<3>::vertices_per_cell;
@@ -70,18 +71,18 @@ namespace QNed
     is_set_cell_data = true;
   }
 
-
-
   QNedBasis::QNedBasis(const QNedBasis &other)
     : // guard against copying non copyable objects
       // Assert (is_copyable,
-      //		ExcMessage ("Object can not be copied after triangulation and other
+      //		ExcMessage ("Object can not be copied after
+      // triangulation and other
       // parts are initialized.")),
     mpi_communicator(other.mpi_communicator)
     , parameters(other.parameters)
     , parameter_filename(other.parameter_filename)
     , triangulation()
-    , // must be constructed deliberately, but is empty on copying anyway
+    , // must be constructed deliberately, but is empty on
+      // copying anyway
     fe(FE_Q<3>(parameters.degree + 1), 1, FE_Nedelec<3>(parameters.degree), 1)
     , dof_handler(triangulation)
     , constraints_curl_v(other.constraints_curl_v)
@@ -142,8 +143,6 @@ namespace QNed
     is_set_cell_data = true;
   }
 
-
-
   QNedBasis::~QNedBasis()
   {
     system_matrix.clear();
@@ -161,10 +160,8 @@ namespace QNed
     dof_handler.clear();
   }
 
-
-
   void
-  QNedBasis::setup_grid()
+    QNedBasis::setup_grid()
   {
     Assert(is_set_cell_data, ExcMessage("Cell data must be set first."));
 
@@ -177,10 +174,8 @@ namespace QNed
     is_copyable = false;
   }
 
-
-
   void
-  QNedBasis::setup_system_matrix()
+    QNedBasis::setup_system_matrix()
   {
     dof_handler.distribute_dofs(fe);
 
@@ -223,10 +218,8 @@ namespace QNed
     global_rhs.reinit(dofs_per_block);
   }
 
-
-
   void
-  QNedBasis::setup_basis_dofs_h1()
+    QNedBasis::setup_basis_dofs_h1()
   {
     Assert(is_set_cell_data, ExcMessage("Cell data must be set first."));
 
@@ -299,10 +292,8 @@ namespace QNed
       }
   }
 
-
-
   void
-  QNedBasis::setup_basis_dofs_curl()
+    QNedBasis::setup_basis_dofs_curl()
   {
     Assert(is_set_cell_data, ExcMessage("Cell data must be set first."));
 
@@ -373,10 +364,8 @@ namespace QNed
       }
   }
 
-
-
   void
-  QNedBasis::assemble_system()
+    QNedBasis::assemble_system()
   {
     Timer timer;
     if (parameters.verbose)
@@ -478,7 +467,8 @@ namespace QNed
                     /*
                      * Discretize
                      * B^{-1}sigma - div(u) = 0
-                     * grad(sigma) + curl(A*curl(u)) + alpha u = f
+                     * grad(sigma) + curl(A*curl(u)) + alpha
+                     * u = f
                      */
                     local_matrix(i, j) +=
                       (tau_i * diffusion_inverse_b_values[q] *
@@ -515,10 +505,12 @@ namespace QNed
         //		{
         //			if (cell->face(face_number)->at_boundary()
         ////				&&
-        ////				(cell->face(face_number)->boundary_id() == 0)
+        ////				(cell->face(face_number)->boundary_id() ==
+        /// 0)
         //				)
         //			{
-        //				fe_face_values.reinit (cell, face_number);
+        //				fe_face_values.reinit (cell,
+        // face_number);
         //		.....
         //			} // end if cell->at_boundary()
         //		} // end face_number++
@@ -570,10 +562,8 @@ namespace QNed
       }
   } // end assemble()
 
-
-
   void
-  QNedBasis::solve_direct(unsigned int n_basis)
+    QNedBasis::solve_direct(unsigned int n_basis)
   {
     Timer timer;
     if (parameters.verbose)
@@ -630,10 +620,8 @@ namespace QNed
       }
   }
 
-
-
   void
-  QNedBasis::solve_iterative(unsigned int n_basis)
+    QNedBasis::solve_iterative(unsigned int n_basis)
   {
     Timer timer;
     Timer inner_timer;
@@ -686,10 +674,10 @@ namespace QNed
     // Now solve.
     if (parameters.verbose)
       {
-        std::cout
-          << "	Solving linear system (iteratively, with preconditioner) in cell   "
-          << global_cell_id.to_string() << "   for basis   " << n_basis
-          << "   .....";
+        std::cout << "	Solving linear system (iteratively, with "
+                     "preconditioner) in cell   "
+                  << global_cell_id.to_string() << "   for basis   " << n_basis
+                  << "   .....";
 
         timer.restart();
       }
@@ -737,9 +725,10 @@ namespace QNed
         //																					typename
         // LinearSolvers::LocalInnerPreconditioner<3>::type>,
         //										PreconditionIdentity>
-        //										preconditioner (schur_complement,
-        //													PreconditionIdentity(),
-        //													/* n_iter */ 5);
+        //										preconditioner
+        //(schur_complement, PreconditionIdentity(),
+        //													/* n_iter */
+        // 5);
 
         /*
          * Precondition the Schur complement with
@@ -747,8 +736,9 @@ namespace QNed
          * Schur complement.
          */
         //			using ApproxSchurPrecon =
-        // PreconditionJacobi<SparseMatrix<double>>; 			using
-        // ApproxSchurPrecon = PreconditionSOR<SparseMatrix<double>>;
+        // PreconditionJacobi<SparseMatrix<double>>;
+        // using ApproxSchurPrecon =
+        // PreconditionSOR<SparseMatrix<double>>;
         using ApproxSchurPrecon = SparseILU<double>;
         //			using ApproxSchurPrecon = PreconditionIdentity;
         LinearSolvers::ApproximateSchurComplement<BlockSparseMatrix<double>,
@@ -790,12 +780,12 @@ namespace QNed
           {
             inner_timer.stop();
 
-            std::cout
-              << std::endl
-              << "		- Iterative Schur complement solver converged in   "
-              << solver_control.last_step()
-              << "   iterations.	Time:	" << inner_timer.cpu_time()
-              << "   seconds." << std::endl;
+            std::cout << std::endl
+                      << "		- Iterative Schur complement solver "
+                         "converged in   "
+                      << solver_control.last_step()
+                      << "   iterations.	Time:	" << inner_timer.cpu_time()
+                      << "   seconds." << std::endl;
           }
       }
 
@@ -843,10 +833,8 @@ namespace QNed
       }
   }
 
-
-
   void
-  QNedBasis::assemble_global_element_matrix()
+    QNedBasis::assemble_global_element_matrix()
   {
     // First, reset.
     global_element_matrix = 0;
@@ -863,7 +851,6 @@ namespace QNed
     // with an algebraic trick. It uses the local system matrix stored in
     // the respective basis object.
     unsigned int block_row, block_col;
-
 
     BlockVector<double> *test_vec_ptr, *trial_vec_ptr;
     unsigned int         offset_index = GeometryInfo<3>::vertices_per_cell;
@@ -937,7 +924,8 @@ namespace QNed
         if (i_test >= GeometryInfo<3>::vertices_per_cell)
           {
             block_row = 1;
-            // If we are testing with u we possibly have a right-hand side.
+            // If we are testing with u we possibly have a
+            // right-hand side.
             global_element_rhs(i_test) +=
               test_vec_ptr->block(block_row) * global_rhs.block(block_row);
           }
@@ -946,10 +934,8 @@ namespace QNed
     is_built_global_element_matrix = true;
   }
 
-
-
   void
-  QNedBasis::output_basis()
+    QNedBasis::output_basis()
   {
     Timer timer;
     if (parameters.verbose)
@@ -1022,7 +1008,6 @@ namespace QNed
         data_out.write_vtu(output);
       }
 
-
     if (parameters.verbose)
       {
         timer.stop();
@@ -1031,9 +1016,8 @@ namespace QNed
       }
   }
 
-
   void
-  QNedBasis::write_exact_solution_in_cell()
+    QNedBasis::write_exact_solution_in_cell()
   {
     std::vector<types::global_dof_index> dofs_per_block(2);
     DoFTools::count_dofs_per_block(dof_handler, dofs_per_block);
@@ -1090,9 +1074,8 @@ namespace QNed
     }
   }
 
-
   void
-  QNedBasis::output_global_solution_in_cell() const
+    QNedBasis::output_global_solution_in_cell() const
   {
     DataOut<3> data_out;
     data_out.attach_dof_handler(dof_handler);
@@ -1160,18 +1143,14 @@ namespace QNed
     data_out.write_vtu(output);
   }
 
-
-
   void
-  QNedBasis::set_output_flag()
+    QNedBasis::set_output_flag()
   {
     parameters.set_output_flag(global_cell_id, first_cell);
   }
 
-
-
   void
-  QNedBasis::set_global_weights(const std::vector<double> &weights)
+    QNedBasis::set_global_weights(const std::vector<double> &weights)
   {
     // Copy assignment of global weights
     global_weights = weights;
@@ -1198,10 +1177,8 @@ namespace QNed
     is_set_global_weights = true;
   }
 
-
-
   void
-  QNedBasis::set_sigma_to_std()
+    QNedBasis::set_sigma_to_std()
   {
     // Quadrature used for projection
     QGauss<3> quad_rule(3);
@@ -1236,10 +1213,8 @@ namespace QNed
     dof_handler_fake.clear();
   }
 
-
-
   void
-  QNedBasis::set_u_to_std()
+    QNedBasis::set_u_to_std()
   {
     // Quadrature used for projection
     QGauss<3> quad_rule(3);
@@ -1275,44 +1250,34 @@ namespace QNed
     dof_handler_fake.clear();
   }
 
-
-
   void
-  QNedBasis::set_filename_global()
+    QNedBasis::set_filename_global()
   {
     parameters.filename_global +=
       ("." + Utilities::int_to_string(local_subdomain, 5) + ".cell-" +
        global_cell_id.to_string() + ".vtu");
   }
 
-
-
   const FullMatrix<double> &
-  QNedBasis::get_global_element_matrix() const
+    QNedBasis::get_global_element_matrix() const
   {
     return global_element_matrix;
   }
 
-
-
   const Vector<double> &
-  QNedBasis::get_global_element_rhs() const
+    QNedBasis::get_global_element_rhs() const
   {
     return global_element_rhs;
   }
 
-
-
   const std::string &
-  QNedBasis::get_filename_global() const
+    QNedBasis::get_filename_global() const
   {
     return parameters.filename_global;
   }
 
-
-
   void
-  QNedBasis::run()
+    QNedBasis::run()
   {
     Timer timer;
 
@@ -1344,9 +1309,9 @@ namespace QNed
         Timer timer;
         if (parameters.verbose)
           {
-            std::cout
-              << "      Setting basis functions to standard functions. This is slow"
-              << ".....";
+            std::cout << "      Setting basis functions to standard functions. "
+                         "This is slow"
+                      << ".....";
 
             timer.restart();
           }

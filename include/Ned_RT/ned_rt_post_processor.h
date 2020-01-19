@@ -3,7 +3,6 @@
 
 // deal.ii
 #include <deal.II/numerics/data_postprocessor.h>
-
 #include <equation_data/eqn_coeff_A.h>
 #include <equation_data/eqn_coeff_B.h>
 
@@ -11,7 +10,6 @@
 
 // my headers
 #include <config.h>
-
 
 namespace NedRT
 {
@@ -31,29 +29,29 @@ namespace NedRT
      * This is the actual evaluation routine of the  post processor.
      */
     virtual void
-    evaluate_vector_field(
-      const DataPostprocessorInputs::Vector<3> &inputs,
-      std::vector<Vector<double>> &computed_quantities) const override;
+      evaluate_vector_field(
+        const DataPostprocessorInputs::Vector<3> &inputs,
+        std::vector<Vector<double>> &computed_quantities) const override;
 
     /**
      * Define all names of solution and post processed quantities.
      */
     virtual std::vector<std::string>
-    get_names() const override;
+      get_names() const override;
 
     /**
      * Define all interpretations of solution and post processed quantities.
      */
     virtual std::vector<
       DataComponentInterpretation::DataComponentInterpretation>
-    get_data_component_interpretation() const override;
+      get_data_component_interpretation() const override;
 
     /**
      * Define all necessary update flags when looping over cells to be post
      * processed.
      */
     virtual UpdateFlags
-    get_needed_update_flags() const override;
+      get_needed_update_flags() const override;
 
   private:
     const EquationData::DiffusionInverse_A a_inverse;

@@ -5,9 +5,9 @@ namespace EquationData
   using namespace dealii;
 
   void
-  BoundaryValues_u::value_list(const std::vector<Point<3>> &points,
-                               std::vector<double> &        values,
-                               const unsigned int /* component = 0 */) const
+    BoundaryValues_u::value_list(const std::vector<Point<3>> &points,
+                                 std::vector<double> &        values,
+                                 const unsigned int /* component = 0 */) const
   {
     Assert(points.size() == values.size(),
            ExcDimensionMismatch(points.size(), values.size()));
@@ -18,11 +18,10 @@ namespace EquationData
       }
   }
 
-
   void
-  Boundary_B_div_u::value_list(const std::vector<Point<3>> &points,
-                               std::vector<double> &        values,
-                               const unsigned int /* component = 0 */) const
+    Boundary_B_div_u::value_list(const std::vector<Point<3>> &points,
+                                 std::vector<double> &        values,
+                                 const unsigned int /* component = 0 */) const
   {
     Assert(points.size() == values.size(),
            ExcDimensionMismatch(points.size(), values.size()));
@@ -33,10 +32,9 @@ namespace EquationData
       }
   }
 
-
   void
-  Boundary_A_curl_u::value_list(const std::vector<Point<3>> &points,
-                                std::vector<Tensor<1, 3>> &  values) const
+    Boundary_A_curl_u::value_list(const std::vector<Point<3>> &points,
+                                  std::vector<Tensor<1, 3>> &  values) const
   {
     Assert(points.size() == values.size(),
            ExcDimensionMismatch(points.size(), values.size()));

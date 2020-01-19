@@ -1,7 +1,6 @@
 #ifndef INCLUDE_FUNCTIONS_SCALAR_SHAPE_FUNCTION_TPP_
 #define INCLUDE_FUNCTIONS_SCALAR_SHAPE_FUNCTION_TPP_
 
-
 namespace ShapeFun
 {
   using namespace dealii;
@@ -34,28 +33,25 @@ namespace ShapeFun
       }
   }
 
-
   template <int dim>
   void
-  ShapeFunctionScalar<dim>::set_current_cell(
-    const typename Triangulation<dim>::active_cell_iterator &cell)
+    ShapeFunctionScalar<dim>::set_current_cell(
+      const typename Triangulation<dim>::active_cell_iterator &cell)
   {
     current_cell_ptr = &cell;
   }
 
-
   template <int dim>
   void
-  ShapeFunctionScalar<dim>::set_shape_fun_index(unsigned int index)
+    ShapeFunctionScalar<dim>::set_shape_fun_index(unsigned int index)
   {
     shape_fun_index = index;
   }
 
-
   template <int dim>
   double
-  ShapeFunctionScalar<dim>::value(const Point<dim> &p,
-                                  const unsigned int /*component*/) const
+    ShapeFunctionScalar<dim>::value(const Point<dim> &p,
+                                    const unsigned int /*component*/) const
   {
     // Map physical points to reference cell
     Point<dim> point_on_ref_cell(
@@ -75,12 +71,11 @@ namespace ShapeFun
     return fe_values.shape_value(shape_fun_index, /* q_index */ 0);
   }
 
-
   template <int dim>
   void
-  ShapeFunctionScalar<dim>::value_list(const std::vector<Point<dim>> &points,
-                                       std::vector<double> &          values,
-                                       const unsigned int /*component*/) const
+    ShapeFunctionScalar<dim>::value_list(const std::vector<Point<dim>> &points,
+                                         std::vector<double> &          values,
+                                         const unsigned int /*component*/) const
   {
     Assert(points.size() == values.size(),
            ExcDimensionMismatch(points.size(), values.size()));
@@ -111,7 +106,6 @@ namespace ShapeFun
         values.at(i) = fe_values.shape_value(shape_fun_index, /* q_index */ i);
       }
   }
-
 
 } // namespace ShapeFun
 

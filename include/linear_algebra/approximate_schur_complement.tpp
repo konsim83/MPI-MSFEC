@@ -1,14 +1,12 @@
 #ifndef INCLUDE_LINEAR_ALGEBRA_APPROXIMATE_SCHUR_COMPLEMENT_TPP_
 #define INCLUDE_LINEAR_ALGEBRA_APPROXIMATE_SCHUR_COMPLEMENT_TPP_
 
+#include "config.h"
 #include <deal.II/base/subscriptor.h>
-
 #include <linear_algebra/inverse_matrix.h>
 
 #include <memory>
 #include <vector>
-
-#include "config.h"
 
 namespace LinearSolvers
 {
@@ -26,7 +24,7 @@ namespace LinearSolvers
     ApproximateSchurComplement(const BlockMatrixType &system_matrix);
 
     void
-    vmult(VectorType &dst, const VectorType &src) const;
+      vmult(VectorType &dst, const VectorType &src) const;
 
   private:
     const SmartPointer<const BlockMatrixType> system_matrix;
@@ -35,7 +33,6 @@ namespace LinearSolvers
 
     mutable VectorType tmp1, tmp2, tmp3;
   };
-
 
   template <typename BlockMatrixType,
             typename VectorType,
@@ -52,13 +49,15 @@ namespace LinearSolvers
     preconditioner.initialize(system_matrix.block(0, 0), data);
   }
 
-
   template <typename BlockMatrixType,
             typename VectorType,
             typename PreconditionerType>
   void
-  ApproximateSchurComplement<BlockMatrixType, VectorType, PreconditionerType>::
-    vmult(VectorType &dst, const VectorType &src) const
+    ApproximateSchurComplement<BlockMatrixType,
+                               VectorType,
+                               PreconditionerType>::vmult(VectorType &      dst,
+                                                          const VectorType &src)
+      const
   {
     system_matrix->block(0, 1).vmult(tmp1, src);
     preconditioner.vmult(tmp2, tmp1);
@@ -67,11 +66,9 @@ namespace LinearSolvers
     dst -= tmp3;
   }
 
-
   //
   //
   //
-
 
   template <typename BlockMatrixType,
             typename VectorType,
@@ -88,7 +85,7 @@ namespace LinearSolvers
       MPI_Comm                     mpi_communicator);
 
     void
-    vmult(VectorType &dst, const VectorType &src) const;
+      vmult(VectorType &dst, const VectorType &src) const;
 
   private:
     const SmartPointer<const BlockMatrixType> system_matrix;
@@ -100,7 +97,6 @@ namespace LinearSolvers
 
     mutable VectorType tmp1, tmp2, tmp3;
   };
-
 
   template <typename BlockMatrixType,
             typename VectorType,
@@ -124,16 +120,15 @@ namespace LinearSolvers
     preconditioner.initialize(system_matrix.block(0, 0), data);
   }
 
-
   template <typename BlockMatrixType,
             typename VectorType,
             typename PreconditionerType>
   void
-  ApproximateSchurComplementMPI<BlockMatrixType,
-                                VectorType,
-                                PreconditionerType>::vmult(VectorType &dst,
-                                                           const VectorType
-                                                             &src) const
+    ApproximateSchurComplementMPI<BlockMatrixType,
+                                  VectorType,
+                                  PreconditionerType>::vmult(VectorType &dst,
+                                                             const VectorType
+                                                               &src) const
   {
     system_matrix->block(0, 1).vmult(tmp1, src);
     preconditioner.vmult(tmp2, tmp1);

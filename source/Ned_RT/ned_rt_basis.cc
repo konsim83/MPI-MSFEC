@@ -47,7 +47,8 @@ namespace NedRT
   {
     if ((parameters.renumber_dofs) && (parameters.use_exact_solution))
       throw std::runtime_error(
-        "When using the exact solution dof renumbering must be disabled in parameter file.");
+        "When using the exact solution dof renumbering must be disabled in "
+        "parameter file.");
 
     for (unsigned int vertex_n = 0;
          vertex_n < GeometryInfo<3>::vertices_per_cell;
@@ -73,14 +74,13 @@ namespace NedRT
     is_set_cell_data = true;
   }
 
-
-
   NedRTBasis::NedRTBasis(const NedRTBasis &other)
     : mpi_communicator(other.mpi_communicator)
     , parameters(other.parameters)
     , parameter_filename(other.parameter_filename)
     , triangulation()
-    , // must be constructed deliberately, but is empty on copying anyway
+    , // must be constructed deliberately, but is empty on
+      // copying anyway
     fe(FE_Nedelec<3>(parameters.degree),
        1,
        FE_RaviartThomas<3>(parameters.degree),
@@ -145,8 +145,6 @@ namespace NedRT
     is_set_cell_data = true;
   }
 
-
-
   NedRTBasis::~NedRTBasis()
   {
     system_matrix.clear();
@@ -164,10 +162,8 @@ namespace NedRT
     dof_handler.clear();
   }
 
-
-
   void
-  NedRTBasis::setup_grid()
+    NedRTBasis::setup_grid()
   {
     Assert(is_set_cell_data, ExcMessage("Cell data must be set first."));
 
@@ -180,10 +176,8 @@ namespace NedRT
     is_copyable = false;
   }
 
-
-
   void
-  NedRTBasis::setup_system_matrix()
+    NedRTBasis::setup_system_matrix()
   {
     dof_handler.distribute_dofs(fe);
 
@@ -226,10 +220,8 @@ namespace NedRT
     global_rhs.reinit(dofs_per_block);
   }
 
-
-
   void
-  NedRTBasis::setup_basis_dofs_curl()
+    NedRTBasis::setup_basis_dofs_curl()
   {
     Assert(is_set_cell_data, ExcMessage("Cell data must be set first."));
 
@@ -298,10 +290,8 @@ namespace NedRT
       }
   }
 
-
-
   void
-  NedRTBasis::setup_basis_dofs_div()
+    NedRTBasis::setup_basis_dofs_div()
   {
     Assert(is_set_cell_data, ExcMessage("Cell data must be set first."));
 
@@ -334,8 +324,8 @@ namespace NedRT
         VectorTools::project_boundary_values_curl_conforming_l2(
           dof_handler,
           /*first vector component */ 0,
-          ZeroFunction<3>(
-            6), // This is not so important as long as BCs do not influence u.
+          ZeroFunction<3>(6), // This is not so important as long as BCs
+                              // do not influence u.
           /*boundary id*/ 0,
           constraints_div_v[n_basis]);
         VectorTools::project_boundary_values_div_conforming(
@@ -362,10 +352,8 @@ namespace NedRT
       }
   }
 
-
-
   void
-  NedRTBasis::assemble_system()
+    NedRTBasis::assemble_system()
   {
     Timer timer;
     if (parameters.verbose)
@@ -468,8 +456,8 @@ namespace NedRT
                     /*
                      * Discretize
                      * A^{-1}sigma - curl(u) = 0
-                     * curl(sigma) - grad(B*div(u)) + alpha u = f , where
-                     * alpha>0.
+                     * curl(sigma) - grad(B*div(u)) + alpha
+                     * u = f , where alpha>0.
                      */
                     local_matrix(i, j) +=
                       (tau_i * diffusion_inverse_a_values[q] *
@@ -506,10 +494,12 @@ namespace NedRT
         //		{
         //			if (cell->face(face_number)->at_boundary()
         ////				&&
-        ////				(cell->face(face_number)->boundary_id() == 0)
+        ////				(cell->face(face_number)->boundary_id() ==
+        /// 0)
         //				)
         //			{
-        //				fe_face_values.reinit (cell, face_number);
+        //				fe_face_values.reinit (cell,
+        // face_number);
         //		.....
         //			} // end if cell->at_boundary()
         //		} // end face_number++
@@ -561,10 +551,8 @@ namespace NedRT
       }
   } // end assemble()
 
-
-
   void
-  NedRTBasis::solve_direct(unsigned int n_basis)
+    NedRTBasis::solve_direct(unsigned int n_basis)
   {
     Timer timer;
     if (parameters.verbose)
@@ -621,10 +609,8 @@ namespace NedRT
       }
   }
 
-
-
   void
-  NedRTBasis::solve_iterative(unsigned int n_basis)
+    NedRTBasis::solve_iterative(unsigned int n_basis)
   {
     Timer timer;
     Timer inner_timer;
@@ -677,10 +663,10 @@ namespace NedRT
     // Now solve.
     if (parameters.verbose)
       {
-        std::cout
-          << "	Solving linear system (iteratively, with preconditioner) in cell   "
-          << global_cell_id.to_string() << "   for basis   " << n_basis
-          << "   .....";
+        std::cout << "	Solving linear system (iteratively, with "
+                     "preconditioner) in cell   "
+                  << global_cell_id.to_string() << "   for basis   " << n_basis
+                  << "   .....";
 
         timer.restart();
       }
@@ -728,9 +714,10 @@ namespace NedRT
         //																					typename
         // LinearSolvers::LocalInnerPreconditioner<3>::type>,
         //										PreconditionIdentity>
-        //										preconditioner (schur_complement,
-        //													PreconditionIdentity(),
-        //													/* n_iter */ 5);
+        //										preconditioner
+        //(schur_complement, PreconditionIdentity(),
+        //													/* n_iter */
+        // 5);
 
         /*
          * Precondition the Schur complement with
@@ -738,8 +725,9 @@ namespace NedRT
          * Schur complement.
          */
         //			using ApproxSchurPrecon =
-        // PreconditionJacobi<SparseMatrix<double>>; 			using
-        // ApproxSchurPrecon = PreconditionSOR<SparseMatrix<double>>;
+        // PreconditionJacobi<SparseMatrix<double>>;
+        // using ApproxSchurPrecon =
+        // PreconditionSOR<SparseMatrix<double>>;
         using ApproxSchurPrecon = SparseILU<double>;
         //			using ApproxSchurPrecon = PreconditionIdentity;
         LinearSolvers::ApproximateSchurComplement<BlockSparseMatrix<double>,
@@ -781,12 +769,12 @@ namespace NedRT
           {
             inner_timer.stop();
 
-            std::cout
-              << std::endl
-              << "		- Iterative Schur complement solver converged in   "
-              << solver_control.last_step()
-              << "   iterations.	Time:	" << inner_timer.cpu_time()
-              << "   seconds." << std::endl;
+            std::cout << std::endl
+                      << "		- Iterative Schur complement solver "
+                         "converged in   "
+                      << solver_control.last_step()
+                      << "   iterations.	Time:	" << inner_timer.cpu_time()
+                      << "   seconds." << std::endl;
           }
       }
 
@@ -834,10 +822,8 @@ namespace NedRT
       }
   }
 
-
-
   void
-  NedRTBasis::assemble_global_element_matrix()
+    NedRTBasis::assemble_global_element_matrix()
   {
     // First, reset.
     global_element_matrix = 0;
@@ -854,7 +840,6 @@ namespace NedRT
     // with an algebraic trick. It uses the local system matrix stored in
     // the respective basis object.
     unsigned int block_row, block_col;
-
 
     BlockVector<double> *test_vec_ptr, *trial_vec_ptr;
     unsigned int         offset_index = GeometryInfo<3>::lines_per_cell;
@@ -928,7 +913,8 @@ namespace NedRT
         if (i_test >= GeometryInfo<3>::lines_per_cell)
           {
             block_row = 1;
-            // If we are testing with u we possibly have a right-hand side.
+            // If we are testing with u we possibly have a
+            // right-hand side.
             global_element_rhs(i_test) +=
               test_vec_ptr->block(block_row) * global_rhs.block(block_row);
           }
@@ -937,10 +923,8 @@ namespace NedRT
     is_built_global_element_matrix = true;
   }
 
-
-
   void
-  NedRTBasis::output_basis()
+    NedRTBasis::output_basis()
   {
     Timer timer;
     if (parameters.verbose)
@@ -1022,9 +1006,8 @@ namespace NedRT
       }
   }
 
-
   void
-  NedRTBasis::write_exact_solution_in_cell()
+    NedRTBasis::write_exact_solution_in_cell()
   {
     std::vector<types::global_dof_index> dofs_per_block(2);
     DoFTools::count_dofs_per_block(dof_handler, dofs_per_block);
@@ -1081,9 +1064,8 @@ namespace NedRT
     }
   }
 
-
   void
-  NedRTBasis::output_global_solution_in_cell()
+    NedRTBasis::output_global_solution_in_cell()
   {
     DataOut<3> data_out;
     data_out.attach_dof_handler(dof_handler);
@@ -1139,18 +1121,14 @@ namespace NedRT
     data_out.write_vtu(output);
   }
 
-
-
   void
-  NedRTBasis::set_output_flag()
+    NedRTBasis::set_output_flag()
   {
     parameters.set_output_flag(global_cell_id, first_cell);
   }
 
-
-
   void
-  NedRTBasis::set_global_weights(const std::vector<double> &weights)
+    NedRTBasis::set_global_weights(const std::vector<double> &weights)
   {
     // Copy assignment of global weights
     global_weights = weights;
@@ -1177,10 +1155,8 @@ namespace NedRT
     is_set_global_weights = true;
   }
 
-
-
   void
-  NedRTBasis::set_sigma_to_std()
+    NedRTBasis::set_sigma_to_std()
   {
     // Quadrature used for projection
     QGauss<3> quad_rule(3);
@@ -1216,10 +1192,8 @@ namespace NedRT
     dof_handler_fake.clear();
   }
 
-
-
   void
-  NedRTBasis::set_u_to_std()
+    NedRTBasis::set_u_to_std()
   {
     // Quadrature used for projection
     QGauss<3> quad_rule(3);
@@ -1254,44 +1228,34 @@ namespace NedRT
     dof_handler_fake.clear();
   }
 
-
-
   void
-  NedRTBasis::set_filename_global()
+    NedRTBasis::set_filename_global()
   {
     parameters.filename_global +=
       ("." + Utilities::int_to_string(local_subdomain, 5) + ".cell-" +
        global_cell_id.to_string() + ".vtu");
   }
 
-
-
   const FullMatrix<double> &
-  NedRTBasis::get_global_element_matrix() const
+    NedRTBasis::get_global_element_matrix() const
   {
     return global_element_matrix;
   }
 
-
-
   const Vector<double> &
-  NedRTBasis::get_global_element_rhs() const
+    NedRTBasis::get_global_element_rhs() const
   {
     return global_element_rhs;
   }
 
-
-
   const std::string &
-  NedRTBasis::get_filename_global() const
+    NedRTBasis::get_filename_global() const
   {
     return parameters.filename_global;
   }
 
-
-
   void
-  NedRTBasis::run()
+    NedRTBasis::run()
   {
     Timer timer;
 
@@ -1323,9 +1287,9 @@ namespace NedRT
         Timer timer;
         if (parameters.verbose)
           {
-            std::cout
-              << "      Setting basis functions to standard functions. This is slow"
-              << ".....";
+            std::cout << "      Setting basis functions to standard functions. "
+                         "This is slow"
+                      << ".....";
 
             timer.restart();
           }

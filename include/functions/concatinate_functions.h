@@ -1,27 +1,21 @@
 #ifndef INCLUDE_FUNCTIONS_CONCATINATE_FUNCTIONS_H_
 #define INCLUDE_FUNCTIONS_CONCATINATE_FUNCTIONS_H_
 
-
 #include <deal.II/base/exceptions.h>
 #include <deal.II/base/function.h>
 #include <deal.II/base/point.h>
 #include <deal.II/base/quadrature_lib.h>
 #include <deal.II/base/tensor.h>
-
 #include <deal.II/dofs/dof_accessor.h>
 #include <deal.II/dofs/dof_handler.h>
 #include <deal.II/dofs/dof_tools.h>
-
 #include <deal.II/fe/fe_tools.h>
 #include <deal.II/fe/fe_values.h>
 #include <deal.II/fe/mapping_q.h>
-
 #include <deal.II/grid/tria.h>
 #include <deal.II/grid/tria_accessor.h>
 #include <deal.II/grid/tria_iterator.h>
-
 #include <deal.II/lac/vector.h>
-
 #include <deal.II/numerics/matrix_tools.h>
 #include <deal.II/numerics/vector_tools.h>
 
@@ -53,14 +47,14 @@ namespace ShapeFun
                                    const Function<dim> &function2);
 
     virtual double
-    value(const Point<dim> &p, const unsigned int component) const override;
+      value(const Point<dim> &p, const unsigned int component) const override;
 
     virtual void
-    vector_value(const Point<dim> &p, Vector<double> &value) const override;
+      vector_value(const Point<dim> &p, Vector<double> &value) const override;
 
     virtual void
-    vector_value_list(const std::vector<Point<dim>> &points,
-                      std::vector<Vector<double>> &  values) const override;
+      vector_value_list(const std::vector<Point<dim>> &points,
+                        std::vector<Vector<double>> &  values) const override;
 
   private:
     SmartPointer<const Function<dim>> function_ptr1;

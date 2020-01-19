@@ -2,14 +2,11 @@
 #define INCLUDE_NED_RT_PARAMETERS_H_
 
 #include <deal.II/base/parameter_handler.h>
-
 #include <deal.II/grid/cell_id.h>
 
 #include <fstream>
 #include <iostream>
 #include <vector>
-
-
 
 /**
  * Namespace for Nedelec-Raviart-Thomas problems.
@@ -23,9 +20,9 @@ namespace NedRT
     ParametersStd(const std::string &parameter_filename);
 
     static void
-    declare_parameters(ParameterHandler &prm);
+      declare_parameters(ParameterHandler &prm);
     void
-    parse_parameters(ParameterHandler &prm);
+      parse_parameters(ParameterHandler &prm);
 
     const bool degree = 0;
 
@@ -41,16 +38,14 @@ namespace NedRT
     bool use_exact_solution;
   };
 
-
-
   struct ParametersMs
   {
     ParametersMs(const std::string &parameter_filename);
 
     static void
-    declare_parameters(ParameterHandler &prm);
+      declare_parameters(ParameterHandler &prm);
     void
-    parse_parameters(ParameterHandler &prm);
+      parse_parameters(ParameterHandler &prm);
 
     bool compute_solution;
     bool verbose;
@@ -68,8 +63,6 @@ namespace NedRT
     bool use_exact_solution;
   };
 
-
-
   struct ParametersBasis
   {
     ParametersBasis(const ParametersMs &param_ms);
@@ -77,7 +70,7 @@ namespace NedRT
       const ParametersBasis &other); // This the the copy constructor
 
     void
-    set_output_flag(CellId local_cell_id, CellId first_cell);
+      set_output_flag(CellId local_cell_id, CellId first_cell);
 
     const unsigned int degree     = 0;
     const bool         set_to_std = false;
@@ -96,7 +89,6 @@ namespace NedRT
 
     bool use_exact_solution;
   };
-
 
 } // namespace NedRT
 

@@ -16,9 +16,8 @@ namespace NedRT
     , exact(exact)
   {}
 
-
   std::vector<std::string>
-  NedRT_PostProcessor::get_names() const
+    NedRT_PostProcessor::get_names() const
   {
     std::vector<std::string> solution_names(3, exact + "curl_u");
     solution_names.emplace_back(exact + "div_u");
@@ -27,9 +26,8 @@ namespace NedRT
     return solution_names;
   }
 
-
   std::vector<DataComponentInterpretation::DataComponentInterpretation>
-  NedRT_PostProcessor::get_data_component_interpretation() const
+    NedRT_PostProcessor::get_data_component_interpretation() const
   {
     // curl u = A_inv*sigma
     std::vector<DataComponentInterpretation::DataComponentInterpretation>
@@ -45,18 +43,16 @@ namespace NedRT
     return interpretation;
   }
 
-
   UpdateFlags
-  NedRT_PostProcessor::get_needed_update_flags() const
+    NedRT_PostProcessor::get_needed_update_flags() const
   {
     return update_values | update_gradients | update_quadrature_points;
   }
 
-
   void
-  NedRT_PostProcessor::evaluate_vector_field(
-    const DataPostprocessorInputs::Vector<3> &inputs,
-    std::vector<Vector<double>> &             computed_quantities) const
+    NedRT_PostProcessor::evaluate_vector_field(
+      const DataPostprocessorInputs::Vector<3> &inputs,
+      std::vector<Vector<double>> &             computed_quantities) const
   {
     const unsigned int n_quadrature_points = inputs.solution_values.size();
 

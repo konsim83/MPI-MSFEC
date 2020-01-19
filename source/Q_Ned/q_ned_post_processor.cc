@@ -15,9 +15,8 @@ namespace QNed
     , exact(exact)
   {}
 
-
   std::vector<std::string>
-  QNed_PostProcessor::get_names() const
+    QNed_PostProcessor::get_names() const
   {
     std::vector<std::string> solution_names(1, exact + "div_u");
     solution_names.emplace_back(exact + "curl_u");
@@ -30,9 +29,8 @@ namespace QNed
     return solution_names;
   }
 
-
   std::vector<DataComponentInterpretation::DataComponentInterpretation>
-  QNed_PostProcessor::get_data_component_interpretation() const
+    QNed_PostProcessor::get_data_component_interpretation() const
   {
     // div u = -B_inv*sigma
     std::vector<DataComponentInterpretation::DataComponentInterpretation>
@@ -57,18 +55,16 @@ namespace QNed
     return interpretation;
   }
 
-
   UpdateFlags
-  QNed_PostProcessor::get_needed_update_flags() const
+    QNed_PostProcessor::get_needed_update_flags() const
   {
     return update_values | update_gradients | update_quadrature_points;
   }
 
-
   void
-  QNed_PostProcessor::evaluate_vector_field(
-    const DataPostprocessorInputs::Vector<3> &inputs,
-    std::vector<Vector<double>> &             computed_quantities) const
+    QNed_PostProcessor::evaluate_vector_field(
+      const DataPostprocessorInputs::Vector<3> &inputs,
+      std::vector<Vector<double>> &             computed_quantities) const
   {
     const unsigned int n_quadrature_points = inputs.solution_values.size();
 
