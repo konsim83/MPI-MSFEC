@@ -65,8 +65,6 @@ namespace RTDQ
     is_set_cell_data = true;
   }
 
-
-
   RTDQBasis::RTDQBasis(const RTDQBasis &other)
     : mpi_communicator(other.mpi_communicator)
     , parameters(other.parameters)
@@ -132,8 +130,6 @@ namespace RTDQ
     is_set_cell_data = true;
   }
 
-
-
   RTDQBasis::~RTDQBasis()
   {
     system_matrix.clear();
@@ -147,10 +143,8 @@ namespace RTDQ
     dof_handler.clear();
   }
 
-
-
   void
-  RTDQBasis::setup_grid()
+    RTDQBasis::setup_grid()
   {
     Assert(is_set_cell_data, ExcMessage("Cell data must be set first."));
 
@@ -219,10 +213,8 @@ namespace RTDQ
     is_copyable = false;
   }
 
-
-
   void
-  RTDQBasis::setup_system_matrix()
+    RTDQBasis::setup_system_matrix()
   {
     dof_handler.distribute_dofs(fe);
 
@@ -265,9 +257,8 @@ namespace RTDQ
     global_rhs.reinit(dofs_per_block);
   }
 
-
   void
-  RTDQBasis::setup_basis_dofs_div()
+    RTDQBasis::setup_basis_dofs_div()
   {
     Assert(is_set_cell_data, ExcMessage("Cell data must be set first."));
 
@@ -376,7 +367,8 @@ namespace RTDQ
                                       local_dof_face_indices.at(i));
                                   }
                               }
-                          } // end cell->at_boundary(face_n)
+                          } // end
+                            // cell->at_boundary(face_n)
                       }     // end ++face_n
                   }         // end if cell->at_boundary (
               }             // end ++cell
@@ -403,9 +395,11 @@ namespace RTDQ
             /*
              * Mean value constraint (slower).
              */
-            //			for (unsigned int i=first_dof_u+1; i<dof_handler.n_dofs();
+            //			for (unsigned int i=first_dof_u+1;
+            // i<dof_handler.n_dofs();
             //++i) 			  if (concentration_dofs[i] == true)
-            //				constraints_div_v[n_basis].add_entry (first_dof_u, i, -1);
+            //				constraints_div_v[n_basis].add_entry
+            //(first_dof_u, i, -1);
           }
 
         constraints_div_v[n_basis].close();
@@ -426,10 +420,8 @@ namespace RTDQ
       }
   }
 
-
-
   void
-  RTDQBasis::assemble_system()
+    RTDQBasis::assemble_system()
   {
     Timer timer;
     if (parameters.verbose)
@@ -464,7 +456,6 @@ namespace RTDQ
     const EquationData::RightHandSideScalarParsed right_hand_side;
     const EquationData::DiffusionInverse_A        a_inverse(parameter_filename);
     const EquationData::ReactionRate              reaction_rate;
-
 
     // allocate
     std::vector<double>       rhs_values(n_q_points);
@@ -501,7 +492,6 @@ namespace RTDQ
         a_inverse.value_list(fe_values.get_quadrature_points(),
                              a_inverse_values);
 
-
         // loop over quad points
         for (unsigned int q = 0; q < n_q_points; ++q)
           {
@@ -524,12 +514,15 @@ namespace RTDQ
                     /*
                      * Discretize
                      * K^{-1}sigma + grad(u) = 0
-                     * div(sigma) + alpha*u = f , where alpha<0 (this is
-                     * important) This is the simplest form of a
-                     * diffusion-reaction equation where an anisotropic
-                     * diffusion and reaction are in balance in a heterogeneous
-                     * medium. A multiscale reaction rate is also possible and
-                     * can easily be added.
+                     * div(sigma) + alpha*u = f , where
+                     * alpha<0 (this is important) This is
+                     * the simplest form of a
+                     * diffusion-reaction equation where an
+                     * anisotropic diffusion and reaction
+                     * are in balance in a heterogeneous
+                     * medium. A multiscale reaction rate is
+                     * also possible and can easily be
+                     * added.
                      */
                     local_matrix(i, j) +=
                       (phi_i_sigma * a_inverse_values[q] *
@@ -546,7 +539,8 @@ namespace RTDQ
                 local_rhs(i) += phi_i_u * rhs_values[q] * fe_values.JxW(q);
 
                 // Only for use in local solving. Critical for
-                // Darcy type problem. (Think of LBB between RT0-DGQ0)
+                // Darcy type problem. (Think of LBB between
+                // RT0-DGQ0)
                 for (unsigned int n_basis = 0;
                      n_basis < GeometryInfo<3>::faces_per_cell;
                      ++n_basis)
@@ -580,17 +574,18 @@ namespace RTDQ
               } // end for ++i
           }     // end for ++q
 
-
         //		for (unsigned int face_number=0;
         //				face_number<GeometryInfo<3>::faces_per_cell;
         //				++face_number)
         //		{
         //			if (cell->face(face_number)->at_boundary()
         ////				&&
-        ////				(cell->face(face_number)->boundary_id() == 0)
+        ////				(cell->face(face_number)->boundary_id() ==
+        /// 0)
         //				)
         //			{
-        //				fe_face_values.reinit (cell, face_number);
+        //				fe_face_values.reinit (cell,
+        // face_number);
         //		.....
         //			} // end if cell->at_boundary()
         //		} // end face_number++
@@ -631,10 +626,8 @@ namespace RTDQ
       }
   } // end assemble()
 
-
-
   void
-  RTDQBasis::solve_direct(unsigned int n_basis)
+    RTDQBasis::solve_direct(unsigned int n_basis)
   {
     Timer timer;
     if (parameters.verbose)
@@ -666,10 +659,8 @@ namespace RTDQ
       }
   }
 
-
-
   void
-  RTDQBasis::solve_iterative(unsigned int n_basis)
+    RTDQBasis::solve_iterative(unsigned int n_basis)
   {
     Timer timer;
     Timer inner_timer;
@@ -707,10 +698,10 @@ namespace RTDQ
     // Now solve.
     if (parameters.verbose)
       {
-        std::cout
-          << "	Solving linear system (iteratively, with preconditioner) in cell   "
-          << global_cell_id.to_string() << "   for basis   " << n_basis
-          << "   .....";
+        std::cout << "	Solving linear system (iteratively, with "
+                     "preconditioner) in cell   "
+                  << global_cell_id.to_string() << "   for basis   " << n_basis
+                  << "   .....";
 
         timer.restart();
       }
@@ -758,9 +749,10 @@ namespace RTDQ
         //																					typename
         // LinearSolvers::LocalInnerPreconditioner<3>::type>,
         //										PreconditionIdentity>
-        //										preconditioner (schur_complement,
-        //													PreconditionIdentity(),
-        //													/* n_iter */ 5);
+        //										preconditioner
+        //(schur_complement, PreconditionIdentity(),
+        //													/* n_iter */
+        // 5);
 
         /*
          * Precondition the Schur complement with
@@ -768,8 +760,9 @@ namespace RTDQ
          * Schur complement.
          */
         //			using ApproxSchurPrecon =
-        // PreconditionJacobi<SparseMatrix<double>>; 			using
-        // ApproxSchurPrecon = PreconditionSOR<SparseMatrix<double>>;
+        // PreconditionJacobi<SparseMatrix<double>>;
+        // using ApproxSchurPrecon =
+        // PreconditionSOR<SparseMatrix<double>>;
         using ApproxSchurPrecon = SparseILU<double>;
         //			using ApproxSchurPrecon = PreconditionIdentity;
         LinearSolvers::ApproximateSchurComplement<BlockSparseMatrix<double>,
@@ -797,17 +790,16 @@ namespace RTDQ
 
         constraints_div_v[n_basis].distribute(solution);
 
-
         if (parameters.verbose)
           {
             inner_timer.stop();
 
-            std::cout
-              << std::endl
-              << "		- Iterative Schur complement solver converged in   "
-              << solver_control.last_step()
-              << "   iterations.	Time:	" << inner_timer.cpu_time()
-              << "   seconds." << std::endl;
+            std::cout << std::endl
+                      << "		- Iterative Schur complement solver "
+                         "converged in   "
+                      << solver_control.last_step()
+                      << "   iterations.	Time:	" << inner_timer.cpu_time()
+                      << "   seconds." << std::endl;
           }
       }
 
@@ -845,10 +837,8 @@ namespace RTDQ
       }
   }
 
-
-
   void
-  RTDQBasis::assemble_global_element_matrix()
+    RTDQBasis::assemble_global_element_matrix()
   {
     // First, reset.
     global_element_matrix = 0;
@@ -865,7 +855,6 @@ namespace RTDQ
     // with an algebraic trick. It uses the local system matrix stored in
     // the respective basis object.
     unsigned int block_row, block_col;
-
 
     BlockVector<double> *test_vec_ptr, *trial_vec_ptr;
 
@@ -932,7 +921,8 @@ namespace RTDQ
         if (i_test >= GeometryInfo<3>::faces_per_cell)
           {
             block_row = 1;
-            // If we are testing with u we possibly have a right-hand side.
+            // If we are testing with u we possibly have a
+            // right-hand side.
             global_element_rhs(i_test) +=
               test_vec_ptr->block(block_row) * global_rhs.block(block_row);
           }
@@ -941,10 +931,8 @@ namespace RTDQ
     is_built_global_element_matrix = true;
   }
 
-
-
   void
-  RTDQBasis::output_basis()
+    RTDQBasis::output_basis()
   {
     Timer timer;
     if (parameters.verbose)
@@ -1000,10 +988,8 @@ namespace RTDQ
       }
   }
 
-
-
   void
-  RTDQBasis::output_global_solution_in_cell()
+    RTDQBasis::output_global_solution_in_cell()
   {
     DataOut<3> data_out;
     data_out.attach_dof_handler(dof_handler);
@@ -1028,18 +1014,14 @@ namespace RTDQ
     data_out.write_vtu(output);
   }
 
-
-
   void
-  RTDQBasis::set_output_flag()
+    RTDQBasis::set_output_flag()
   {
     parameters.set_output_flag(global_cell_id, first_cell);
   }
 
-
-
   void
-  RTDQBasis::set_global_weights(const std::vector<double> &weights)
+    RTDQBasis::set_global_weights(const std::vector<double> &weights)
   {
     // Copy assignment of global weights
     global_weights = weights;
@@ -1066,19 +1048,15 @@ namespace RTDQ
     is_set_global_weights = true;
   }
 
-
-
   void
-  RTDQBasis::set_u_to_std()
+    RTDQBasis::set_u_to_std()
   {
     for (unsigned int i = 0; i < GeometryInfo<3>::faces_per_cell; ++i)
       basis_div_v[i].block(1) = 1;
   }
 
-
-
   void
-  RTDQBasis::set_sigma_to_std()
+    RTDQBasis::set_sigma_to_std()
   {
     std::cout << "   (INFO: Sanity check for sigma employed!)   ";
 
@@ -1096,8 +1074,8 @@ namespace RTDQ
 
     if (parameters.renumber_dofs)
       {
-        throw std::runtime_error(
-          "Renumbering DoFs not allowed when sanity checking basis for sigma.");
+        throw std::runtime_error("Renumbering DoFs not allowed when sanity "
+                                 "checking basis for sigma.");
       }
 
     AffineConstraints<double> constraints;
@@ -1121,44 +1099,34 @@ namespace RTDQ
     dof_handler_fake.clear();
   }
 
-
-
   void
-  RTDQBasis::set_filename_global()
+    RTDQBasis::set_filename_global()
   {
     parameters.filename_global +=
       ("." + Utilities::int_to_string(local_subdomain, 5) + ".cell-" +
        global_cell_id.to_string() + ".vtu");
   }
 
-
-
   const FullMatrix<double> &
-  RTDQBasis::get_global_element_matrix() const
+    RTDQBasis::get_global_element_matrix() const
   {
     return global_element_matrix;
   }
 
-
-
   const Vector<double> &
-  RTDQBasis::get_global_element_rhs() const
+    RTDQBasis::get_global_element_rhs() const
   {
     return global_element_rhs;
   }
 
-
-
   const std::string &
-  RTDQBasis::get_filename_global() const
+    RTDQBasis::get_filename_global() const
   {
     return parameters.filename_global;
   }
 
-
-
   void
-  RTDQBasis::run()
+    RTDQBasis::run()
   {
     Timer timer;
 

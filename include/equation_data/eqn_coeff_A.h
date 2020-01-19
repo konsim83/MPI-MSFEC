@@ -25,9 +25,9 @@ namespace EquationData
     Diffusion_A_Data(const std::string &parameter_filename);
 
     static void
-    declare_parameters(ParameterHandler &prm);
+      declare_parameters(ParameterHandler &prm);
     void
-    parse_parameters(ParameterHandler &prm);
+      parse_parameters(ParameterHandler &prm);
 
     /**
      * Frequency of oscillations in x, y and z.
@@ -63,7 +63,6 @@ namespace EquationData
     Tensor<2, 3> rot;
   };
 
-
   /**
    * Diffusion tensor. Must be positive definite and
    * uniformly bounded from below and above.
@@ -87,8 +86,7 @@ namespace EquationData
      * @param values
      */
     virtual Tensor<2, 3>
-    value(const Point<3> &point) const override;
-
+      value(const Point<3> &point) const override;
 
     /**
      * Implementation of the diffusion tensor.
@@ -98,10 +96,9 @@ namespace EquationData
      * @param values
      */
     virtual void
-    value_list(const std::vector<Point<3>> &points,
-               std::vector<Tensor<2, 3>> &  values) const override;
+      value_list(const std::vector<Point<3>> &points,
+                 std::vector<Tensor<2, 3>> &  values) const override;
   };
-
 
   /**
    * Inverse of diffusion tensor. Must be positive
@@ -127,7 +124,7 @@ namespace EquationData
      * @param values
      */
     virtual Tensor<2, 3>
-    value(const Point<3> &point) const override;
+      value(const Point<3> &point) const override;
 
     /**
      * Implementation of inverse of the diffusion tensor.
@@ -137,8 +134,8 @@ namespace EquationData
      * @param values
      */
     virtual void
-    value_list(const std::vector<Point<3>> &points,
-               std::vector<Tensor<2, 3>> &  values) const override;
+      value_list(const std::vector<Point<3>> &points,
+                 std::vector<Tensor<2, 3>> &  values) const override;
   };
 
 } // end namespace EquationData

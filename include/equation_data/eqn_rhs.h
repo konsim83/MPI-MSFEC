@@ -5,7 +5,6 @@
 #include <deal.II/base/numbers.h>
 #include <deal.II/base/point.h>
 #include <deal.II/base/tensor_function.h>
-
 #include <equation_data/eqn_coeff_A.h>
 #include <equation_data/eqn_coeff_B.h>
 #include <equation_data/eqn_exact_solution_lin.h>
@@ -40,10 +39,9 @@ namespace EquationData
      * @param component = 0
      */
     void
-    value_list(const std::vector<Point<3>> &points,
-               std::vector<Tensor<1, 3>> &  values) const override;
+      value_list(const std::vector<Point<3>> &points,
+                 std::vector<Tensor<1, 3>> &  values) const override;
   };
-
 
   /**
    * Right hand side of equation in first and last part of
@@ -67,11 +65,10 @@ namespace EquationData
      * @param component = 0
      */
     void
-    value_list(const std::vector<Point<3>> &points,
-               std::vector<double> &        values,
-               unsigned int                 component = 0) const override;
+      value_list(const std::vector<Point<3>> &points,
+                 std::vector<double> &        values,
+                 unsigned int                 component = 0) const override;
   };
-
 
   /**
    * Right hand side of equation is a vectorial function. This class
@@ -97,8 +94,8 @@ namespace EquationData
      * @param component = 0
      */
     void
-    value_list(const std::vector<Point<3>> &points,
-               std::vector<Tensor<1, 3>> &  values) const override;
+      value_list(const std::vector<Point<3>> &points,
+                 std::vector<Tensor<1, 3>> &  values) const override;
 
   private:
     const double pi = numbers::PI;
@@ -110,6 +107,5 @@ namespace EquationData
   };
 
 } // end namespace EquationData
-
 
 #endif /* EQN_RHS_H_ */

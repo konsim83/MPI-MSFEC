@@ -56,9 +56,8 @@ namespace EquationData
       }
   }
 
-
   void
-  Diffusion_A_Data::declare_parameters(ParameterHandler &prm)
+    Diffusion_A_Data::declare_parameters(ParameterHandler &prm)
   {
     prm.enter_subsection("Equation parameters");
     {
@@ -114,9 +113,8 @@ namespace EquationData
     prm.leave_subsection();
   }
 
-
   void
-  Diffusion_A_Data::parse_parameters(ParameterHandler &prm)
+    Diffusion_A_Data::parse_parameters(ParameterHandler &prm)
   {
     prm.enter_subsection("Equation parameters");
     {
@@ -141,9 +139,8 @@ namespace EquationData
     prm.leave_subsection();
   }
 
-
   Tensor<2, 3>
-  Diffusion_A::value(const Point<3> &point) const
+    Diffusion_A::value(const Point<3> &point) const
   {
     Tensor<2, 3> value;
 
@@ -155,7 +152,6 @@ namespace EquationData
     value[2][2] =
       scale_z * (1.0 - alpha_z * sin(2 * numbers::PI * k_z * point(2)));
 
-
     if (rotate)
       // Rotation leads to anisotropy
       value = rot * value * transpose(rot);
@@ -163,11 +159,9 @@ namespace EquationData
     return value;
   }
 
-
-
   void
-  Diffusion_A::value_list(const std::vector<Point<3>> &points,
-                          std::vector<Tensor<2, 3>> &  values) const
+    Diffusion_A::value_list(const std::vector<Point<3>> &points,
+                            std::vector<Tensor<2, 3>> &  values) const
   {
     Assert(points.size() == values.size(),
            ExcDimensionMismatch(points.size(), values.size()));
@@ -196,9 +190,8 @@ namespace EquationData
         }
   }
 
-
   Tensor<2, 3>
-  DiffusionInverse_A::value(const Point<3> &point) const
+    DiffusionInverse_A::value(const Point<3> &point) const
   {
     Tensor<2, 3> value;
 
@@ -210,7 +203,6 @@ namespace EquationData
     value[2][2] =
       1 / (scale_z * (1.0 - alpha_z * sin(2 * numbers::PI * k_z * point(2))));
 
-
     if (rotate)
       // Rotation leads to anisotropy
       value = rot * value * transpose(rot);
@@ -218,10 +210,9 @@ namespace EquationData
     return value;
   }
 
-
   void
-  DiffusionInverse_A::value_list(const std::vector<Point<3>> &points,
-                                 std::vector<Tensor<2, 3>> &  values) const
+    DiffusionInverse_A::value_list(const std::vector<Point<3>> &points,
+                                   std::vector<Tensor<2, 3>> &  values) const
   {
     Assert(points.size() == values.size(),
            ExcDimensionMismatch(points.size(), values.size()));

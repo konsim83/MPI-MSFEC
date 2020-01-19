@@ -37,7 +37,7 @@ namespace RTDQ
   }
 
   void
-  ParametersStd::declare_parameters(ParameterHandler &prm)
+    ParametersStd::declare_parameters(ParameterHandler &prm)
   {
     prm.enter_subsection("Standard method parameters");
     {
@@ -80,9 +80,8 @@ namespace RTDQ
     prm.leave_subsection();
   }
 
-
   void
-  ParametersStd::parse_parameters(ParameterHandler &prm)
+    ParametersStd::parse_parameters(ParameterHandler &prm)
   {
     prm.enter_subsection("Standard method parameters");
     {
@@ -105,8 +104,6 @@ namespace RTDQ
     }
     prm.leave_subsection();
   }
-
-
 
   ParametersMs::ParametersMs(const std::string &parameter_filename)
     : compute_solution(true)
@@ -141,10 +138,8 @@ namespace RTDQ
     ParametersMs::parse_parameters(prm);
   }
 
-
-
   void
-  ParametersMs::declare_parameters(ParameterHandler &prm)
+    ParametersMs::declare_parameters(ParameterHandler &prm)
   {
     prm.enter_subsection("Multiscale method parameters");
     {
@@ -188,11 +183,11 @@ namespace RTDQ
           "true",
           Patterns::Bool(),
           "Dof renumbering reduces bandwidth in system matrices.");
-        prm.declare_entry(
-          "write first basis",
-          "false",
-          Patterns::Bool(),
-          "Decide whether first cell's basis will be written for diagnostic purposes.");
+        prm.declare_entry("write first basis",
+                          "false",
+                          Patterns::Bool(),
+                          "Decide whether first cell's basis will be "
+                          "written for diagnostic purposes.");
       }
       prm.leave_subsection();
 
@@ -204,10 +199,8 @@ namespace RTDQ
     prm.leave_subsection();
   }
 
-
-
   void
-  ParametersMs::parse_parameters(ParameterHandler &prm)
+    ParametersMs::parse_parameters(ParameterHandler &prm)
   {
     prm.enter_subsection("Multiscale method parameters");
     {
@@ -235,8 +228,6 @@ namespace RTDQ
     prm.leave_subsection();
   }
 
-
-
   ParametersBasis::ParametersBasis(const ParametersMs &parameters_ms)
     : verbose(parameters_ms.verbose_basis)
     , use_direct_solver(parameters_ms.use_direct_solver_basis)
@@ -247,8 +238,6 @@ namespace RTDQ
     , n_refine_local(parameters_ms.n_refine_local)
     , filename_global(parameters_ms.filename_output)
   {}
-
-
 
   ParametersBasis::ParametersBasis(const ParametersBasis &other)
     : verbose(other.verbose)
@@ -261,10 +250,8 @@ namespace RTDQ
     , filename_global(other.filename_global)
   {}
 
-
-
   void
-  ParametersBasis::set_output_flag(CellId local_cell_id, CellId first_cell)
+    ParametersBasis::set_output_flag(CellId local_cell_id, CellId first_cell)
   {
     if (!prevent_output)
       output_flag = (local_cell_id == first_cell);

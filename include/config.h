@@ -9,7 +9,6 @@
 #include <limits>
 #include <type_traits>
 
-
 #define FORCE_USE_OF_TRILINOS
 
 namespace LA
@@ -46,7 +45,7 @@ static const double double_max = std::numeric_limits<double>::max();
  */
 template <class T>
 typename std::enable_if<!std::numeric_limits<T>::is_integer, bool>::type
-is_approx(T x, T y, int ulp = 2)
+  is_approx(T x, T y, int ulp = 2)
 {
   /* Machine epsilon has to be scaled to the magnitude
    * of the values used and multiplied by the desired precision
@@ -56,6 +55,5 @@ is_approx(T x, T y, int ulp = 2)
          /* unless the result is subnormal. */
          || std::abs(x - y) < std::numeric_limits<T>::min();
 }
-
 
 #endif /* INCLUDE_CONFIG_H_ */

@@ -23,8 +23,6 @@ namespace RTDQ
     , cell_basis_map()
   {}
 
-
-
   RTDQMultiscale::~RTDQMultiscale()
   {
     system_matrix.clear();
@@ -32,10 +30,8 @@ namespace RTDQ
     dof_handler.clear();
   }
 
-
-
   void
-  RTDQMultiscale::setup_grid()
+    RTDQMultiscale::setup_grid()
   {
     TimerOutput::Scope t(computing_timer, "coarse mesh generation");
 
@@ -44,10 +40,8 @@ namespace RTDQ
     triangulation.refine_global(parameters.n_refine_global);
   }
 
-
-
   void
-  RTDQMultiscale::initialize_and_compute_basis()
+    RTDQMultiscale::initialize_and_compute_basis()
   {
     TimerOutput::Scope t(
       computing_timer,
@@ -84,7 +78,6 @@ namespace RTDQ
           }
       } // end ++cell
 
-
     /*
      * Now each node possesses a set of basis objects.
      * We need to compute them on each node and do so in
@@ -100,9 +93,8 @@ namespace RTDQ
       }
   }
 
-
   void
-  RTDQMultiscale::setup_system_matrix()
+    RTDQMultiscale::setup_system_matrix()
   {
     TimerOutput::Scope t(computing_timer, "system (incl. constraint) setup");
 
@@ -162,9 +154,8 @@ namespace RTDQ
     system_rhs.reinit(owned_partitioning, mpi_communicator);
   }
 
-
   void
-  RTDQMultiscale::setup_constraints()
+    RTDQMultiscale::setup_constraints()
   {
     TimerOutput::Scope t(computing_timer, "constraint setup");
 
@@ -256,17 +247,16 @@ namespace RTDQ
          * This is the mean value constraint
          * (slower for large problems).
          */
-        //		for (unsigned int i=first_dof_u+1; i<dof_handler.n_dofs(); ++i)
-        //			if (concentration_dofs[i] == true)
-        //				constraints.add_entry (first_dof_u, i, -1);
+        //		for (unsigned int i=first_dof_u+1; i<dof_handler.n_dofs();
+        //++i) 			if (concentration_dofs[i] == true)
+        // constraints.add_entry (first_dof_u, i, -1);
       }
 
     constraints.close();
   }
 
-
   void
-  RTDQMultiscale::assemble_system()
+    RTDQMultiscale::assemble_system()
   {
     TimerOutput::Scope t(computing_timer, "multiscale assembly");
 
@@ -320,17 +310,21 @@ namespace RTDQ
             local_matrix = (it_basis->second).get_global_element_matrix();
             local_rhs    = (it_basis->second).get_global_element_rhs();
 
-
-            // line integral over boundary faces for for natural conditions on u
+            // line integral over boundary faces for for natural
+            // conditions on u
             for (unsigned int face_n = 0;
                  face_n < GeometryInfo<3>::faces_per_cell;
                  ++face_n)
               {
                 if (cell->at_boundary(face_n)
-                    //                && cell->face(face_n)->boundary_id()!=0 /*
-                    //                Select only certain faces. */
-                    //                && cell->face(face_n)->boundary_id()!=2 /*
-                    //                Select only certain faces. */
+                    //                &&
+                    //                cell->face(face_n)->boundary_id()!=0
+                    //                /* Select only certain
+                    //                faces. */
+                    //                &&
+                    //                cell->face(face_n)->boundary_id()!=2
+                    //                /* Select only certain
+                    //                faces. */
                 )
                   {
                     fe_face_values.reinit(cell, face_n);
@@ -364,19 +358,18 @@ namespace RTDQ
     system_rhs.compress(VectorOperation::add);
   }
 
-
   void
-  RTDQMultiscale::solve_direct()
+    RTDQMultiscale::solve_direct()
   {
     TimerOutput::Scope t(computing_timer, " direct solver (MUMPS)");
 
     throw std::runtime_error(
-      "Solver not implemented: MUMPS does not work on TrilinosWrappers::MPI::BlockSparseMatrix classes.");
+      "Solver not implemented: MUMPS does not work on "
+      "TrilinosWrappers::MPI::BlockSparseMatrix classes.");
   }
 
-
   void
-  RTDQMultiscale::solve_iterative()
+    RTDQMultiscale::solve_iterative()
   {
     inner_schur_preconditioner =
       std::make_shared<typename LinearSolvers::InnerPreconditioner<3>::type>();
@@ -441,9 +434,10 @@ namespace RTDQ
       //																					LA::MPI::Vector,
       //																					typename
       // LinearSolvers::InnerPreconditioner<3>::type>,
-      // PreconditionIdentity> 									preconditioner
-      // (schur_complement,
-      //												PreconditionIdentity() );
+      // PreconditionIdentity>
+      // preconditioner (schur_complement,
+      //												PreconditionIdentity()
+      //);
 
       /*
        * Precondition the Schur complement with
@@ -469,10 +463,12 @@ namespace RTDQ
 #endif
 
       /*
-       * Precondition the Schur complement with a preconditioner of block(1,1).
+       * Precondition the Schur complement with a preconditioner of
+       * block(1,1).
        */
       //		LA::MPI::PreconditionAMG preconditioner;
-      //		preconditioner.initialize(system_matrix.block(1, 1), data);
+      //		preconditioner.initialize(system_matrix.block(1, 1),
+      // data);
 
       /////////////////////////////////////////////////////////////////////
 
@@ -491,7 +487,8 @@ namespace RTDQ
       TimerOutput::Scope t(computing_timer, "outer CG solver (for sigma)");
 
       //	SolverControl                    outer_solver_control;
-      //	PETScWrappers::SparseDirectMUMPS outer_solver(outer_solver_control,
+      //	PETScWrappers::SparseDirectMUMPS
+      // outer_solver(outer_solver_control,
       // mpi_communicator); 	outer_solver.set_symmetric_mode(true);
 
       // use computed u to solve for sigma
@@ -512,10 +509,8 @@ namespace RTDQ
     locally_relevant_solution = distributed_solution;
   }
 
-
-
   void
-  RTDQMultiscale::send_global_weights_to_cell()
+    RTDQMultiscale::send_global_weights_to_cell()
   {
     // For each cell we get dofs_per_cell values
     const unsigned int                   dofs_per_cell = fe.dofs_per_cell;
@@ -541,10 +536,8 @@ namespace RTDQ
       } // end ++cell
   }
 
-
-
   std::vector<std::string>
-  RTDQMultiscale::collect_filenames_on_mpi_process()
+    RTDQMultiscale::collect_filenames_on_mpi_process()
   {
     std::vector<std::string> filename_list;
 
@@ -561,10 +554,8 @@ namespace RTDQ
     return filename_list;
   }
 
-
-
   void
-  RTDQMultiscale::output_results()
+    RTDQMultiscale::output_results()
   {
     // write local fine solution
     typename std::map<CellId, RTDQBasis>::iterator it_basis =
@@ -661,15 +652,14 @@ namespace RTDQ
       }
   }
 
-
   void
-  RTDQMultiscale::run()
+    RTDQMultiscale::run()
   {
     if (parameters.compute_solution == false)
       {
-        deallog
-          << "Run of multiscale problem is explicitly disabled in parameter file. "
-          << std::endl;
+        deallog << "Run of multiscale problem is explicitly disabled in "
+                   "parameter file. "
+                << std::endl;
         return;
       }
 

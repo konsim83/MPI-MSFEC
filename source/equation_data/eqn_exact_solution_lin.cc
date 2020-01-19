@@ -30,9 +30,8 @@ namespace EquationData
     curl_u[2] = A[1][0] - A[0][1];
   }
 
-
   void
-  ExactSolutionLin_Data::declare_parameters(ParameterHandler &prm)
+    ExactSolutionLin_Data::declare_parameters(ParameterHandler &prm)
   {
     prm.enter_subsection("Equation parameters");
     {
@@ -93,9 +92,8 @@ namespace EquationData
     prm.leave_subsection();
   }
 
-
   void
-  ExactSolutionLin_Data::parse_parameters(ParameterHandler &prm)
+    ExactSolutionLin_Data::parse_parameters(ParameterHandler &prm)
   {
     prm.enter_subsection("Equation parameters");
     {
@@ -116,24 +114,21 @@ namespace EquationData
     prm.leave_subsection();
   }
 
-
   ExactSolutionLin::ExactSolutionLin(const std::string &parameter_filename)
     : TensorFunction<1, 3>()
     , ExactSolutionLin_Data(parameter_filename)
   {}
 
-
   Tensor<1, 3>
-  ExactSolutionLin::value(const Point<3> &point) const
+    ExactSolutionLin::value(const Point<3> &point) const
   {
     Tensor<1, 3> value = A * point + b;
     return value;
   }
 
-
   void
-  ExactSolutionLin::value_list(const std::vector<Point<3>> &points,
-                               std::vector<Tensor<1, 3>> &  values) const
+    ExactSolutionLin::value_list(const std::vector<Point<3>> &points,
+                                 std::vector<Tensor<1, 3>> &  values) const
   {
     Assert(points.size() == values.size(),
            ExcDimensionMismatch(points.size(), values.size()));
@@ -146,7 +141,6 @@ namespace EquationData
       }
   }
 
-
   ExactSolutionLin_B_div::ExactSolutionLin_B_div(
     const std::string &parameter_filename)
     : Function<3>(1)
@@ -154,10 +148,9 @@ namespace EquationData
     , b(parameter_filename)
   {}
 
-
   double
-  ExactSolutionLin_B_div::value(const Point<3> &point,
-                                const unsigned int /*component = 0*/) const
+    ExactSolutionLin_B_div::value(const Point<3> &point,
+                                  const unsigned int /*component = 0*/) const
   {
     double value = b.value(point);
 
@@ -166,11 +159,11 @@ namespace EquationData
     return value;
   }
 
-
   void
-  ExactSolutionLin_B_div::value_list(const std::vector<Point<3>> &points,
-                                     std::vector<double> &        values,
-                                     const unsigned int /*component = 0*/) const
+    ExactSolutionLin_B_div::value_list(
+      const std::vector<Point<3>> &points,
+      std::vector<double> &        values,
+      const unsigned int /*component = 0*/) const
   {
     Assert(points.size() == values.size(),
            ExcDimensionMismatch(points.size(), values.size()));
@@ -183,7 +176,6 @@ namespace EquationData
       }
   }
 
-
   ExactSolutionLin_A_curl::ExactSolutionLin_A_curl(
     const std::string &parameter_filename)
     : TensorFunction<1, 3>()
@@ -191,18 +183,16 @@ namespace EquationData
     , a(parameter_filename)
   {}
 
-
   Tensor<1, 3>
-  ExactSolutionLin_A_curl::value(const Point<3> &point) const
+    ExactSolutionLin_A_curl::value(const Point<3> &point) const
   {
     Tensor<1, 3> value = a.value(point) * curl_u;
     return value;
   }
 
-
   void
-  ExactSolutionLin_A_curl::value_list(const std::vector<Point<3>> &points,
-                                      std::vector<Tensor<1, 3>> &  values) const
+    ExactSolutionLin_A_curl::value_list(const std::vector<Point<3>> &points,
+                                        std::vector<Tensor<1, 3>> &values) const
   {
     Assert(points.size() == values.size(),
            ExcDimensionMismatch(points.size(), values.size()));

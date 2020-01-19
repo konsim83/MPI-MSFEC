@@ -4,7 +4,6 @@ namespace QNed
 {
   using namespace dealii;
 
-
   QNedStd::QNedStd(QNed::ParametersStd &parameters_,
                    const std::string &  parameter_filename_)
     : mpi_communicator(MPI_COMM_WORLD)
@@ -24,9 +23,9 @@ namespace QNed
   {
     if ((parameters.renumber_dofs) && (parameters.use_exact_solution))
       throw std::runtime_error(
-        "When using the exact solution dof renumbering must be disabled in parameter file.");
+        "When using the exact solution dof renumbering must be disabled in "
+        "parameter file.");
   }
-
 
   QNedStd::~QNedStd()
   {
@@ -35,10 +34,8 @@ namespace QNed
     dof_handler.clear();
   }
 
-
-
   void
-  QNedStd::setup_grid()
+    QNedStd::setup_grid()
   {
     TimerOutput::Scope t(computing_timer, "mesh generation");
 
@@ -47,10 +44,8 @@ namespace QNed
     triangulation.refine_global(parameters.n_refine);
   }
 
-
-
   void
-  QNedStd::setup_system_matrix()
+    QNedStd::setup_system_matrix()
   {
     TimerOutput::Scope t(computing_timer, "system and constraint setup");
 
@@ -110,10 +105,8 @@ namespace QNed
     system_rhs.reinit(owned_partitioning, mpi_communicator);
   }
 
-
-
   void
-  QNedStd::setup_constraints()
+    QNedStd::setup_constraints()
   {
     // set constraints (first hanging nodes, then flux)
     constraints.clear();
@@ -158,10 +151,8 @@ namespace QNed
     constraints.close();
   }
 
-
-
   void
-  QNedStd::assemble_system()
+    QNedStd::assemble_system()
   {
     TimerOutput::Scope t(computing_timer, "assembly");
 
@@ -178,22 +169,20 @@ namespace QNed
                             update_quadrature_points | update_JxW_values);
 
     //	FEFaceValues<3> fe_face_values (fe, face_quadrature_formula,
-    //									  update_values    | update_normal_vectors |
-    //									  update_quadrature_points  | update_JxW_values);
+    //									  update_values    | update_normal_vectors
+    //| 									  update_quadrature_points  | update_JxW_values);
 
     // Define some abbreviations
     const unsigned int dofs_per_cell = fe.dofs_per_cell;
     const unsigned int n_q_points    = quadrature_formula.size();
-    //	const unsigned int   n_face_q_points = face_quadrature_formula.size();
-
+    //	const unsigned int   n_face_q_points =
+    // face_quadrature_formula.size();
 
     // Declare local contributions and reserve memory
     FullMatrix<double> local_matrix(dofs_per_cell, dofs_per_cell);
     Vector<double>     local_rhs(dofs_per_cell);
 
-
     std::vector<types::global_dof_index> local_dof_indices(dofs_per_cell);
-
 
     // equation data
     std::unique_ptr<TensorFunction<1, 3>> right_hand_side;
@@ -207,7 +196,6 @@ namespace QNed
       parameter_filename, parameters.use_exact_solution);
     const EquationData::ReactionRate reaction_rate;
 
-
     // allocate
     std::vector<Tensor<1, 3>> rhs_values(n_q_points);
     std::vector<double>       reaction_rate_values(n_q_points);
@@ -217,7 +205,6 @@ namespace QNed
     // define extractors
     const FEValuesExtractors::Scalar q1(/* first_vector_component */ 0);
     const FEValuesExtractors::Vector curl(/* first_vector_component */ 1);
-
 
     // ------------------------------------------------------------------
     // loop over cells
@@ -267,14 +254,16 @@ namespace QNed
                         /*
                          * Discretize
                          * B^{-1}sigma + div(u) = 0
-                         * grad(sigma) + curl(A*curl(u)) + alpha u = f , where
+                         * grad(sigma) + curl(A*curl(u))
+                         * + alpha u = f , where
                          * alpha>0.
                          */
                         local_matrix(i, j) +=
                           (tau_i * b_inverse_values[q] *
                              sigma_j                           /* block (0,0) */
                            - grad_tau_i * u_j                  /* block (0,1) */
-                           + v_i * grad_sigma_j                /* block (1,0) */
+                           + v_i * grad_sigma_j                /* block
+                                                                  (1,0) */
                            + curl_v_i * a_values[q] * curl_u_j /* block (1,1) */
                            + v_i * reaction_rate_values[q] *
                                u_j) /* block (1,1) */
@@ -285,16 +274,20 @@ namespace QNed
                   } // end for ++i
               }     // end for ++q
 
-
-            // line integral over boundary faces for for natural conditions on u
+            // line integral over boundary faces for for natural
+            // conditions on u
             //		for (unsigned int face_n=0;
             //					 face_n<GeometryInfo<3>::faces_per_cell;
             //					 ++face_n)
             //		{
             //			if (cell->at_boundary(face_n)
-            //		//					&& cell->face(face_n)->boundary_id()!=0 /* Select
+            //		//					&&
+            // cell->face(face_n)->boundary_id()!=0 /*
+            // Select
             // only certain faces. */
-            //		//					&& cell->face(face_n)->boundary_id()!=2 /* Select
+            //		//					&&
+            // cell->face(face_n)->boundary_id()!=2 /*
+            // Select
             // only certain faces. */
             //					)
             //			{
@@ -304,12 +297,13 @@ namespace QNed
             //(fe_face_values.get_quadrature_points(),
             //					  boundary_values_u_values);
             //
-            //				for (unsigned int q=0; q<n_face_q_points; ++q)
-            //					for (unsigned int i=0; i<dofs_per_cell; ++i)
-            //						local_rhs(i) += -(fe_face_values[flux].value (i, q) *
-            //										fe_face_values.normal_vector(q) *
-            //										boundary_values_u_values[q] *
-            //										fe_face_values.JxW(q));
+            //				for (unsigned int q=0; q<n_face_q_points;
+            //++q) 					for (unsigned int i=0; i<dofs_per_cell;
+            //++i) local_rhs(i) +=
+            //-(fe_face_values[flux].value (i, q) *
+            //										fe_face_values.normal_vector(q)
+            //* 										boundary_values_u_values[q] *
+            // fe_face_values.JxW(q));
             //			}
             //		}
 
@@ -329,19 +323,18 @@ namespace QNed
     system_rhs.compress(VectorOperation::add);
   }
 
-
   void
-  QNedStd::solve_direct()
+    QNedStd::solve_direct()
   {
     TimerOutput::Scope t(computing_timer, " direct solver (MUMPS)");
 
     throw std::runtime_error(
-      "Solver not implemented: MUMPS does not work on TrilinosWrappers::MPI::BlockSparseMatrix classes.");
+      "Solver not implemented: MUMPS does not work on "
+      "TrilinosWrappers::MPI::BlockSparseMatrix classes.");
   }
 
-
   void
-  QNedStd::solve_iterative()
+    QNedStd::solve_iterative()
   {
     inner_schur_preconditioner =
       std::make_shared<typename LinearSolvers::InnerPreconditioner<3>::type>();
@@ -401,9 +394,10 @@ namespace QNed
       //																					LA::MPI::Vector,
       //																					typename
       // LinearSolvers::InnerPreconditioner<3>::type>,
-      // PreconditionIdentity> 									preconditioner
-      // (schur_complement,
-      //												PreconditionIdentity() );
+      // PreconditionIdentity>
+      // preconditioner (schur_complement,
+      //												PreconditionIdentity()
+      //);
 
       /*
        * Precondition the Schur complement with
@@ -429,10 +423,12 @@ namespace QNed
 #endif
 
       /*
-       * Precondition the Schur complement with a preconditioner of block(1,1).
+       * Precondition the Schur complement with a preconditioner of
+       * block(1,1).
        */
       //		LA::MPI::PreconditionAMG preconditioner;
-      //		preconditioner.initialize(system_matrix.block(1, 1), data);
+      //		preconditioner.initialize(system_matrix.block(1, 1),
+      // data);
 
       schur_solver.solve(schur_complement,
                          distributed_solution.block(1),
@@ -449,7 +445,8 @@ namespace QNed
       TimerOutput::Scope t(computing_timer, "outer CG solver (for sigma)");
 
       //	SolverControl                    outer_solver_control;
-      //	PETScWrappers::SparseDirectMUMPS outer_solver(outer_solver_control,
+      //	PETScWrappers::SparseDirectMUMPS
+      // outer_solver(outer_solver_control,
       // mpi_communicator); 	outer_solver.set_symmetric_mode(true);
 
       // use computed u to solve for sigma
@@ -470,9 +467,8 @@ namespace QNed
     locally_relevant_solution = distributed_solution;
   }
 
-
   void
-  QNedStd::write_exact_solution()
+    QNedStd::write_exact_solution()
   {
     locally_relevant_exact_solution.reinit(owned_partitioning,
                                            relevant_partitioning,
@@ -533,9 +529,8 @@ namespace QNed
     }
   }
 
-
   void
-  QNedStd::output_results() const
+    QNedStd::output_results() const
   {
     DataOut<3> data_out;
     data_out.attach_dof_handler(dof_handler);
@@ -639,18 +634,17 @@ namespace QNed
       }
   }
 
-
   /*!
    * Solve standard mixed problem with Q1-Nedelec element pairing.
    */
   void
-  QNedStd::run()
+    QNedStd::run()
   {
     if (parameters.compute_solution == false)
       {
-        deallog
-          << "Run of standard problem is explicitly disabled in parameter file. "
-          << std::endl;
+        deallog << "Run of standard problem is explicitly disabled in "
+                   "parameter file. "
+                << std::endl;
         return;
       }
 
@@ -659,7 +653,6 @@ namespace QNed
 #else
     pcout << "Running using Trilinos." << std::endl;
 #endif
-
 
     setup_grid();
 
@@ -684,7 +677,6 @@ namespace QNed
       TimerOutput::Scope t(computing_timer, "vtu output");
       output_results();
     }
-
 
     if (parameters.verbose)
       {

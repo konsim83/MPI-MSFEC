@@ -4,7 +4,6 @@ namespace NedRT
 {
   using namespace dealii;
 
-
   NedRTStd::NedRTStd(NedRT::ParametersStd &parameters_,
                      const std::string &   parameter_filename_)
     : mpi_communicator(MPI_COMM_WORLD)
@@ -24,9 +23,9 @@ namespace NedRT
   {
     if ((parameters.renumber_dofs) && (parameters.use_exact_solution))
       throw std::runtime_error(
-        "When using the exact solution dof renumbering must be disabled in parameter file.");
+        "When using the exact solution dof renumbering must be disabled in "
+        "parameter file.");
   }
-
 
   NedRTStd::~NedRTStd()
   {
@@ -35,10 +34,8 @@ namespace NedRT
     dof_handler.clear();
   }
 
-
-
   void
-  NedRTStd::setup_grid()
+    NedRTStd::setup_grid()
   {
     TimerOutput::Scope t(computing_timer, "mesh generation");
 
@@ -47,10 +44,8 @@ namespace NedRT
     triangulation.refine_global(parameters.n_refine);
   }
 
-
-
   void
-  NedRTStd::setup_system_matrix()
+    NedRTStd::setup_system_matrix()
   {
     TimerOutput::Scope t(computing_timer, "system and constraint setup");
 
@@ -110,10 +105,8 @@ namespace NedRT
     system_rhs.reinit(owned_partitioning, mpi_communicator);
   }
 
-
-
   void
-  NedRTStd::setup_constraints()
+    NedRTStd::setup_constraints()
   {
     // set constraints (first hanging nodes, then flux)
     constraints.clear();
@@ -131,8 +124,8 @@ namespace NedRT
     //					/*boundary id*/ i,
     //					constraints);
     //		VectorTools::project_boundary_values_div_conforming(dof_handler,
-    //							/*first vector component */ 3,
-    //							ZeroFunction<3>(6),
+    //							/*first vector component */
+    // 3, 							ZeroFunction<3>(6),
     //							/*boundary id*/ i,
     //							constraints);
     //	}
@@ -140,10 +133,8 @@ namespace NedRT
     constraints.close();
   }
 
-
-
   void
-  NedRTStd::assemble_system()
+    NedRTStd::assemble_system()
   {
     TimerOutput::Scope t(computing_timer, "assembly");
 
@@ -169,7 +160,6 @@ namespace NedRT
     const unsigned int dofs_per_cell   = fe.dofs_per_cell;
     const unsigned int n_q_points      = quadrature_formula.size();
     const unsigned int n_face_q_points = face_quadrature_formula.size();
-
 
     // Declare local contributions and reserve memory
     FullMatrix<double> local_matrix(dofs_per_cell, dofs_per_cell);
@@ -200,7 +190,6 @@ namespace NedRT
         u.reset(new EquationData::ExactSolutionLin(parameter_filename));
       }
 
-
     // allocate
     std::vector<Tensor<1, 3>> rhs_values(n_q_points);
     std::vector<double>       reaction_rate_values(n_q_points);
@@ -212,7 +201,6 @@ namespace NedRT
     // define extractors
     const FEValuesExtractors::Vector curl(/* first_vector_component */ 0);
     const FEValuesExtractors::Vector flux(/* first_vector_component */ 3);
-
 
     // ------------------------------------------------------------------
     // loop over cells
@@ -261,14 +249,16 @@ namespace NedRT
                         /*
                          * Discretize
                          * A^{-1}sigma - curl(u) = 0
-                         * curl(sigma) - grad(B*div(u)) + alpha u = f , where
+                         * curl(sigma) - grad(B*div(u))
+                         * + alpha u = f , where
                          * alpha>0.
                          */
                         local_matrix(i, j) +=
                           (tau_i * a_inverse_values[q] *
                              sigma_j                         /* block (0,0) */
                            - curl_tau_i * u_j                /* block (0,1) */
-                           + v_i * curl_sigma_j              /* block (1,0) */
+                           + v_i * curl_sigma_j              /* block
+                                                                (1,0) */
                            + div_v_i * b_values[q] * div_u_j /* block (1,1) */
                            + v_i * reaction_rate_values[q] *
                                u_j) /* block (1,1) */
@@ -279,8 +269,8 @@ namespace NedRT
                   } // end for ++i
               }     // end for ++q
 
-
-            // line integral over boundary faces for for natural conditions
+            // line integral over boundary faces for for natural
+            // conditions
             if (parameters.use_exact_solution)
               {
                 for (unsigned int face_n = 0;
@@ -288,15 +278,18 @@ namespace NedRT
                      ++face_n)
                   {
                     if (cell->at_boundary(face_n)
-                        //					&& cell->face(face_n)->boundary_id()!=0 /*
-                        // Select only certain faces. */
-                        //					&& cell->face(face_n)->boundary_id()!=2 /*
-                        // Select only certain faces. */
+                        //					&&
+                        // cell->face(face_n)->boundary_id()!=0
+                        // /* Select only certain faces. */
+                        //					&&
+                        // cell->face(face_n)->boundary_id()!=2
+                        // /* Select only certain faces. */
                     )
                       {
                         fe_face_values.reinit(cell, face_n);
 
-                        // note that the BVs for u already have a minus
+                        // note that the BVs for u
+                        // already have a minus
                         minus_B_div_u->value_list(
                           fe_face_values.get_quadrature_points(),
                           minus_B_div_u_values);
@@ -341,19 +334,18 @@ namespace NedRT
     system_rhs.compress(VectorOperation::add);
   }
 
-
   void
-  NedRTStd::solve_direct()
+    NedRTStd::solve_direct()
   {
     TimerOutput::Scope t(computing_timer, " direct solver (MUMPS)");
 
     throw std::runtime_error(
-      "Solver not implemented: MUMPS does not work on TrilinosWrappers::MPI::BlockSparseMatrix classes.");
+      "Solver not implemented: MUMPS does not work on "
+      "TrilinosWrappers::MPI::BlockSparseMatrix classes.");
   }
 
-
   void
-  NedRTStd::solve_iterative()
+    NedRTStd::solve_iterative()
   {
     inner_schur_preconditioner =
       std::make_shared<typename LinearSolvers::InnerPreconditioner<3>::type>();
@@ -413,9 +405,10 @@ namespace NedRT
       //																					LA::MPI::Vector,
       //																					typename
       // LinearSolvers::InnerPreconditioner<3>::type>,
-      // PreconditionIdentity> 									preconditioner
-      // (schur_complement,
-      //												PreconditionIdentity() );
+      // PreconditionIdentity>
+      // preconditioner (schur_complement,
+      //												PreconditionIdentity()
+      //);
 
       /*
        * Precondition the Schur complement with
@@ -441,10 +434,12 @@ namespace NedRT
 #endif
 
       /*
-       * Precondition the Schur complement with a preconditioner of block(1,1).
+       * Precondition the Schur complement with a preconditioner of
+       * block(1,1).
        */
       //		LA::MPI::PreconditionAMG preconditioner;
-      //		preconditioner.initialize(system_matrix.block(1, 1), data);
+      //		preconditioner.initialize(system_matrix.block(1, 1),
+      // data);
 
       schur_solver.solve(schur_complement,
                          distributed_solution.block(1),
@@ -461,7 +456,8 @@ namespace NedRT
       TimerOutput::Scope t(computing_timer, "outer CG solver (for sigma)");
 
       //	SolverControl                    outer_solver_control;
-      //	PETScWrappers::SparseDirectMUMPS outer_solver(outer_solver_control,
+      //	PETScWrappers::SparseDirectMUMPS
+      // outer_solver(outer_solver_control,
       // mpi_communicator); 	outer_solver.set_symmetric_mode(true);
 
       // use computed u to solve for sigma
@@ -482,9 +478,8 @@ namespace NedRT
     locally_relevant_solution = distributed_solution;
   }
 
-
   void
-  NedRTStd::write_exact_solution()
+    NedRTStd::write_exact_solution()
   {
     locally_relevant_exact_solution.reinit(owned_partitioning,
                                            relevant_partitioning,
@@ -545,9 +540,8 @@ namespace NedRT
     }
   }
 
-
   void
-  NedRTStd::output_results() const
+    NedRTStd::output_results() const
   {
     DataOut<3> data_out;
     data_out.attach_dof_handler(dof_handler);
@@ -638,15 +632,14 @@ namespace NedRT
       }
   }
 
-
   void
-  NedRTStd::run()
+    NedRTStd::run()
   {
     if (parameters.compute_solution == false)
       {
-        deallog
-          << "Run of standard problem is explicitly disabled in parameter file. "
-          << std::endl;
+        deallog << "Run of standard problem is explicitly disabled in "
+                   "parameter file. "
+                << std::endl;
         return;
       }
 
@@ -655,7 +648,6 @@ namespace NedRT
 #else
     pcout << "Running using Trilinos." << std::endl;
 #endif
-
 
     setup_grid();
 
@@ -680,7 +672,6 @@ namespace NedRT
       TimerOutput::Scope t(computing_timer, "vtu output");
       output_results();
     }
-
 
     if (parameters.verbose)
       {

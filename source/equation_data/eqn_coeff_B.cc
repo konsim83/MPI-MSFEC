@@ -20,9 +20,8 @@ namespace EquationData
     parse_parameters(prm);
   }
 
-
   void
-  Diffusion_B_Data::declare_parameters(ParameterHandler &prm)
+    Diffusion_B_Data::declare_parameters(ParameterHandler &prm)
   {
     prm.enter_subsection("Equation parameters");
     {
@@ -50,9 +49,8 @@ namespace EquationData
     prm.leave_subsection();
   }
 
-
   void
-  Diffusion_B_Data::parse_parameters(ParameterHandler &prm)
+    Diffusion_B_Data::parse_parameters(ParameterHandler &prm)
   {
     prm.enter_subsection("Equation parameters");
     {
@@ -70,7 +68,6 @@ namespace EquationData
     }
     prm.leave_subsection();
   }
-
 
   Diffusion_B::Diffusion_B(const std::string &parameter_filename,
                            bool               use_exact_solution)
@@ -92,7 +89,6 @@ namespace EquationData
 
     this->initialize(variables, fnc_expression, constants);
   }
-
 
   DiffusionInverse_B::DiffusionInverse_B(const std::string &parameter_filename,
                                          bool               use_exact_solution)
