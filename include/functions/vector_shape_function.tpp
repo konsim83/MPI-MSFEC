@@ -1,7 +1,6 @@
 #ifndef INCLUDE_FUNCTIONS_VECTOR_SHAPE_FUNCTION_TPP_
 #define INCLUDE_FUNCTIONS_VECTOR_SHAPE_FUNCTION_TPP_
 
-
 namespace ShapeFun
 {
   using namespace dealii;
@@ -37,28 +36,25 @@ namespace ShapeFun
       }
   }
 
-
   template <int dim>
   void
-  ShapeFunctionVector<dim>::set_current_cell(
-    const typename Triangulation<dim>::cell_iterator &cell)
+    ShapeFunctionVector<dim>::set_current_cell(
+      const typename Triangulation<dim>::cell_iterator &cell)
   {
     current_cell_ptr = &cell;
   }
 
-
   template <int dim>
   void
-  ShapeFunctionVector<dim>::set_shape_fun_index(unsigned int index)
+    ShapeFunctionVector<dim>::set_shape_fun_index(unsigned int index)
   {
     shape_fun_index = index;
   }
 
-
   template <int dim>
   void
-  ShapeFunctionVector<dim>::vector_value(const Point<dim> &p,
-                                         Vector<double> &  value) const
+    ShapeFunctionVector<dim>::vector_value(const Point<dim> &p,
+                                           Vector<double> &  value) const
   {
     // Map physical points to reference cell
     Point<dim> point_on_ref_cell(
@@ -76,17 +72,17 @@ namespace ShapeFun
 
     for (unsigned int i = 0; i < dim; ++i)
       {
-        value[i] =
-          fe_values.shape_value_component(shape_fun_index, /* q_index */ 0, i);
+        value[i] = fe_values.shape_value_component(shape_fun_index,
+                                                   /* q_index */ 0,
+                                                   i);
       }
   }
 
-
   template <int dim>
   void
-  ShapeFunctionVector<dim>::vector_value_list(
-    const std::vector<Point<dim>> &points,
-    std::vector<Vector<double>> &  values) const
+    ShapeFunctionVector<dim>::vector_value_list(
+      const std::vector<Point<dim>> &points,
+      std::vector<Vector<double>> &  values) const
   {
     Assert(points.size() == values.size(),
            ExcDimensionMismatch(points.size(), values.size()));
@@ -123,12 +119,11 @@ namespace ShapeFun
       }
   }
 
-
   template <int dim>
   void
-  ShapeFunctionVector<dim>::tensor_value_list(
-    const std::vector<Point<dim>> &points,
-    std::vector<Tensor<1, dim>> &  values) const
+    ShapeFunctionVector<dim>::tensor_value_list(
+      const std::vector<Point<dim>> &points,
+      std::vector<Tensor<1, dim>> &  values) const
   {
     Assert(points.size() == values.size(),
            ExcDimensionMismatch(points.size(), values.size()));
@@ -167,6 +162,5 @@ namespace ShapeFun
   }
 
 } // namespace ShapeFun
-
 
 #endif /* INCLUDE_FUNCTIONS_VECTOR_SHAPE_FUNCTION_TPP_ */

@@ -1,7 +1,6 @@
 #ifndef INCLUDE_FUNCTIONS_VECTOR_SHAPE_FUNCTION_DIV_TPP_
 #define INCLUDE_FUNCTIONS_VECTOR_SHAPE_FUNCTION_DIV_TPP_
 
-
 namespace ShapeFun
 {
   using namespace dealii;
@@ -38,29 +37,26 @@ namespace ShapeFun
       }
   }
 
-
   template <int dim>
   void
-  ShapeFunctionVectorDiv<dim>::set_current_cell(
-    const typename Triangulation<dim>::active_cell_iterator &cell)
+    ShapeFunctionVectorDiv<dim>::set_current_cell(
+      const typename Triangulation<dim>::active_cell_iterator &cell)
   {
     current_cell_ptr = &cell;
   }
 
-
   template <int dim>
   void
-  ShapeFunctionVectorDiv<dim>::set_shape_fun_index(unsigned int index)
+    ShapeFunctionVectorDiv<dim>::set_shape_fun_index(unsigned int index)
   {
     shape_fun_index = index;
   }
 
-
   template <int dim>
   double
-  ShapeFunctionVectorDiv<dim>::value(
-    const Point<dim> &p,
-    const unsigned int /* component = 0 */) const
+    ShapeFunctionVectorDiv<dim>::value(
+      const Point<dim> &p,
+      const unsigned int /* component = 0 */) const
   {
     // Map physical points to reference cell
     Point<dim> point_on_ref_cell(
@@ -80,13 +76,12 @@ namespace ShapeFun
     return fe_values[flux].divergence(shape_fun_index, /* q_index */ 0);
   }
 
-
   template <int dim>
   void
-  ShapeFunctionVectorDiv<dim>::value_list(
-    const std::vector<Point<dim>> &points,
-    std::vector<double> &          values,
-    const unsigned int /* component = 0 */) const
+    ShapeFunctionVectorDiv<dim>::value_list(
+      const std::vector<Point<dim>> &points,
+      std::vector<double> &          values,
+      const unsigned int /* component = 0 */) const
   {
     Assert(points.size() == values.size(),
            ExcDimensionMismatch(points.size(), values.size()));
@@ -120,6 +115,5 @@ namespace ShapeFun
   }
 
 } // namespace ShapeFun
-
 
 #endif /* INCLUDE_FUNCTIONS_VECTOR_SHAPE_FUNCTION_DIV_TPP_ */

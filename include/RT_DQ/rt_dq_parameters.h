@@ -2,13 +2,11 @@
 #define INCLUDE_RT_DQ_PARAMETERS_H_
 
 #include <deal.II/base/parameter_handler.h>
-
 #include <deal.II/grid/cell_id.h>
 
 #include <fstream>
 #include <iostream>
 #include <vector>
-
 
 /**
  * Namespace for RT-DQ problems.
@@ -22,9 +20,9 @@ namespace RTDQ
     ParametersStd(const std::string &parameter_filename);
 
     static void
-    declare_parameters(ParameterHandler &prm);
+      declare_parameters(ParameterHandler &prm);
     void
-    parse_parameters(ParameterHandler &prm);
+      parse_parameters(ParameterHandler &prm);
 
     const bool degree = 0;
 
@@ -41,16 +39,14 @@ namespace RTDQ
     std::string filename_output;
   };
 
-
-
   struct ParametersMs
   {
     ParametersMs(const std::string &parameter_filename);
 
     static void
-    declare_parameters(ParameterHandler &prm);
+      declare_parameters(ParameterHandler &prm);
     void
-    parse_parameters(ParameterHandler &prm);
+      parse_parameters(ParameterHandler &prm);
 
     bool compute_solution;
     bool verbose;
@@ -69,8 +65,6 @@ namespace RTDQ
     std::string filename_output;
   };
 
-
-
   struct ParametersBasis
   {
     ParametersBasis(const ParametersMs &param_ms);
@@ -78,7 +72,7 @@ namespace RTDQ
       const ParametersBasis &other); // This the the copy constructor
 
     void
-    set_output_flag(CellId local_cell_id, CellId first_cell);
+      set_output_flag(CellId local_cell_id, CellId first_cell);
 
     const unsigned int degree     = 0;
     const bool         set_to_std = false;
@@ -99,7 +93,6 @@ namespace RTDQ
 
     std::string filename_global;
   };
-
 
 } // namespace RTDQ
 

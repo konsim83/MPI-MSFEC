@@ -14,10 +14,9 @@ namespace EquationData
     R_trans_curl_u = transpose(rot) * curl_u;
   }
 
-
   void
-  RightHandSideExactLin::value_list(const std::vector<Point<3>> &points,
-                                    std::vector<Tensor<1, 3>> &  values) const
+    RightHandSideExactLin::value_list(const std::vector<Point<3>> &points,
+                                      std::vector<Tensor<1, 3>> &  values) const
   {
     Assert(points.size() == values.size(),
            ExcDimensionMismatch(points.size(), values.size()));
@@ -55,10 +54,9 @@ namespace EquationData
       }
   }
 
-
   void
-  RightHandSideParsed::value_list(const std::vector<Point<3>> &points,
-                                  std::vector<Tensor<1, 3>> &  values) const
+    RightHandSideParsed::value_list(const std::vector<Point<3>> &points,
+                                    std::vector<Tensor<1, 3>> &  values) const
   {
     Assert(points.size() == values.size(),
            ExcDimensionMismatch(points.size(), values.size()));
@@ -116,8 +114,6 @@ namespace EquationData
         //////////////////////////////////////////////////////////
         //////////////////////////////////////////////////////////
 
-
-
         //////////////////////////////////////////////////////////
         ////   No BCs   //////////////////////////////////////////
         //////////////////////////////////////////////////////////
@@ -129,10 +125,13 @@ namespace EquationData
 
         // Curl
         //		const unsigned int k = 1;
-        //		values.at(i)[0] = - 2 * numbers::PI * k * cos(2 * numbers::PI * k
-        //* points[i](1) * points[i](2)) * points[i](1); 		values.at(i)[1] = -
-        // 2 * numbers::PI * k * cos(2 * numbers::PI * k * points[i](0) *
-        // points[i](2)) * points[i](2); 		values.at(i)[2] = - 2 * numbers::PI
+        //		values.at(i)[0] = - 2 * numbers::PI * k * cos(2 *
+        // numbers::PI * k
+        //* points[i](1) * points[i](2)) * points[i](1);
+        // values.at(i)[1] = -
+        // 2 * numbers::PI * k * cos(2 * numbers::PI * k * points[i](0)
+        // * points[i](2)) * points[i](2); 		values.at(i)[2] = - 2 *
+        // numbers::PI
         // *
         // k
         //* cos(2 * numbers::PI * k * points[i](0) * points[i](1)) *
@@ -140,15 +139,21 @@ namespace EquationData
 
         // Curl
         //		const unsigned int k = 1;
-        //		values.at(i)[0] = 2 * numbers::PI * k * (cos(2 * numbers::PI * k *
+        //		values.at(i)[0] = 2 * numbers::PI * k * (cos(2 *
+        // numbers::PI * k *
         // points[i](0) * points[i](1))
-        //						- cos(2 * numbers::PI * k * points[i](0) * points[i](2)))
-        //* points[i](0); 		values.at(i)[1] = 2 * numbers::PI * k * (cos(2 *
+        //						- cos(2 * numbers::PI * k *
+        // points[i](0) * points[i](2)))
+        //* points[i](0); 		values.at(i)[1] = 2 * numbers::PI * k *
+        //(cos(2 *
         // numbers::PI * k * points[i](1) * points[i](2))
-        //						- cos(2 * numbers::PI * k * points[i](0) * points[i](1)))
-        //* points[i](1); 		values.at(i)[2] = 2 * numbers::PI * k * (cos(2 *
+        //						- cos(2 * numbers::PI * k *
+        // points[i](0) * points[i](1)))
+        //* points[i](1); 		values.at(i)[2] = 2 * numbers::PI * k *
+        //(cos(2 *
         // numbers::PI * k * points[i](0) * points[i](2))
-        //						- cos(2 * numbers::PI * k * points[i](1) * points[i](2)))
+        //						- cos(2 * numbers::PI * k *
+        // points[i](1) * points[i](2)))
         //* points[i](2);
 
         // Curl
@@ -159,16 +164,15 @@ namespace EquationData
         //////////////////////////////////////////////////////////
         //////////////////////////////////////////////////////////
 
-
-
         //////////////////////////////////////////////////////////
         ////   Anything   ////////////////////////////////////////
         //////////////////////////////////////////////////////////
         //		values.at(i)[0] = 0;
         //		values.at(i)[1] = std::pow(sin(numbers::PI*points[i](0))
-        //										* sin(numbers::PI*points[i](1))
-        //										* sin(numbers::PI*points[i](2)), 2);;
-        //		values.at(i)[2] = 0;
+        //										*
+        // sin(numbers::PI*points[i](1))
+        //										*
+        // sin(numbers::PI*points[i](2)), 2);; 		values.at(i)[2] = 0;
 
         //		values.at(i)[0] += 1;
         //		values.at(i)[1] += 1;
@@ -179,11 +183,10 @@ namespace EquationData
       }
   }
 
-
   void
-  RightHandSideScalarParsed::value_list(const std::vector<Point<3>> &points,
-                                        std::vector<double> &        values,
-                                        unsigned int /* component */) const
+    RightHandSideScalarParsed::value_list(const std::vector<Point<3>> &points,
+                                          std::vector<double> &        values,
+                                          unsigned int /* component */) const
   {
     Assert(points.size() == values.size(),
            ExcDimensionMismatch(points.size(), values.size()));

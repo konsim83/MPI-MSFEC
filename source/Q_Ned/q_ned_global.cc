@@ -24,10 +24,9 @@ namespace QNed
   {
     if ((parameters.renumber_dofs) && (parameters.use_exact_solution))
       throw std::runtime_error(
-        "When using the exact solution dof renumbering must be disabled in parameter file.");
+        "When using the exact solution dof renumbering must be disabled in "
+        "parameter file.");
   }
-
-
 
   QNedMultiscale::~QNedMultiscale()
   {
@@ -36,10 +35,8 @@ namespace QNed
     dof_handler.clear();
   }
 
-
-
   void
-  QNedMultiscale::setup_grid()
+    QNedMultiscale::setup_grid()
   {
     TimerOutput::Scope t(computing_timer, "coarse mesh generation");
 
@@ -48,10 +45,8 @@ namespace QNed
     triangulation.refine_global(parameters.n_refine_global);
   }
 
-
-
   void
-  QNedMultiscale::initialize_and_compute_basis()
+    QNedMultiscale::initialize_and_compute_basis()
   {
     TimerOutput::Scope t(computing_timer,
                          "Q1-Nedelec basis initialization and computation");
@@ -87,7 +82,6 @@ namespace QNed
           }
       } // end ++cell
 
-
     /*
      * Now each node possesses a set of basis objects.
      * We need to compute them on each node and do so in
@@ -103,9 +97,8 @@ namespace QNed
       }
   }
 
-
   void
-  QNedMultiscale::setup_system_matrix()
+    QNedMultiscale::setup_system_matrix()
   {
     TimerOutput::Scope t(computing_timer, "system and constraint setup");
 
@@ -169,9 +162,8 @@ namespace QNed
     system_rhs.reinit(owned_partitioning, mpi_communicator);
   }
 
-
   void
-  QNedMultiscale::setup_constraints()
+    QNedMultiscale::setup_constraints()
   {
     // set constraints (first hanging nodes, then flux)
     constraints.clear();
@@ -216,9 +208,8 @@ namespace QNed
     constraints.close();
   }
 
-
   void
-  QNedMultiscale::assemble_system()
+    QNedMultiscale::assemble_system()
   {
     TimerOutput::Scope t(computing_timer, "multiscale assembly");
 
@@ -229,18 +220,17 @@ namespace QNed
 
     // Get relevant quantities to be updated from finite element
     //	FEFaceValues<3> fe_face_values (fe, face_quadrature_formula,
-    //									  update_values    | update_normal_vectors |
-    //									  update_quadrature_points  | update_JxW_values);
+    //									  update_values    | update_normal_vectors
+    //| 									  update_quadrature_points  | update_JxW_values);
 
     // Define some abbreviations
     const unsigned int dofs_per_cell = fe.dofs_per_cell;
-    //	const unsigned int   n_face_q_points = face_quadrature_formula.size();
-
+    //	const unsigned int   n_face_q_points =
+    // face_quadrature_formula.size();
 
     // Declare local contributions and reserve memory
     FullMatrix<double> local_matrix(dofs_per_cell, dofs_per_cell);
     Vector<double>     local_rhs(dofs_per_cell);
-
 
     std::vector<types::global_dof_index> local_dof_indices(dofs_per_cell);
 
@@ -262,29 +252,36 @@ namespace QNed
             local_matrix = (it_basis->second).get_global_element_matrix();
             local_rhs    = (it_basis->second).get_global_element_rhs();
 
-
-            // line integral over boundary faces for for natural conditions on u
+            // line integral over boundary faces for for natural
+            // conditions on u
             //			for (unsigned int face_n=0;
             //						 face_n<GeometryInfo<3>::faces_per_cell;
             //						 ++face_n)
             //			{
             //				if (cell->at_boundary(face_n)
-            //			//					&& cell->face(face_n)->boundary_id()!=0 /*
+            //			//					&&
+            // cell->face(face_n)->boundary_id()!=0
+            ///*
             // Select only certain faces. */
-            //			//					&& cell->face(face_n)->boundary_id()!=2 /*
+            //			//					&&
+            // cell->face(face_n)->boundary_id()!=2
+            ///*
             // Select only certain faces. */
             //						)
             //				{
-            //					fe_face_values.reinit (cell, face_n);
+            //					fe_face_values.reinit (cell,
+            // face_n);
             //
             //					boundary_values_u.value_list
             //(fe_face_values.get_quadrature_points(),
             //						  boundary_values_u_values);
             //
-            //					for (unsigned int q=0; q<n_face_q_points; ++q)
-            //						for (unsigned int i=0; i<dofs_per_cell; ++i)
-            //							local_rhs(i) += -(fe_face_values[flux].value (i, q)
-            //* 											fe_face_values.normal_vector(q) *
+            //					for (unsigned int q=0; q<n_face_q_points;
+            //++q) 						for (unsigned int i=0;
+            // i<dofs_per_cell; ++i) local_rhs(i) +=
+            //-(fe_face_values[flux].value (i, q)
+            //* fe_face_values.normal_vector(q)
+            //*
             // boundary_values_u_values[q] * fe_face_values.JxW(q));
             //				}
             //			}
@@ -305,19 +302,18 @@ namespace QNed
     system_rhs.compress(VectorOperation::add);
   }
 
-
   void
-  QNedMultiscale::solve_direct()
+    QNedMultiscale::solve_direct()
   {
     TimerOutput::Scope t(computing_timer, " direct solver (MUMPS)");
 
     throw std::runtime_error(
-      "Solver not implemented: MUMPS does not work on TrilinosWrappers::MPI::BlockSparseMatrix classes.");
+      "Solver not implemented: MUMPS does not work on "
+      "TrilinosWrappers::MPI::BlockSparseMatrix classes.");
   }
 
-
   void
-  QNedMultiscale::solve_iterative()
+    QNedMultiscale::solve_iterative()
   {
     inner_schur_preconditioner =
       std::make_shared<typename LinearSolvers::InnerPreconditioner<3>::type>();
@@ -377,9 +373,10 @@ namespace QNed
       //																					LA::MPI::Vector,
       //																					typename
       // LinearSolvers::InnerPreconditioner<3>::type>,
-      // PreconditionIdentity> 									preconditioner
-      // (schur_complement,
-      //												PreconditionIdentity() );
+      // PreconditionIdentity>
+      // preconditioner (schur_complement,
+      //												PreconditionIdentity()
+      //);
 
       /*
        * Precondition the Schur complement with
@@ -405,10 +402,12 @@ namespace QNed
 #endif
 
       /*
-       * Precondition the Schur complement with a preconditioner of block(1,1).
+       * Precondition the Schur complement with a preconditioner of
+       * block(1,1).
        */
       //		LA::MPI::PreconditionAMG preconditioner;
-      //		preconditioner.initialize(system_matrix.block(1, 1), data);
+      //		preconditioner.initialize(system_matrix.block(1, 1),
+      // data);
 
       schur_solver.solve(schur_complement,
                          distributed_solution.block(1),
@@ -425,7 +424,8 @@ namespace QNed
       TimerOutput::Scope t(computing_timer, "outer CG solver (for sigma)");
 
       //	SolverControl                    outer_solver_control;
-      //	PETScWrappers::SparseDirectMUMPS outer_solver(outer_solver_control,
+      //	PETScWrappers::SparseDirectMUMPS
+      // outer_solver(outer_solver_control,
       // mpi_communicator); 	outer_solver.set_symmetric_mode(true);
 
       // use computed u to solve for sigma
@@ -446,10 +446,8 @@ namespace QNed
     locally_relevant_solution = distributed_solution;
   }
 
-
-
   void
-  QNedMultiscale::send_global_weights_to_cell()
+    QNedMultiscale::send_global_weights_to_cell()
   {
     // For each cell we get dofs_per_cell values
     const unsigned int                   dofs_per_cell = fe.dofs_per_cell;
@@ -475,9 +473,8 @@ namespace QNed
       } // end ++cell
   }
 
-
   void
-  QNedMultiscale::write_exact_solution()
+    QNedMultiscale::write_exact_solution()
   {
     locally_relevant_exact_solution.reinit(owned_partitioning,
                                            relevant_partitioning,
@@ -538,10 +535,8 @@ namespace QNed
     }
   }
 
-
-
   std::vector<std::string>
-  QNedMultiscale::collect_filenames_on_mpi_process()
+    QNedMultiscale::collect_filenames_on_mpi_process()
   {
     std::vector<std::string> filename_list;
 
@@ -558,10 +553,8 @@ namespace QNed
     return filename_list;
   }
 
-
-
   void
-  QNedMultiscale::output_results()
+    QNedMultiscale::output_results()
   {
     // write local fine solution
     typename std::map<CellId, QNedBasis>::iterator it_basis =
@@ -704,15 +697,14 @@ namespace QNed
       }
   }
 
-
   void
-  QNedMultiscale::run()
+    QNedMultiscale::run()
   {
     if (parameters.compute_solution == false)
       {
-        deallog
-          << "Run of multiscale problem is explicitly disabled in parameter file. "
-          << std::endl;
+        deallog << "Run of multiscale problem is explicitly disabled in "
+                   "parameter file. "
+                << std::endl;
         return;
       }
 

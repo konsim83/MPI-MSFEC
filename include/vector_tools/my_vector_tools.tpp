@@ -11,13 +11,13 @@ namespace MyVectorTools
   {
     template <int dim, typename FunctionType>
     void
-    assemble_projection(const DoFHandler<dim> &          dof_handler,
-                        const AffineConstraints<double> &constraints,
-                        const Quadrature<dim> &          quad_rule,
-                        const FunctionType &             my_function,
-                        TrilinosWrappers::SparseMatrix & system_matrix,
-                        TrilinosWrappers::MPI::Vector &  system_rhs,
-                        const MPI_Comm & /* mpi_communicator */)
+      assemble_projection(const DoFHandler<dim> &          dof_handler,
+                          const AffineConstraints<double> &constraints,
+                          const Quadrature<dim> &          quad_rule,
+                          const FunctionType &             my_function,
+                          TrilinosWrappers::SparseMatrix & system_matrix,
+                          TrilinosWrappers::MPI::Vector &  system_rhs,
+                          const MPI_Comm & /* mpi_communicator */)
     {
       const FiniteElement<dim> &fe = dof_handler.get_fe();
 
@@ -93,12 +93,12 @@ namespace MyVectorTools
 
     template <int dim, typename FunctionType>
     void
-    assemble_projection(const DoFHandler<dim> &          dof_handler,
-                        const AffineConstraints<double> &constraints,
-                        const Quadrature<dim> &          quad_rule,
-                        const FunctionType &             my_function,
-                        SparseMatrix<double> &           system_matrix,
-                        Vector<double> &                 system_rhs)
+      assemble_projection(const DoFHandler<dim> &          dof_handler,
+                          const AffineConstraints<double> &constraints,
+                          const Quadrature<dim> &          quad_rule,
+                          const FunctionType &             my_function,
+                          SparseMatrix<double> &           system_matrix,
+                          Vector<double> &                 system_rhs)
     {
       const FiniteElement<dim> &fe = dof_handler.get_fe();
 
@@ -167,12 +167,12 @@ namespace MyVectorTools
     }
 
     void
-    solve(const AffineConstraints<double> &     constraints,
-          const IndexSet &                      locally_owned_dofs,
-          const TrilinosWrappers::SparseMatrix &system_matrix,
-          const TrilinosWrappers::MPI::Vector & system_rhs,
-          TrilinosWrappers::MPI::Vector &       vec,
-          const MPI_Comm &                      mpi_communicator)
+      solve(const AffineConstraints<double> &     constraints,
+            const IndexSet &                      locally_owned_dofs,
+            const TrilinosWrappers::SparseMatrix &system_matrix,
+            const TrilinosWrappers::MPI::Vector & system_rhs,
+            TrilinosWrappers::MPI::Vector &       vec,
+            const MPI_Comm &                      mpi_communicator)
     {
       TrilinosWrappers::MPI::Vector completely_distributed_solution(
         locally_owned_dofs, mpi_communicator);
@@ -194,10 +194,10 @@ namespace MyVectorTools
     } // end solve
 
     void
-    solve(const AffineConstraints<double> &constraints,
-          const SparseMatrix<double> &     system_matrix,
-          const Vector<double> &           system_rhs,
-          Vector<double> &                 vec)
+      solve(const AffineConstraints<double> &constraints,
+            const SparseMatrix<double> &     system_matrix,
+            const Vector<double> &           system_rhs,
+            Vector<double> &                 vec)
     { // Solver
 
       SolverControl solver_control(system_rhs.size(), 1e-12);
@@ -218,12 +218,12 @@ namespace MyVectorTools
 
   template <int dim, typename FunctionType>
   void
-  project_on_fe_space(const DoFHandler<dim> &          dof_handler,
-                      const AffineConstraints<double> &constraints,
-                      const Quadrature<dim> &          quad_rule,
-                      const FunctionType &             my_function,
-                      TrilinosWrappers::MPI::Vector &  vec,
-                      const MPI_Comm &                 mpi_communicator)
+    project_on_fe_space(const DoFHandler<dim> &          dof_handler,
+                        const AffineConstraints<double> &constraints,
+                        const Quadrature<dim> &          quad_rule,
+                        const FunctionType &             my_function,
+                        TrilinosWrappers::MPI::Vector &  vec,
+                        const MPI_Comm &                 mpi_communicator)
   {
     const FiniteElement<dim> &fe = dof_handler.get_fe();
 
@@ -273,11 +273,11 @@ namespace MyVectorTools
 
   template <int dim, typename FunctionType>
   void
-  project_on_fe_space(const DoFHandler<dim> &          dof_handler,
-                      const AffineConstraints<double> &constraints,
-                      const Quadrature<dim> &          quad_rule,
-                      const FunctionType &             my_function,
-                      Vector<double> &                 vec)
+    project_on_fe_space(const DoFHandler<dim> &          dof_handler,
+                        const AffineConstraints<double> &constraints,
+                        const Quadrature<dim> &          quad_rule,
+                        const FunctionType &             my_function,
+                        Vector<double> &                 vec)
   {
     const FiniteElement<dim> &fe = dof_handler.get_fe();
 

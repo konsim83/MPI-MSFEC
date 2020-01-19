@@ -17,7 +17,6 @@ namespace EquationData
 {
   using namespace dealii;
 
-
   /**
    * Class containing data for tensor valued
    * diffusivity.
@@ -31,9 +30,9 @@ namespace EquationData
     Diffusion_B_Data(const std::string &parameter_filename);
 
     static void
-    declare_parameters(ParameterHandler &prm);
+      declare_parameters(ParameterHandler &prm);
     void
-    parse_parameters(ParameterHandler &prm);
+      parse_parameters(ParameterHandler &prm);
 
     /**
      * Frequency of oscillations
@@ -56,8 +55,6 @@ namespace EquationData
     std::string expression;
   };
 
-
-
   /**
    * Second (scalar) coefficient function. Must be positive definite and
    * uniformly bounded from below and above.
@@ -76,7 +73,6 @@ namespace EquationData
     std::string                   fnc_expression;
     std::map<std::string, double> constants;
   };
-
 
   /**
    * Inverse of second diffusion tensor. Must be positive definite and

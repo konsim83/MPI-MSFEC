@@ -9,12 +9,10 @@
 #include <deal.II/base/quadrature_lib.h>
 #include <deal.II/base/timer.h>
 #include <deal.II/base/utilities.h>
-
 #include <deal.II/dofs/dof_accessor.h>
 #include <deal.II/dofs/dof_handler.h>
 #include <deal.II/dofs/dof_renumbering.h>
 #include <deal.II/dofs/dof_tools.h>
-
 #include <deal.II/fe/fe_bdm.h>
 #include <deal.II/fe/fe_dgp.h>
 #include <deal.II/fe/fe_dgq.h>
@@ -22,19 +20,16 @@
 #include <deal.II/fe/fe_raviart_thomas.h>
 #include <deal.II/fe/fe_system.h>
 #include <deal.II/fe/fe_values.h>
-
 #include <deal.II/grid/grid_generator.h>
 #include <deal.II/grid/tria.h>
 #include <deal.II/grid/tria_accessor.h>
 #include <deal.II/grid/tria_iterator.h>
-
 #include <deal.II/lac/block_sparse_matrix.h>
 #include <deal.II/lac/block_vector.h>
 #include <deal.II/lac/full_matrix.h>
 #include <deal.II/lac/precondition.h>
 #include <deal.II/lac/solver_cg.h>
 #include <deal.II/lac/sparse_direct.h>
-
 #include <deal.II/numerics/data_out.h>
 #include <deal.II/numerics/matrix_tools.h>
 #include <deal.II/numerics/vector_tools.h>
@@ -61,13 +56,11 @@
 #include <functions/vector_shape_function_curl.h>
 #include <functions/vector_shape_function_div.h>
 #include <linear_algebra/approximate_inverse.h>
+#include <linear_algebra/approximate_schur_complement.tpp>
 #include <linear_algebra/inverse_matrix.h>
 #include <linear_algebra/preconditioner.h>
-#include <vector_tools/my_vector_tools.h>
-
-#include <linear_algebra/approximate_schur_complement.tpp>
 #include <linear_algebra/schur_complement.tpp>
-
+#include <vector_tools/my_vector_tools.h>
 
 namespace NedRT
 {
@@ -110,13 +103,13 @@ namespace NedRT
      * Compute the basis.
      */
     void
-    run();
+      run();
 
     /**
      * Write vtu file for solution in cell.
      */
     void
-    output_global_solution_in_cell();
+      output_global_solution_in_cell();
 
     /**
      * Get reference to global multiscale element matrix.
@@ -124,7 +117,7 @@ namespace NedRT
      * @return
      */
     const FullMatrix<double> &
-    get_global_element_matrix() const;
+      get_global_element_matrix() const;
 
     /**
      * * Get reference to global multiscale element rhs.
@@ -132,14 +125,14 @@ namespace NedRT
      * @return
      */
     const Vector<double> &
-    get_global_element_rhs() const;
+      get_global_element_rhs() const;
 
     /**
      * Get global filename.
      * @return
      */
     const std::string &
-    get_filename_global() const;
+      get_filename_global() const;
 
     /**
      * Set the global (coarse) weight after coarse solution is
@@ -148,58 +141,59 @@ namespace NedRT
      * @param global_weights
      */
     void
-    set_global_weights(const std::vector<double> &global_weights);
+      set_global_weights(const std::vector<double> &global_weights);
 
   private:
     void
-    setup_grid();
+      setup_grid();
     void
-    setup_system_matrix();
+      setup_system_matrix();
 
     /**
      * Setup the constraints for H(curl)-basis.
      */
     void
-    setup_basis_dofs_curl();
+      setup_basis_dofs_curl();
 
     /**
      * Setup the constraints for H(div)-basis.
      */
     void
-    setup_basis_dofs_div();
+      setup_basis_dofs_div();
 
     /**
      * Assemble local system.
      */
     void
-    assemble_system();
+      assemble_system();
 
     /**
      * Build the global multiscale element matrix.
      */
     void
-    assemble_global_element_matrix();
+      assemble_global_element_matrix();
 
     // Private setters
     void
-    set_output_flag();
+      set_output_flag();
     void
-    set_u_to_std();
+      set_u_to_std();
     void
-    set_sigma_to_std();
+      set_sigma_to_std();
     void
-    set_filename_global();
+      set_filename_global();
     void
-    set_cell_data();
+      set_cell_data();
 
     /**
      * Can not be used yet since ther is no TrilinosWrapper for the direct
-     * solver for block matrices. Does not scale well anyway for large problems.
+     * solver for block matrices. Does not scale well anyway for large
+     * problems.
      *
      * @param n_basis
      */
     void
-    solve_direct(unsigned int n_basis);
+      solve_direct(unsigned int n_basis);
 
     /**
      * Schur complement solver with inner and outer preconditioner.
@@ -207,19 +201,19 @@ namespace NedRT
      * @param n_basis
      */
     void
-    solve_iterative(unsigned int n_basis);
+      solve_iterative(unsigned int n_basis);
 
     /**
      * Project the exact solution onto the local fe space.
      */
     void
-    write_exact_solution_in_cell();
+      write_exact_solution_in_cell();
 
     /**
      * Write the multiscale basis as vtu.
      */
     void
-    output_basis();
+      output_basis();
 
     MPI_Comm mpi_communicator;
 

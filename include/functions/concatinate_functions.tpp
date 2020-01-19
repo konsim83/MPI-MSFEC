@@ -1,7 +1,6 @@
 #ifndef INCLUDE_FUNCTIONS_CONCATINATE_FUNCTIONS_TPP_
 #define INCLUDE_FUNCTIONS_CONCATINATE_FUNCTIONS_TPP_
 
-
 namespace ShapeFun
 {
   using namespace dealii;
@@ -15,11 +14,11 @@ namespace ShapeFun
     , function_ptr2(&function2)
   {}
 
-
   template <int dim>
   double
-  ShapeFunctionConcatinateVector<dim>::value(const Point<dim> & p,
-                                             const unsigned int component) const
+    ShapeFunctionConcatinateVector<dim>::value(
+      const Point<dim> & p,
+      const unsigned int component) const
   {
     if (component < function_ptr1->n_components)
       {
@@ -35,11 +34,11 @@ namespace ShapeFun
       }
   }
 
-
   template <int dim>
   void
-  ShapeFunctionConcatinateVector<dim>::vector_value(const Point<dim> &p,
-                                                    Vector<double> &value) const
+    ShapeFunctionConcatinateVector<dim>::vector_value(
+      const Point<dim> &p,
+      Vector<double> &  value) const
   {
     Vector<double> value1(function_ptr1->n_components);
     function_ptr1->vector_value(p, value1);
@@ -53,12 +52,11 @@ namespace ShapeFun
       value(function_ptr1->n_components + j) = value2(j);
   }
 
-
   template <int dim>
   void
-  ShapeFunctionConcatinateVector<dim>::vector_value_list(
-    const std::vector<Point<dim>> &points,
-    std::vector<Vector<double>> &  values) const
+    ShapeFunctionConcatinateVector<dim>::vector_value_list(
+      const std::vector<Point<dim>> &points,
+      std::vector<Vector<double>> &  values) const
   {
     Assert(points.size() == values.size(),
            ExcDimensionMismatch(points.size(), values.size()));
@@ -85,6 +83,5 @@ namespace ShapeFun
   }
 
 } // namespace ShapeFun
-
 
 #endif /* INCLUDE_FUNCTIONS_CONCATINATE_FUNCTIONS_TPP_ */

@@ -7,9 +7,7 @@
 #include <deal.II/base/point.h>
 #include <deal.II/base/tensor.h>
 #include <deal.II/base/tensor_function.h>
-
 #include <deal.II/lac/vector.h>
-
 #include <equation_data/eqn_coeff_A.h>
 #include <equation_data/eqn_coeff_B.h>
 
@@ -21,7 +19,6 @@
 namespace EquationData
 {
   using namespace dealii;
-
 
   /**
    * This class contains only data members read from a parameter file.
@@ -40,7 +37,7 @@ namespace EquationData
      * @param prm
      */
     static void
-    declare_parameters(ParameterHandler &prm);
+      declare_parameters(ParameterHandler &prm);
 
     /**
      * Parse all delaced parameters in file.
@@ -48,7 +45,7 @@ namespace EquationData
      * @param prm
      */
     void
-    parse_parameters(ParameterHandler &prm);
+      parse_parameters(ParameterHandler &prm);
 
     /**
      * Matrix coefficient 'A' of 'u=Ax+b'.
@@ -72,7 +69,6 @@ namespace EquationData
     Tensor<1, 3> curl_u;
   };
 
-
   /**
    * Exact solution (linear function).
    */
@@ -89,16 +85,15 @@ namespace EquationData
      * Tensor value function. u = A*x+b.
      */
     Tensor<1, 3>
-    value(const Point<3> &p) const override;
+      value(const Point<3> &p) const override;
 
     /**
      * Tensor value list function. u = A*x+b.
      */
     void
-    value_list(const std::vector<Point<3>> &points,
-               std::vector<Tensor<1, 3>> &  values) const;
+      value_list(const std::vector<Point<3>> &points,
+                 std::vector<Tensor<1, 3>> &  values) const;
   };
-
 
   /**
    * Auxiliary variable for H1-H(curl) problem.
@@ -116,21 +111,20 @@ namespace EquationData
      * Value function for 'sigma = -B*div_u'
      */
     double
-    value(const Point<3> &   point,
-          const unsigned int component = 0) const override;
+      value(const Point<3> &   point,
+            const unsigned int component = 0) const override;
 
     /**
      * Value list function for 'sigma = -B*div_u'.
      */
     void
-    value_list(const std::vector<Point<3>> &points,
-               std::vector<double> &        values,
-               const unsigned int           component = 0) const override;
+      value_list(const std::vector<Point<3>> &points,
+                 std::vector<double> &        values,
+                 const unsigned int           component = 0) const override;
 
   private:
     const Diffusion_B b;
   };
-
 
   /**
    * Auxiliary variable for H(curl)-H(div) problem.
@@ -148,14 +142,14 @@ namespace EquationData
      * Value function for 'sigma = A*curl_u'.
      */
     virtual Tensor<1, 3>
-    value(const Point<3> &point) const override;
+      value(const Point<3> &point) const override;
 
     /**
      * Value list function for 'sigma = A*curl_u'.
      */
     void
-    value_list(const std::vector<Point<3>> &points,
-               std::vector<Tensor<1, 3>> &  values) const override;
+      value_list(const std::vector<Point<3>> &points,
+                 std::vector<Tensor<1, 3>> &  values) const override;
 
   private:
     const Diffusion_A a;

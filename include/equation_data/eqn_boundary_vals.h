@@ -36,11 +36,10 @@ namespace EquationData
      * @param component = 0
      */
     virtual void
-    value_list(const std::vector<Point<3>> &points,
-               std::vector<double> &        values,
-               const unsigned int           component = 0) const override;
+      value_list(const std::vector<Point<3>> &points,
+                 std::vector<double> &        values,
+                 const unsigned int           component = 0) const override;
   };
-
 
   /**
    * Boundary values for B*div u.
@@ -62,11 +61,10 @@ namespace EquationData
      * @param component = 0
      */
     virtual void
-    value_list(const std::vector<Point<3>> &points,
-               std::vector<double> &        values,
-               const unsigned int /* component = 0 */) const override;
+      value_list(const std::vector<Point<3>> &points,
+                 std::vector<double> &        values,
+                 const unsigned int /* component = 0 */) const override;
   };
-
 
   /**
    * Boundary values for A*curl u.
@@ -87,8 +85,8 @@ namespace EquationData
      * @param p
      */
     virtual void
-    value_list(const std::vector<Point<3>> &points,
-               std::vector<Tensor<1, 3>> &  values) const override;
+      value_list(const std::vector<Point<3>> &points,
+                 std::vector<Tensor<1, 3>> &  values) const override;
   };
 
 } // end namespace EquationData

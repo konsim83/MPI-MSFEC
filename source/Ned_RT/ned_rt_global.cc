@@ -24,10 +24,9 @@ namespace NedRT
   {
     if ((parameters.renumber_dofs) && (parameters.use_exact_solution))
       throw std::runtime_error(
-        "When using the exact solution dof renumbering must be disabled in parameter file.");
+        "When using the exact solution dof renumbering must be disabled in "
+        "parameter file.");
   }
-
-
 
   NedRTMultiscale::~NedRTMultiscale()
   {
@@ -36,10 +35,8 @@ namespace NedRT
     dof_handler.clear();
   }
 
-
-
   void
-  NedRTMultiscale::setup_grid()
+    NedRTMultiscale::setup_grid()
   {
     TimerOutput::Scope t(computing_timer, "coarse mesh generation");
 
@@ -48,10 +45,8 @@ namespace NedRT
     triangulation.refine_global(parameters.n_refine_global);
   }
 
-
-
   void
-  NedRTMultiscale::initialize_and_compute_basis()
+    NedRTMultiscale::initialize_and_compute_basis()
   {
     TimerOutput::Scope t(
       computing_timer,
@@ -88,7 +83,6 @@ namespace NedRT
           }
       } // end ++cell
 
-
     /*
      * Now each node possesses a set of basis objects.
      * We need to compute them on each node and do so in
@@ -104,9 +98,8 @@ namespace NedRT
       }
   }
 
-
   void
-  NedRTMultiscale::setup_system_matrix()
+    NedRTMultiscale::setup_system_matrix()
   {
     TimerOutput::Scope t(computing_timer, "system and constraint setup");
 
@@ -166,9 +159,8 @@ namespace NedRT
     system_rhs.reinit(owned_partitioning, mpi_communicator);
   }
 
-
   void
-  NedRTMultiscale::setup_constraints()
+    NedRTMultiscale::setup_constraints()
   {
     // set constraints (first hanging nodes, then flux)
     constraints.clear();
@@ -186,8 +178,8 @@ namespace NedRT
     //					/*boundary id*/ i,
     //					constraints);
     //		VectorTools::project_boundary_values_div_conforming(dof_handler,
-    //							/*first vector component */ 3,
-    //							ZeroFunction<3>(6),
+    //							/*first vector component */
+    // 3, 							ZeroFunction<3>(6),
     //							/*boundary id*/ i,
     //							constraints);
     //	}
@@ -195,9 +187,8 @@ namespace NedRT
     constraints.close();
   }
 
-
   void
-  NedRTMultiscale::assemble_system()
+    NedRTMultiscale::assemble_system()
   {
     TimerOutput::Scope t(computing_timer, "multiscale assembly");
 
@@ -259,8 +250,8 @@ namespace NedRT
             local_matrix = (it_basis->second).get_global_element_matrix();
             local_rhs    = (it_basis->second).get_global_element_rhs();
 
-
-            // line integral over boundary faces for for natural conditions
+            // line integral over boundary faces for for natural
+            // conditions
             if (parameters.use_exact_solution)
               {
                 for (unsigned int face_n = 0;
@@ -268,15 +259,18 @@ namespace NedRT
                      ++face_n)
                   {
                     if (cell->at_boundary(face_n)
-                        //					&& cell->face(face_n)->boundary_id()!=0 /*
-                        // Select only certain faces. */
-                        //					&& cell->face(face_n)->boundary_id()!=2 /*
-                        // Select only certain faces. */
+                        //					&&
+                        // cell->face(face_n)->boundary_id()!=0
+                        // /* Select only certain faces. */
+                        //					&&
+                        // cell->face(face_n)->boundary_id()!=2
+                        // /* Select only certain faces. */
                     )
                       {
                         fe_face_values.reinit(cell, face_n);
 
-                        // note that the BVs for u already have a minus
+                        // note that the BVs for u
+                        // already have a minus
                         minus_B_div_u->value_list(
                           fe_face_values.get_quadrature_points(),
                           minus_B_div_u_values);
@@ -321,19 +315,18 @@ namespace NedRT
     system_rhs.compress(VectorOperation::add);
   }
 
-
   void
-  NedRTMultiscale::solve_direct()
+    NedRTMultiscale::solve_direct()
   {
     TimerOutput::Scope t(computing_timer, " direct solver (MUMPS)");
 
     throw std::runtime_error(
-      "Solver not implemented: MUMPS does not work on TrilinosWrappers::MPI::BlockSparseMatrix classes.");
+      "Solver not implemented: MUMPS does not work on "
+      "TrilinosWrappers::MPI::BlockSparseMatrix classes.");
   }
 
-
   void
-  NedRTMultiscale::solve_iterative()
+    NedRTMultiscale::solve_iterative()
   {
     inner_schur_preconditioner =
       std::make_shared<typename LinearSolvers::InnerPreconditioner<3>::type>();
@@ -393,9 +386,10 @@ namespace NedRT
       //																					LA::MPI::Vector,
       //																					typename
       // LinearSolvers::InnerPreconditioner<3>::type>,
-      // PreconditionIdentity> 									preconditioner
-      // (schur_complement,
-      //												PreconditionIdentity() );
+      // PreconditionIdentity>
+      // preconditioner (schur_complement,
+      //												PreconditionIdentity()
+      //);
 
       /*
        * Precondition the Schur complement with
@@ -421,10 +415,12 @@ namespace NedRT
 #endif
 
       /*
-       * Precondition the Schur complement with a preconditioner of block(1,1).
+       * Precondition the Schur complement with a preconditioner of
+       * block(1,1).
        */
       //		LA::MPI::PreconditionAMG preconditioner;
-      //		preconditioner.initialize(system_matrix.block(1, 1), data);
+      //		preconditioner.initialize(system_matrix.block(1, 1),
+      // data);
 
       schur_solver.solve(schur_complement,
                          distributed_solution.block(1),
@@ -441,7 +437,8 @@ namespace NedRT
       TimerOutput::Scope t(computing_timer, "outer CG solver (for sigma)");
 
       //	SolverControl                    outer_solver_control;
-      //	PETScWrappers::SparseDirectMUMPS outer_solver(outer_solver_control,
+      //	PETScWrappers::SparseDirectMUMPS
+      // outer_solver(outer_solver_control,
       // mpi_communicator); 	outer_solver.set_symmetric_mode(true);
 
       // use computed u to solve for sigma
@@ -462,10 +459,8 @@ namespace NedRT
     locally_relevant_solution = distributed_solution;
   }
 
-
-
   void
-  NedRTMultiscale::send_global_weights_to_cell()
+    NedRTMultiscale::send_global_weights_to_cell()
   {
     // For each cell we get dofs_per_cell values
     const unsigned int                   dofs_per_cell = fe.dofs_per_cell;
@@ -491,9 +486,8 @@ namespace NedRT
       } // end ++cell
   }
 
-
   void
-  NedRTMultiscale::write_exact_solution()
+    NedRTMultiscale::write_exact_solution()
   {
     locally_relevant_exact_solution.reinit(owned_partitioning,
                                            relevant_partitioning,
@@ -554,10 +548,8 @@ namespace NedRT
     }
   }
 
-
-
   std::vector<std::string>
-  NedRTMultiscale::collect_filenames_on_mpi_process()
+    NedRTMultiscale::collect_filenames_on_mpi_process()
   {
     std::vector<std::string> filename_list;
 
@@ -574,10 +566,8 @@ namespace NedRT
     return filename_list;
   }
 
-
-
   void
-  NedRTMultiscale::output_results()
+    NedRTMultiscale::output_results()
   {
     // write local fine solution
     typename std::map<CellId, NedRTBasis>::iterator it_basis =
@@ -707,15 +697,14 @@ namespace NedRT
       }
   }
 
-
   void
-  NedRTMultiscale::run()
+    NedRTMultiscale::run()
   {
     if (parameters.compute_solution == false)
       {
-        deallog
-          << "Run of multiscale problem is explicitly disabled in parameter file. "
-          << std::endl;
+        deallog << "Run of multiscale problem is explicitly disabled in "
+                   "parameter file. "
+                << std::endl;
         return;
       }
 

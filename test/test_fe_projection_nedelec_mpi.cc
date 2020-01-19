@@ -1,7 +1,6 @@
 // This program tests the functionality of my_vector_tools (parallel
 // and serial projection on FE spaces).
 
-
 // Deal.ii MPI
 #include <deal.II/base/conditional_ostream.h>
 #include <deal.II/base/function.h>
@@ -12,16 +11,11 @@
 #include <deal.II/base/tensor.h>
 #include <deal.II/base/tensor_function.h>
 #include <deal.II/base/utilities.h>
-
 #include <deal.II/distributed/tria.h>
-
 #include <deal.II/dofs/dof_handler.h>
 #include <deal.II/dofs/dof_tools.h>
-
 #include <deal.II/fe/fe_nedelec.h>
-
 #include <deal.II/grid/grid_generator.h>
-
 #include <deal.II/lac/affine_constraints.h>
 #include <deal.II/lac/vector.h>
 
@@ -30,7 +24,6 @@
 
 // My library
 #include <vector_tools/my_vector_tools.h>
-
 #include <vector_tools/my_vector_tools.tpp>
 
 using namespace dealii;
@@ -45,14 +38,14 @@ public:
     : TensorFunction<1, dim>(){};
 
   void
-  value_list(const std::vector<Point<dim>> &points,
-             std::vector<Tensor<1, dim>> &  values) const override;
+    value_list(const std::vector<Point<dim>> &points,
+               std::vector<Tensor<1, dim>> &  values) const override;
 };
 
 template <int dim>
 void
-MyVectorFunction<dim>::value_list(const std::vector<Point<dim>> &points,
-                                  std::vector<Tensor<1, dim>> &  values) const
+  MyVectorFunction<dim>::value_list(const std::vector<Point<dim>> &points,
+                                    std::vector<Tensor<1, dim>> &  values) const
 {
   Assert(points.size() == values.size(),
          ExcDimensionMismatch(points.size(), values.size()));
@@ -67,18 +60,15 @@ MyVectorFunction<dim>::value_list(const std::vector<Point<dim>> &points,
 ///////////////////////////////////
 ///////////////////////////////////
 
-
-
 ///////////////////////////////////
 ///////////////////////////////////
 int
-main(int argc, char *argv[])
+  main(int argc, char *argv[])
 {
   dealii::Utilities::MPI::MPI_InitFinalize mpi_initialization(
     argc, argv, dealii::numbers::invalid_unsigned_int);
 
   MPI_Comm mpi_communicator(MPI_COMM_WORLD);
-
 
   const int dim = 3, degree = 0, n_refine = 3;
 

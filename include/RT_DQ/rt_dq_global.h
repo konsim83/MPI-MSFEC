@@ -9,7 +9,6 @@
 #include <deal.II/base/mpi.h>
 #include <deal.II/base/parameter_handler.h>
 #include <deal.II/base/utilities.h>
-
 #include <deal.II/lac/affine_constraints.h>
 #include <deal.II/lac/block_sparse_matrix.h>
 #include <deal.II/lac/block_vector.h>
@@ -27,32 +26,26 @@
 
 // Distributed triangulation
 #include <deal.II/base/timer.h>
-
 #include <deal.II/distributed/tria.h>
-
 #include <deal.II/dofs/dof_accessor.h>
 #include <deal.II/dofs/dof_handler.h>
 #include <deal.II/dofs/dof_renumbering.h>
 #include <deal.II/dofs/dof_tools.h>
-
 #include <deal.II/fe/fe_bdm.h>
 #include <deal.II/fe/fe_dgp.h>
 #include <deal.II/fe/fe_dgq.h>
 #include <deal.II/fe/fe_nedelec.h>
 #include <deal.II/fe/fe_raviart_thomas.h>
 #include <deal.II/fe/fe_system.h>
-
 #include <deal.II/grid/cell_id.h>
 #include <deal.II/grid/grid_generator.h>
 #include <deal.II/grid/tria_accessor.h>
 #include <deal.II/grid/tria_iterator.h>
-
 #include <deal.II/lac/petsc_precondition.h>
 #include <deal.II/lac/petsc_solver.h>
 #include <deal.II/lac/precondition.h>
 #include <deal.II/lac/trilinos_precondition.h>
 #include <deal.II/lac/trilinos_solver.h>
-
 #include <deal.II/numerics/data_out.h>
 #include <deal.II/numerics/matrix_tools.h>
 #include <deal.II/numerics/vector_tools.h>
@@ -74,17 +67,15 @@
 #include <equation_data/eqn_coeff_R.h>
 #include <equation_data/eqn_rhs.h>
 #include <linear_algebra/approximate_inverse.h>
+#include <linear_algebra/approximate_schur_complement.tpp>
 #include <linear_algebra/inverse_matrix.h>
 #include <linear_algebra/preconditioner.h>
-#include <vector_tools/my_vector_tools.h>
-
-#include <linear_algebra/approximate_schur_complement.tpp>
 #include <linear_algebra/schur_complement.tpp>
+#include <vector_tools/my_vector_tools.h>
 
 namespace RTDQ
 {
   using namespace dealii;
-
 
   class RTDQMultiscale
   {
@@ -100,30 +91,30 @@ namespace RTDQ
     ~RTDQMultiscale();
 
     void
-    run();
+      run();
 
   private:
     void
-    setup_grid();
+      setup_grid();
     void
-    initialize_and_compute_basis();
+      initialize_and_compute_basis();
     void
-    setup_system_matrix();
+      setup_system_matrix();
     void
-    setup_constraints();
+      setup_constraints();
     void
-    assemble_system();
+      assemble_system();
     void
-    solve_direct();
+      solve_direct();
     void
-    solve_iterative();
+      solve_iterative();
     void
-    send_global_weights_to_cell();
+      send_global_weights_to_cell();
 
     std::vector<std::string>
-    collect_filenames_on_mpi_process();
+      collect_filenames_on_mpi_process();
     void
-    output_results();
+      output_results();
 
     MPI_Comm mpi_communicator;
 
@@ -187,6 +178,5 @@ namespace RTDQ
   };
 
 } // end namespace RTDQ
-
 
 #endif /* INCLUDE_RT_DQ_RT_DQ_GLOBAL_H_ */
