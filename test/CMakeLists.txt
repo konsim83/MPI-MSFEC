@@ -3,7 +3,7 @@
 #
 # Include directory for sources
 #
-include_directories(${MsFEComplex_INCLUDE_DIR})
+include_directories(${MsFEC_INCLUDE_DIR})
 ###############################################################################
 ###############################################################################
 
@@ -25,6 +25,6 @@ include_directories(${MsFEComplex_INCLUDE_DIR})
 #
 # Name all libraries to be tested (with different .cc files)
 #
-set(TEST_LIBRARIES MsFEComplex_LIBRARY)
+set(TEST_LIBRARIES MsFEC_VECTOR_TOOLS_LIBRARY)
 
 DEAL_II_PICKUP_TESTS()

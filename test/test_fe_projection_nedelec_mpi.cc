@@ -25,13 +25,13 @@
 #include <deal.II/lac/affine_constraints.h>
 #include <deal.II/lac/vector.h>
 
-// My library
-#include <my_vector_tools.h>
-
-#include <my_vector_tools.tpp>
-
 // C++ STL
 #include <iostream>
+
+// My library
+#include <vector_tools/my_vector_tools.h>
+
+#include <vector_tools/my_vector_tools.tpp>
 
 using namespace dealii;
 

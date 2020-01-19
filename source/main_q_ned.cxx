@@ -3,12 +3,13 @@
 #include <deal.II/base/numbers.h>
 #include <deal.II/base/utilities.h>
 
-#include "q_ned_global.h"
-#include "q_ned_ref.h"
-
 // Std C++
 #include <fstream>
 #include <iostream>
+
+// my headers
+#include "Q_Ned/q_ned_global.h"
+#include "Q_Ned/q_ned_ref.h"
 
 /**
  * Main file. Call ./main and see instructions for command lie parameters.
@@ -72,8 +73,8 @@ main(int argc, char *argv[])
         dealii::deallog.depth_console(2);
 
         // reference solution
-        Parameters::QNed::ParametersStd parameters(input_file);
-        LaplaceProblem::QNedStd mixed_laplace_std(parameters, input_file);
+        QNed::ParametersStd parameters(input_file);
+        QNed::QNedStd       mixed_laplace_std(parameters, input_file);
         mixed_laplace_std.run();
       }
 
@@ -81,9 +82,8 @@ main(int argc, char *argv[])
         dealii::deallog.depth_console(0);
 
         // multiscale solution
-        Parameters::QNed::ParametersMs parameters(input_file);
-        LaplaceProblem::QNedMultiscale mixed_laplace_global(parameters,
-                                                            input_file);
+        QNed::ParametersMs   parameters(input_file);
+        QNed::QNedMultiscale mixed_laplace_global(parameters, input_file);
         mixed_laplace_global.run();
       }
     } /* try */

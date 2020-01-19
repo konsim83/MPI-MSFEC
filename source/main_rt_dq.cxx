@@ -3,8 +3,8 @@
 #include <deal.II/base/numbers.h>
 #include <deal.II/base/utilities.h>
 
-#include <Ned_RT/ned_rt_global.h>
-#include <Ned_RT/ned_rt_ref.h>
+#include <RT_DQ/rt_dq_global.h>
+#include <RT_DQ/rt_dq_ref.h>
 
 // Std C++
 #include <fstream>
@@ -72,8 +72,8 @@ main(int argc, char *argv[])
         dealii::deallog.depth_console(2);
 
         // reference solution
-        NedRT::ParametersStd parameters(input_file);
-        NedRT::NedRTStd      mixed_laplace_std(parameters, input_file);
+        RTDQ::ParametersStd parameters(input_file);
+        RTDQ::RTDQStd       mixed_laplace_std(parameters, input_file);
         mixed_laplace_std.run();
       }
 
@@ -81,8 +81,8 @@ main(int argc, char *argv[])
         dealii::deallog.depth_console(0);
 
         // multiscale solution
-        NedRT::ParametersMs    parameters(input_file);
-        NedRT::NedRTMultiscale mixed_laplace_global(parameters, input_file);
+        RTDQ::ParametersMs   parameters(input_file);
+        RTDQ::RTDQMultiscale mixed_laplace_global(parameters, input_file);
         mixed_laplace_global.run();
       }
     } /* try */

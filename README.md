@@ -1,14 +1,93 @@
-# C++ Protoype of Stable Multiscale Finite Element Complexes
+# C++ Protoype of Stable Multiscale Finite Element Complexes (MsFEC)
 
 
-The C++ code of the *MsFEComplex* subprojects which serve as a demonstration of the method can be found in subfolders.
+This C++ code implements the *MsFEC* to demonstrate the method. *MsFEC* is a framework to 
+construct stable pairings of multiscale finite elements throughout the entire L2-de Rham
+complex when rough data is involved, i.e., we solve a scalar or vector valued modified
+Laplace problem (hence we seek a Hodge decomposition). 
+For further information build the documentation of the project.
 
-To set up an Eclipse project using cmake enter the folder containing the problem implementation and type
+Note that there is still room to optimize the implementation (e.g., faster linear solvers).
+
+---
+**NOTE**
+
+*MsFEC* requires:
+
+* A Linux distribution (we used Debian and Ubuntu for the development)
+* **cmake** v2.8.12 or higher	
+* **clang-format-6.0** (recommented to indent the code, available in most linux distributions)
+* A working **debugger** (we use gdb)
+* **doxygen**, **mathjax** and **GraphViz** (for the documentation)
+* A working installation of **[deal.ii](www.dealii.org)** v9.1.1 or higher 
+with **MPI**, **p4est** and all **Trilinos** dependencies must be installed. This
+can easily be done through the **[spack](https://spack.readthedocs.io/en/latest/)** 
+package manager
+
+---
+
+
+### Building the Library and Linking Executables
+
+To build the project together with Eclipse project files you must first clone the repository:
+
 ```
-mkdir build/
-cd build/
-cmake -DDEAL_II_DIR=~/path/to/dealii -G"Eclipse CDT4 - Unix Makefiles" -DCMAKE_ECLIPSE_MAKE_ARGUMENTS=-jN ..
+git clone https://github.com/konsim83/MPI-MSFEC.git MPI_MSFEC
 ```
-Replace `N` with the number of cores of your machine and `/path/to/dealii` with the path containing the library.
+We want an out-of-source-build with build files in a folder parallel to the code:
 
-Please do not commit to the master branch directly. If you wish to make changes open a separate branch.
+```
+mkdir MPI_MSFEC_build
+cd MPI_MSFEC_build
+```
+Then create the build files with `cmake`:
+
+```
+cmake -DDEAL_II_DIR=/path/to/dealii -DCMAKE_ECLIPSE_MAKE_ARGUMENTS=-j4 -G"Eclipse CDT4 - Unix Makefiles" ../MPI_MSFEC
+```
+You can now import an existing project in Eclipse. To generate the executable in debug mode type
+
+```
+make debug
+make -jN
+```
+If you want to produce a faster reslease version type
+
+```
+make release
+make -jN
+```
+To run the executable with an example parameter file run
+
+```
+mpirun -n N source/MsFEC_Ned_RT -p ../MSFEC/example_parameters/parameter_ned_rt.in
+```
+where N is now the number of MPI processes. This will run the code for the multiscale (modified) 
+Nedelec-Raviart-Thomas pairing.
+
+You should also be able to run this on clusters.
+
+To run all tests type
+
+```
+ctest -V -R
+```
+
+
+
+### Building the Documentation
+
+You will need `doxygen`, `mathjax` and some other packages such as `GraphViz` installed.
+
+To build the documentation with `doxygen` enter the code folder
+
+```
+cd MPI_MSFEC/doc
+```
+and type
+
+```
+doxygen Doxyfile
+```
+This will generate a html documentation of classes in the `MPI_MSFEC/documentation/html` directory.
+To open it open the `index.html` in a web browser.

@@ -18,6 +18,10 @@ endmacro (print_all_args)
 
 ###############################################################################
 ###############################################################################
+MESSAGE(STATUS "====================================================")
+MESSAGE(STATUS "============= Configuring MsFEC ====================")
+MESSAGE(STATUS "====================================================")
+
 message(STATUS "This is CMake ${CMAKE_VERSION}")
 message(STATUS "")
 
@@ -26,6 +30,7 @@ cmake_minimum_required(VERSION 2.8.12)
 find_package(deal.II 9.1.1 QUIET
   HINTS ${deal.II_DIR} ${DEAL_II_DIR} ../ ../../ $ENV{DEAL_II_DIR}
   )
+  
 if (NOT ${deal.II_FOUND})
   message(FATAL_ERROR "\n"
     "*** Could not locate a (sufficiently recent) version of deal.II. ***\n\n"
@@ -34,22 +39,53 @@ if (NOT ${deal.II_FOUND})
     )
 endif ()
 
-DEAL_II_INITIALIZE_CACHED_VARIABLES()
+IF(NOT DEAL_II_WITH_CXX11)
+  MESSAGE(FATAL_ERROR "\n*** MsFEC requires C++11 but your version of deal.II is not "
+    "configured with it. This likely means that your compiler is too old. Check "
+    "DEAL_II_WITH_CXX11 in deal.II.")
+ENDIF()
 
+IF(NOT DEAL_II_WITH_TRILINOS)
+    MESSAGE(SEND_ERROR
+      "\n-- deal.II was built without support for Trilinos!\n"
+      )
+ENDIF()
+
+IF(NOT DEAL_II_WITH_P4EST)
+    MESSAGE(SEND_ERROR
+      "\n-- deal.II was built without support for p4est!\n"
+      )
+ENDIF()
+
+DEAL_II_INITIALIZE_CACHED_VARIABLES()
+###############################################################################
+###############################################################################
+
+
+
+###############################################################################
+###############################################################################
 ADD_CUSTOM_TARGET(debug
   COMMAND ${CMAKE_COMMAND} -DCMAKE_BUILD_TYPE=Debug ${CMAKE_SOURCE_DIR}
-  COMMENT "Switch CMAKE_BUILD_TYPE to Debug"
+  COMMENT "Switch CMAKE_BUILD_TYPE to Debug."
   )
 
 ADD_CUSTOM_TARGET(release
   COMMAND ${CMAKE_COMMAND} -DCMAKE_BUILD_TYPE=Release ${CMAKE_SOURCE_DIR}
-  )  
+  COMMENT "Switch CMAKE_BUILD_TYPE to Release."
+  )
+  
+ADD_CUSTOM_TARGET(indent
+  WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+  COMMAND ./contrib/utilities/indent
+  COMMENT "Indenting all C++ source and header files."
+  )
 
-set(PROJECT_NAME MsFEComplex)
+set(PROJECT_NAME MsFEC)
 
 # The version number
-set(MsFEComplex_VER_MAJOR 0)
-set(MsFEComplex_VER_MINOR 1)
+set(MsFEC_VER_MAJOR 0)
+set(MsFEC_VER_MINOR 1)
 
 project(${PROJECT_NAME})
 ###############################################################################
@@ -61,11 +97,11 @@ project(${PROJECT_NAME})
 ###############################################################################
 # Check for the existence of various optional folders:
 if (EXISTS ${CMAKE_SOURCE_DIR}/doc/CMakeLists.txt)
-  set(MsFEComplex_HAVE_DOC_DIRECTORY TRUE)
+  set(MsFEC_HAVE_DOC_DIRECTORY TRUE)
 endif ()
 
 if (EXISTS ${CMAKE_SOURCE_DIR}/test/CMakeLists.txt)
-  set (MsFEComplex_HAVE_TEST_DIRECTORY TRUE)
+  set (MsFEC_HAVE_TEST_DIRECTORY TRUE)
 endif ()
 ###############################################################################
 ###############################################################################
@@ -77,26 +113,26 @@ if (CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
   set(CMAKE_INSTALL_PREFIX "${CMAKE_SOURCE_DIR}/lib" CACHE PATH "default install path" FORCE )
 endif ()
 
-set (MsFEComplex_LIBRARY msfecomplex)
+set (MsFEC_LIBRARY MsFEC)
 
 
 ###############################################################################
 ###############################################################################
-set(MsFEComplex_INCLUDE_DIR
+set(MsFEC_INCLUDE_DIR
 		${CMAKE_SOURCE_DIR}/include)
 
-set(MsFEComplex_SRC_DIR 
+set(MsFEC_SRC_DIR 
 		${CMAKE_SOURCE_DIR}/source)
-add_subdirectory (${MsFEComplex_SRC_DIR})
+add_subdirectory (${MsFEC_SRC_DIR})
 
 
 # Only add subdirectories for doc if exists
-if (MsFEComplex_HAVE_DOC_DIRECTORY)
+if (MsFEC_HAVE_DOC_DIRECTORY)
   add_subdirectory (${CMAKE_SOURCE_DIR}/doc)
 endif ()
 
-# Only add subdirectories for doc if exists
-if (MsFEComplex_HAVE_TEST_DIRECTORY)
+# Only add subdirectories for tests if exists
+if (MsFEC_HAVE_TEST_DIRECTORY)
   add_subdirectory (${CMAKE_SOURCE_DIR}/test)
   ENABLE_TESTING()
 endif ()
