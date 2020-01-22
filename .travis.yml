@@ -24,7 +24,7 @@ script:
 deploy:
   provider: pages
   skip_cleanup: true
-  local_dir: html
+  local_dir: documentation/html
   github_token: $MSFEC_DOCS
   on:
     branch: master
