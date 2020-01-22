@@ -1,0 +1,20 @@
+- os: linux
+  if: branch = master
+  dist: xenial
+  env: TOOL=docs
+  addons:
+    apt:
+      sources:
+        - ubuntu-toolchain-r-test
+      packages:
+        - cmake
+        - doxygen
+        - doxygen-doc
+        - doxygen-latex
+        - doxygen-gui
+        - graphviz
+  deploy:
+    provider: pages
+    skip_cleanup: true
+    github_token: $MSFEC_DOCS
+    local_dir: build/doc/html
