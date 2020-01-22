@@ -21,7 +21,6 @@ script:
   - cd doc
   - doxygen Doxyfile
   - cd ../documentation
-  - ls -lah
 
 # Generate and deploy documentation
 deploy:
