@@ -1,5 +1,5 @@
-#ifndef INCLUDE_RT_DQ_RT_DQ_BASIS_H_
-#define INCLUDE_RT_DQ_RT_DQ_BASIS_H_
+#ifndef INCLUDE_RT_DQ_BASIS_H_
+#define INCLUDE_RT_DQ_BASIS_H_
 
 // Deal.ii MPI
 #include <deal.II/base/conditional_ostream.h>
@@ -44,10 +44,10 @@
 
 // my headers
 #include <RT_DQ/rt_dq_parameters.h>
+#include <RT_DQ/rt_dq_post_processor.h>
 #include <config.h>
 #include <equation_data/eqn_boundary_vals.h>
 #include <equation_data/eqn_coeff_A.h>
-#include <equation_data/eqn_coeff_B.h>
 #include <equation_data/eqn_coeff_R.h>
 #include <equation_data/eqn_exact_solution_lin.h>
 #include <equation_data/eqn_rhs.h>
@@ -279,4 +279,4 @@ namespace RTDQ
 
 } // end namespace RTDQ
 
-#endif /* INCLUDE_RT_DQ_RT_DQ_BASIS_H_ */
+#endif /* INCLUDE_RT_DQ_BASIS_H_ */

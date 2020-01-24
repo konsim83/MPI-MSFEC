@@ -169,51 +169,17 @@ namespace RTDQ
      */
     if (parameters.is_pure_neumann)
       {
-        // boundary values for normal flux
-        const unsigned int                   dofs_per_cell = fe.dofs_per_cell;
-        const unsigned int                   dofs_per_face = fe.dofs_per_face;
-        std::vector<types::global_dof_index> local_dof_indices(dofs_per_cell);
-        std::vector<types::global_dof_index> local_dof_face_indices(
-          dofs_per_face);
+		EquationData::Boundary_A_grad_u     tensor_boundary_A_grad_u;
+		VectorFunctionFromTensorFunction<3> boundary_A_grad_u(
+		  tensor_boundary_A_grad_u);
 
-        typename DoFHandler<2>::active_cell_iterator cell = dof_handler
-                                                              .begin_active(),
-                                                     endc = dof_handler.end();
-        for (; cell != endc; ++cell)
-          {
-            if (cell->at_boundary())
-              {
-                cell->get_dof_indices(local_dof_indices);
-                for (unsigned int face_n = 0;
-                     face_n < GeometryInfo<2>::faces_per_cell;
-                     ++face_n)
-                  {
-                    cell->face(face_n)->get_dof_indices(local_dof_face_indices);
-                    if (cell->at_boundary(face_n))
-                      {
-                        if (cell->face(face_n)->boundary_id() == 0)
-                          {
-                            for (unsigned int i = 0; i < dofs_per_face; ++i)
-                              {
-                                constraints.add_line(
-                                  local_dof_face_indices.at(i));
-                                constraints.set_inhomogeneity(
-                                  local_dof_face_indices.at(i),
-                                  1 / std::pow(2, parameters.n_refine_global));
-                              }
-                          }
-                        else
-                          {
-                            for (unsigned int i = 0; i < dofs_per_face; ++i)
-                              {
-                                constraints.add_line(
-                                  local_dof_face_indices.at(i));
-                              }
-                          }
-                      } // end cell->at_boundary(face_n)
-                  }     // end ++face_n
-              }         // end if cell->at_boundary (
-          }             // end ++cell
+		for (unsigned int i = 0; i < GeometryInfo<3>::faces_per_cell; ++i)
+		  VectorTools::project_boundary_values_div_conforming(
+			dof_handler,
+			/*first vector component */ 0,
+			boundary_A_grad_u,
+			/*boundary id*/ i,
+			constraints);
       }
 
     /*
@@ -223,33 +189,24 @@ namespace RTDQ
      */
     if (parameters.is_laplace && parameters.is_pure_neumann)
       {
-        FEValuesExtractors::Scalar concentration(3);
-        ComponentMask concentration_mask = fe.component_mask(concentration);
+    	IndexSet locally_relevant_dofs_u(relevant_partitioning[1]);
 
-        std::vector<bool> concentration_dofs(dof_handler.n_dofs(), false);
-        DoFTools::extract_dofs(dof_handler,
-                               concentration_mask,
-                               concentration_dofs);
+		// initially set a non-admissible value
+		unsigned int first_local_dof_u = dof_handler.n_dofs()+1;
+		if (locally_relevant_dofs_u.n_elements() > 0)
+			first_local_dof_u = locally_relevant_dofs_u.nth_index_in_set(0);
 
-        const unsigned int first_dof_u =
-          std::distance(concentration_dofs.begin(),
-                        std::find(concentration_dofs.begin(),
-                                  concentration_dofs.end(),
-                                  true));
-        /*
-         * This constrains only the first dof. We set it to zero.
-         * Note that setting a point value may be problematic
-         * for an H1-Function.
-         */
-        constraints.add_line(first_dof_u);
+		const unsigned int first_dof_u
+		   = dealii::Utilities::MPI::min (first_local_dof_u, mpi_communicator);
 
-        /*
-         * This is the mean value constraint
-         * (slower for large problems).
-         */
-        //		for (unsigned int i=first_dof_u+1; i<dof_handler.n_dofs();
-        //++i) 			if (concentration_dofs[i] == true)
-        // constraints.add_entry (first_dof_u, i, -1);
+		/*
+		 * This constrains only the first dof on the first processor. We set it
+		 * to zero. Note that setting a point value may be problematic for an
+		 * H1-Function but in parallel adding mean value constraints should not
+		 * be done.
+		 */
+		if (first_dof_u == first_local_dof_u)
+			constraints.add_line(first_dof_u);
       }
 
     constraints.close();
@@ -312,33 +269,36 @@ namespace RTDQ
 
             // line integral over boundary faces for for natural
             // conditions on u
-            for (unsigned int face_n = 0;
-                 face_n < GeometryInfo<3>::faces_per_cell;
-                 ++face_n)
+            if (!parameters.is_pure_neumann)
               {
-                if (cell->at_boundary(face_n)
-                    //                &&
-                    //                cell->face(face_n)->boundary_id()!=0
-                    //                /* Select only certain
-                    //                faces. */
-                    //                &&
-                    //                cell->face(face_n)->boundary_id()!=2
-                    //                /* Select only certain
-                    //                faces. */
-                )
+                for (unsigned int face_n = 0;
+                     face_n < GeometryInfo<3>::faces_per_cell;
+                     ++face_n)
                   {
-                    fe_face_values.reinit(cell, face_n);
+                    if (cell->at_boundary(face_n)
+                        //                &&
+                        //                cell->face(face_n)->boundary_id()!=0
+                        //                /* Select only certain
+                        //                faces. */
+                        //                &&
+                        //                cell->face(face_n)->boundary_id()!=2
+                        //                /* Select only certain
+                        //                faces. */
+                    )
+                      {
+                        fe_face_values.reinit(cell, face_n);
 
-                    boundary_values_u.value_list(
-                      fe_face_values.get_quadrature_points(),
-                      boundary_values_u_values);
+                        boundary_values_u.value_list(
+                          fe_face_values.get_quadrature_points(),
+                          boundary_values_u_values);
 
-                    for (unsigned int q = 0; q < n_face_q_points; ++q)
-                      for (unsigned int i = 0; i < dofs_per_cell; ++i)
-                        local_rhs(i) += -(fe_face_values[flux].value(i, q) *
-                                          fe_face_values.normal_vector(q) *
-                                          boundary_values_u_values[q]) *
-                                        fe_face_values.JxW(q);
+                        for (unsigned int q = 0; q < n_face_q_points; ++q)
+                          for (unsigned int i = 0; i < dofs_per_cell; ++i)
+                            local_rhs(i) += -(fe_face_values[flux].value(i, q) *
+                                              fe_face_values.normal_vector(q) *
+                                              boundary_values_u_values[q]) *
+                                            fe_face_values.JxW(q);
+                      }
                   }
               }
 
@@ -601,6 +561,11 @@ namespace RTDQ
       subdomain(i) = triangulation.locally_owned_subdomain();
     data_out.add_data_vector(subdomain, "subdomain_id");
 
+    // Postprocess
+	std::unique_ptr<RTDQ_PostProcessor> postprocessor(
+	  new RTDQ_PostProcessor(parameter_filename));
+	data_out.add_data_vector(locally_relevant_solution, *postprocessor);
+
     data_out.build_patches();
 
     std::string filename(parameters.filename_output);
@@ -663,6 +628,10 @@ namespace RTDQ
         return;
       }
 
+    pcout << std::endl
+              << "===========================================" << std::endl
+              << "Solving >> modified RT-DQ MULTISCALE << problem in 3D." << std::endl;
+
 #ifdef USE_PETSC_LA
     pcout << "Running multiscale algorithm using PETSc." << std::endl;
 #else
@@ -689,7 +658,7 @@ namespace RTDQ
     send_global_weights_to_cell();
 
     {
-      TimerOutput::Scope t(computing_timer, "vtu output fine");
+      TimerOutput::Scope t(computing_timer, "vtu output");
       output_results();
     }
 
@@ -698,6 +667,9 @@ namespace RTDQ
         computing_timer.print_summary();
         computing_timer.reset();
       }
+
+    pcout << std::endl
+              << "===========================================" << std::endl;
   }
 
 } // end namespace RTDQ

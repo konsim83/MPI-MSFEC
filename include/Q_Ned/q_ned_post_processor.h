@@ -1,5 +1,5 @@
-#ifndef INCLUDE_Q_NED_Q_NED_POST_PROCESSOR_H_
-#define INCLUDE_Q_NED_Q_NED_POST_PROCESSOR_H_
+#ifndef INCLUDE_Q_NED_POST_PROCESSOR_H_
+#define INCLUDE_Q_NED_POST_PROCESSOR_H_
 
 // deal.ii
 #include <deal.II/numerics/data_postprocessor.h>
@@ -62,4 +62,4 @@ namespace QNed
 
 } // end namespace QNed
 
-#endif /* INCLUDE_Q_NED_Q_NED_POST_PROCESSOR_H_ */
+#endif /* INCLUDE_Q_NED_POST_PROCESSOR_H_ */

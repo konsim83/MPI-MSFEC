@@ -18,7 +18,7 @@ subsection Standard method parameters
   	end
   	
   	# name of outputfile without ending
-  	set filename output = NED-RT-Std
+  	set filename output = test-03_Q-NED-Std
   	
   	# compare to exact solution
   	set use exact solution = false
@@ -51,7 +51,7 @@ subsection Multiscale method parameters
   	end
   	
   	# name of outputfile without ending
-  	set filename output = NED-RT-Ms
+  	set filename output = test-03_Q-NED-Ms
   	
   	# compare to exact solution
   	set use exact solution = false
@@ -60,11 +60,20 @@ end
 
 subsection Equation parameters
 	subsection Right-hand side
-		set Function constants  = 
+		set Function constants  = alpha=100, beta=10
 		
-		# Separate vector valued expressions by ';' as ',' is used internally by the
-		# function parser.
-		set Function expression = 1; 1; 1
+		# This is the sum of the gradient of the H^1_0-function 
+		# V=scale*x*y*z*(x-1)*(y-1)*(z-1)
+		# and the curl of the H(curl)-function 
+		# W=scale*0.5*(z^2,x^2,y^2)^T
+		# and hence neither div(u) nor curl(u)=0 
+		# for zero (essential) BCs. Hence the solution is the
+		# superposition of the solutions of test-01 and test-02
+		set Function expression = alpha*(2*x-1)*(y^2-y)*(z^2-z) + beta*y; alpha*(2*y-1)*(x^2-x)*(z^2-z) + beta*z; alpha*(2*z-1)*(x^2-x)*(y^2-y) + beta*x		
+	
+		# The name of the variables as they will be used in the function, separated
+		# by ','.
+		set Variable names      = x,y,z
 	
 		# The name of the variables as they will be used in the function, separated
 		# by ','.
@@ -94,9 +103,9 @@ subsection Equation parameters
 	end
 	
 	subsection Diffusion A
-		set frequency x = 12
-		set frequency y = 10
-		set frequency z = 9
+		set frequency x = 2
+		set frequency y = 3
+		set frequency z = 1
 		
 		# scaling parameter
 		set scale x = 1.0
@@ -104,20 +113,18 @@ subsection Equation parameters
 		set scale z = 1.0
 		
 		# scaling parameter to set the contrast
-		set alpha x = 0.99
-		set alpha y = 0.99
-		set alpha z = 0.99
+		set alpha x = 0.9
+		set alpha y = 0.9
+		set alpha z = 0.9
 		
 		# Rotate with fixed Euler angles
 		set rotate = false
 	end
 	
 	subsection Diffusion B
-		# We need to set some quantities twice if we 
-		# want to use the exact solution class
-		set frequency = 9
+		set frequency = 2
 		set scale = 1
-		set alpha = 0.99
+		set alpha = 0.9
 		
 		# Separate vector valued expressions by ';' as ',' is used internally by the
 		# function parser.

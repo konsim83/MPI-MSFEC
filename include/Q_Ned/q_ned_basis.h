@@ -40,6 +40,7 @@
 #include <iostream>
 #include <map>
 #include <memory>
+#include <type_traits>
 #include <vector>
 
 // my headers

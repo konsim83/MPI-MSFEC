@@ -1,5 +1,5 @@
-#ifndef INCLUDE_RT_DQ_RT_DQ_REF_H_
-#define INCLUDE_RT_DQ_RT_DQ_REF_H_
+#ifndef INCLUDE_RT_DQ_REF_H_
+#define INCLUDE_RT_DQ_REF_H_
 
 // Deal.ii MPI
 #include <deal.II/base/conditional_ostream.h>
@@ -8,6 +8,7 @@
 #include <deal.II/base/logstream.h>
 #include <deal.II/base/mpi.h>
 #include <deal.II/base/parameter_handler.h>
+#include <deal.II/base/tensor_function.h>
 #include <deal.II/base/utilities.h>
 #include <deal.II/lac/affine_constraints.h>
 #include <deal.II/lac/block_sparse_matrix.h>
@@ -51,6 +52,7 @@
 #include <deal.II/numerics/vector_tools.h>
 
 // std library
+#include <algorithm>
 #include <cmath>
 #include <fstream>
 #include <iostream>
@@ -60,11 +62,13 @@
 
 // my headers
 #include <RT_DQ/rt_dq_parameters.h>
+#include <RT_DQ/rt_dq_post_processor.h>
 #include <config.h>
 #include <equation_data/eqn_boundary_vals.h>
 #include <equation_data/eqn_coeff_A.h>
 #include <equation_data/eqn_coeff_R.h>
 #include <equation_data/eqn_rhs.h>
+#include <functions/concatinate_functions.h>
 #include <linear_algebra/approximate_inverse.h>
 #include <linear_algebra/approximate_schur_complement.tpp>
 #include <linear_algebra/inverse_matrix.h>
@@ -149,4 +153,4 @@ namespace RTDQ
 
 } // end namespace RTDQ
 
-#endif /* INCLUDE_RT_DQ_RT_DQ_REF_H_ */
+#endif /* INCLUDE_RT_DQ_REF_H_ */

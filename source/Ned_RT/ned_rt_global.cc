@@ -174,12 +174,12 @@ namespace NedRT
     //	{
     //		VectorTools::project_boundary_values_curl_conforming(dof_handler,
     //					/*first vector component */ 0,
-    //					ZeroFunction<3>(6),
+    //					Functions::ZeroFunction<3>(6),
     //					/*boundary id*/ i,
     //					constraints);
     //		VectorTools::project_boundary_values_div_conforming(dof_handler,
     //							/*first vector component */
-    // 3, 							ZeroFunction<3>(6),
+    // 3, 							Functions::ZeroFunction<3>(6),
     //							/*boundary id*/ i,
     //							constraints);
     //	}
@@ -708,6 +708,10 @@ namespace NedRT
         return;
       }
 
+    pcout << std::endl
+                  << "===========================================" << std::endl
+                  << "Solving >> modified Ned-RT MULTISCALE << problem in 3D." << std::endl;
+
 #ifdef USE_PETSC_LA
     pcout << "Running multiscale algorithm using PETSc." << std::endl;
 #else
@@ -749,6 +753,9 @@ namespace NedRT
         computing_timer.print_summary();
         computing_timer.reset();
       }
+
+    pcout << std::endl
+              << "===========================================" << std::endl;
   }
 
 } // end namespace NedRT

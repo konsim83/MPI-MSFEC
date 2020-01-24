@@ -309,7 +309,7 @@ namespace QNed
     ShapeFun::ShapeFunctionVector<3> std_shape_function_ned(fe.base_element(1),
                                                             global_cell_it,
                                                             /*verbose =*/false);
-    ZeroFunction<3> zero_fun(1); // need this to keep pointer valid
+    Functions::ZeroFunction<3> zero_fun(1); // need this to keep pointer valid
 
     ShapeFun::ShapeFunctionConcatinateVector<3> std_shape_function(
       zero_fun, std_shape_function_ned);
@@ -336,7 +336,7 @@ namespace QNed
             VectorTools::interpolate_boundary_values(
               dof_handler,
               /*boundary id*/ i,
-              ZeroFunction<3>(4),
+              Functions::ZeroFunction<3>(4),
               constraints_curl_v[n_basis],
               q1_mask);
             VectorTools::project_boundary_values_curl_conforming(
@@ -398,12 +398,15 @@ namespace QNed
     std::vector<types::global_dof_index> local_dof_indices(dofs_per_cell);
 
     // equation data
-    std::unique_ptr<TensorFunction<1, 3>> right_hand_side;
+    std::unique_ptr<EquationData::RightHandSide> right_hand_side;
     if (parameters.use_exact_solution)
       right_hand_side.reset(
         new EquationData::RightHandSideExactLin(parameter_filename));
     else
-      right_hand_side.reset(new EquationData::RightHandSideParsed());
+      right_hand_side.reset(
+        new EquationData::RightHandSideParsed(parameter_filename,
+                                              /* n_components */ 3));
+
     const EquationData::Diffusion_A        diffusion_a(parameter_filename);
     const EquationData::DiffusionInverse_B diffusion_inverse_b(
       parameter_filename, parameters.use_exact_solution);
@@ -435,8 +438,8 @@ namespace QNed
             local_rhs_v[n_basis] = 0;
           }
 
-        right_hand_side->value_list(fe_values.get_quadrature_points(),
-                                    rhs_values);
+        right_hand_side->tensor_value_list(fe_values.get_quadrature_points(),
+                                           rhs_values);
         reaction_rate.value_list(fe_values.get_quadrature_points(),
                                  reaction_rate_values);
         diffusion_a.value_list(fe_values.get_quadrature_points(),

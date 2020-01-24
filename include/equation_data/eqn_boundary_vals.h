@@ -89,6 +89,32 @@ namespace EquationData
                  std::vector<Tensor<1, 3>> &  values) const override;
   };
 
+  /**
+   * Boundary values for A*grad u.
+   */
+  class Boundary_A_grad_u : public TensorFunction<1, 3>
+  {
+  public:
+    /**
+     * Constructor.
+     */
+    Boundary_A_grad_u()
+      : TensorFunction<1, 3>()
+    {}
+
+    virtual Tensor<1, 3>
+      value(const Point<3> &point) const override;
+
+    /**
+     * Implementation of boundary values for A*grad u.
+     *
+     * @param p
+     */
+    virtual void
+      value_list(const std::vector<Point<3>> &points,
+                 std::vector<Tensor<1, 3>> &  values) const override;
+  };
+
 } // end namespace EquationData
 
 #endif /* EQN_BOUNDARY_VALS_H_ */

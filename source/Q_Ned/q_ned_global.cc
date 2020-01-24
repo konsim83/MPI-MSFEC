@@ -186,7 +186,7 @@ namespace QNed
           new ShapeFun::ShapeFunctionConcatinateVector<3>(*sigma, *u));
       }
     else
-      boundary_values.reset(new ZeroFunction<3>(4));
+      boundary_values.reset(new Functions::ZeroFunction<3>(4));
 
     FEValuesExtractors::Scalar q1(0);
     ComponentMask              q1_mask = fe.component_mask(q1);
@@ -708,6 +708,10 @@ namespace QNed
         return;
       }
 
+    pcout << std::endl
+                  << "===========================================" << std::endl
+                  << "Solving >> modified Q1-Ned MULTISCALE << problem in 3D." << std::endl;
+
 #ifdef USE_PETSC_LA
     pcout << "Running multiscale algorithm using PETSc." << std::endl;
 #else
@@ -749,6 +753,9 @@ namespace QNed
         computing_timer.print_summary();
         computing_timer.reset();
       }
+
+    pcout << std::endl
+              << "===========================================" << std::endl;
   }
 
 } // end namespace QNed
