@@ -66,6 +66,12 @@ namespace ShapeFun
 
     for (unsigned int i = 0; i < points.size(); ++i)
       {
+        Assert(values[i].size() ==
+                 (function_ptr2->n_components + function_ptr2->n_components),
+               ExcDimensionMismatch(values[i].size(),
+                                    (function_ptr2->n_components +
+                                     function_ptr2->n_components)));
+
         value1 = 0;
         value2 = 0;
         function_ptr1->vector_value(points[i], value1);

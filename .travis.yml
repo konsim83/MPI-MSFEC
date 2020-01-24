@@ -1,0 +1,32 @@
+# This will run on Travis' 'new' container-based infrastructure
+sudo: false 
+
+# Blacklist
+branches:
+  only:
+    - master
+
+# Install dependencies
+addons:
+  apt:
+    packages:
+      - doxygen
+      - doxygen-doc
+      - doxygen-latex
+      - doxygen-gui
+      - graphviz
+
+# Build your code e.g. by calling make
+script:
+  - cd doc
+  - doxygen Doxyfile
+  - cd ../documentation
+
+# Generate and deploy documentation
+deploy:
+  provider: pages
+  skip_cleanup: true
+  local_dir: documentation/html
+  github_token: $MSFEC_DOCS
+  on:
+    branch: master

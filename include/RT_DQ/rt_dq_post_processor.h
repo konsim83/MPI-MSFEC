@@ -1,29 +1,26 @@
-#ifndef INCLUDE_NED_RT_POST_PROCESSOR_H_
-#define INCLUDE_NED_RT_POST_PROCESSOR_H_
+#ifndef INCLUDE_RT_DQ_POSTPROCESSOR_H_
+#define INCLUDE_RT_DQ_POSTPROCESSOR_H_
 
 // deal.ii
 #include <deal.II/numerics/data_postprocessor.h>
 #include <equation_data/eqn_coeff_A.h>
-#include <equation_data/eqn_coeff_B.h>
 
 #include <vector>
 
 // my headers
 #include <config.h>
 
-namespace NedRT
+namespace RTDQ
 {
   using namespace dealii;
 
-  class NedRT_PostProcessor : public DataPostprocessor<3>
+  class RTDQ_PostProcessor : public DataPostprocessor<3>
   {
   public:
     /**
      * Constructor.
      */
-    NedRT_PostProcessor(const std::string &parameter_filename,
-                        const bool         use_exact_solution,
-                        const std::string  exact = "");
+    RTDQ_PostProcessor(const std::string &parameter_filename);
 
     /**
      * This is the actual evaluation routine of the  post processor.
@@ -54,12 +51,9 @@ namespace NedRT
       get_needed_update_flags() const override;
 
   private:
-    const EquationData::DiffusionInverse_A a_inverse;
-    const EquationData::Diffusion_B        b;
-
-    std::string exact;
+    const EquationData::DiffusionInverse_A       a_inverse;
   };
 
-} // end namespace NedRT
+} // end namespace RTDQ
 
-#endif /* INCLUDE_NED_RT_POST_PROCESSOR_H_ */
+#endif /* INCLUDE_RT_DQ_POSTPROCESSOR_H_ */

@@ -61,11 +61,9 @@
 // my headers
 #include <RT_DQ/rt_dq_basis.h>
 #include <RT_DQ/rt_dq_parameters.h>
+#include <RT_DQ/rt_dq_post_processor.h>
 #include <config.h>
 #include <equation_data/eqn_boundary_vals.h>
-#include <equation_data/eqn_coeff_A.h>
-#include <equation_data/eqn_coeff_R.h>
-#include <equation_data/eqn_rhs.h>
 #include <linear_algebra/approximate_inverse.h>
 #include <linear_algebra/approximate_schur_complement.tpp>
 #include <linear_algebra/inverse_matrix.h>
@@ -110,7 +108,6 @@ namespace RTDQ
       solve_iterative();
     void
       send_global_weights_to_cell();
-
     std::vector<std::string>
       collect_filenames_on_mpi_process();
     void

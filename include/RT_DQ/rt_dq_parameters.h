@@ -27,6 +27,7 @@ namespace RTDQ
     const bool degree = 0;
 
     bool compute_solution;
+    bool is_pure_neumann;
     bool verbose;
     bool use_direct_solver; /* This is often better for 2D problems. */
     bool renumber_dofs;     /* Reduce bandwidth in either system component */
@@ -34,10 +35,10 @@ namespace RTDQ
     unsigned int n_refine;
 
     const bool is_laplace      = true;
-    const bool is_pure_neumann = false;
 
     std::string filename_output;
   };
+
 
   struct ParametersMs
   {
@@ -49,6 +50,7 @@ namespace RTDQ
       parse_parameters(ParameterHandler &prm);
 
     bool compute_solution;
+    bool is_pure_neumann;
     bool verbose;
     bool verbose_basis;
     bool use_direct_solver;       /* This is often better for 2D problems. */
@@ -60,10 +62,10 @@ namespace RTDQ
     unsigned int n_refine_local;
 
     const bool is_laplace      = true;
-    const bool is_pure_neumann = false;
 
     std::string filename_output;
   };
+
 
   struct ParametersBasis
   {
@@ -88,7 +90,6 @@ namespace RTDQ
     unsigned int n_refine_local;
 
     const bool is_laplace            = true;
-    const bool is_pure_neumann       = false;
     const bool fast_constraint_setup = false; // false is safer but slower
 
     std::string filename_global;

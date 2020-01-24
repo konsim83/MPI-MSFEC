@@ -263,7 +263,7 @@ namespace NedRT
           dof_handler,
           /*first vector component */ 0,
           std_shape_function, // This is important!!!
-                              //					ZeroFunction<3>(3),
+                              //					Functions::ZeroFunction<3>(3),
           /*boundary id*/ 0,
           constraints_curl_v[n_basis]);
         VectorTools::project_boundary_values_div_conforming(
@@ -324,8 +324,8 @@ namespace NedRT
         VectorTools::project_boundary_values_curl_conforming_l2(
           dof_handler,
           /*first vector component */ 0,
-          ZeroFunction<3>(6), // This is not so important as long as BCs
-                              // do not influence u.
+          Functions::ZeroFunction<3>(6), // This is not so important as long as
+                                         // BCs do not influence u.
           /*boundary id*/ 0,
           constraints_div_v[n_basis]);
         VectorTools::project_boundary_values_div_conforming(
@@ -386,12 +386,15 @@ namespace NedRT
     std::vector<types::global_dof_index> local_dof_indices(dofs_per_cell);
 
     // equation data
-    std::unique_ptr<TensorFunction<1, 3>> right_hand_side;
+    std::unique_ptr<EquationData::RightHandSide> right_hand_side;
     if (parameters.use_exact_solution)
       right_hand_side.reset(
         new EquationData::RightHandSideExactLin(parameter_filename));
     else
-      right_hand_side.reset(new EquationData::RightHandSideParsed());
+      right_hand_side.reset(
+        new EquationData::RightHandSideParsed(parameter_filename,
+                                              /* n_components */ 3));
+
     const EquationData::DiffusionInverse_A diffusion_inverse_a(
       parameter_filename);
     const EquationData::Diffusion_B  diffusion_b(parameter_filename,
@@ -424,8 +427,8 @@ namespace NedRT
             local_rhs_v[n_basis] = 0;
           }
 
-        right_hand_side->value_list(fe_values.get_quadrature_points(),
-                                    rhs_values);
+        right_hand_side->tensor_value_list(fe_values.get_quadrature_points(),
+                                           rhs_values);
         reaction_rate.value_list(fe_values.get_quadrature_points(),
                                  reaction_rate_values);
         diffusion_inverse_a.value_list(fe_values.get_quadrature_points(),

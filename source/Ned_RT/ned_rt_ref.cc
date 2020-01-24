@@ -118,14 +118,14 @@ namespace NedRT
     //			i<GeometryInfo<3>::faces_per_cell;
     //			++i)
     //	{
-    //		VectorTools::project_boundary_values_curl_conforming(dof_handler,
+    //		VectorTools::project_boundary_values_curl_conforming_l2(dof_handler,
     //					/*first vector component */ 0,
-    //					ZeroFunction<3>(6),
+    //					Functions::ZeroFunction<3>(6),
     //					/*boundary id*/ i,
     //					constraints);
     //		VectorTools::project_boundary_values_div_conforming(dof_handler,
     //							/*first vector component */
-    // 3, 							ZeroFunction<3>(6),
+    // 3, 							Functions::ZeroFunction<3>(6),
     //							/*boundary id*/ i,
     //							constraints);
     //	}
@@ -168,12 +168,14 @@ namespace NedRT
     std::vector<types::global_dof_index> local_dof_indices(dofs_per_cell);
 
     // equation data
-    std::unique_ptr<TensorFunction<1, 3>> right_hand_side;
+    std::unique_ptr<EquationData::RightHandSide> right_hand_side;
     if (parameters.use_exact_solution)
       right_hand_side.reset(
         new EquationData::RightHandSideExactLin(parameter_filename));
     else
-      right_hand_side.reset(new EquationData::RightHandSideParsed());
+      right_hand_side.reset(
+        new EquationData::RightHandSideParsed(parameter_filename,
+                                              /* n_components */ 3));
 
     const EquationData::DiffusionInverse_A a_inverse(parameter_filename);
     const EquationData::Diffusion_B        b(parameter_filename,
@@ -215,8 +217,8 @@ namespace NedRT
             local_matrix = 0;
             local_rhs    = 0;
 
-            right_hand_side->value_list(fe_values.get_quadrature_points(),
-                                        rhs_values);
+            right_hand_side->tensor_value_list(
+              fe_values.get_quadrature_points(), rhs_values);
             reaction_rate.value_list(fe_values.get_quadrature_points(),
                                      reaction_rate_values);
             a_inverse.value_list(fe_values.get_quadrature_points(),
@@ -643,6 +645,10 @@ namespace NedRT
         return;
       }
 
+    pcout << std::endl
+              << "===========================================" << std::endl
+              << "Solving >> Ned-RT STANDARD << problem in 3D." << std::endl;
+
 #ifdef USE_PETSC_LA
     pcout << "Running using PETSc." << std::endl;
 #else
@@ -678,6 +684,9 @@ namespace NedRT
         computing_timer.print_summary();
         computing_timer.reset();
       }
+
+    pcout << std::endl
+              << "===========================================" << std::endl;
   }
 
 } // end namespace NedRT

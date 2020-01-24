@@ -6,7 +6,7 @@ namespace EquationData
 
   RightHandSideExactLin::RightHandSideExactLin(
     const std::string &parameter_filename)
-    : TensorFunction<1, 3>()
+    : RightHandSide(3)
     , ExactSolutionLin_Data(parameter_filename)
     , Diffusion_A_Data(parameter_filename)
     , Diffusion_B_Data(parameter_filename)
@@ -15,8 +15,9 @@ namespace EquationData
   }
 
   void
-    RightHandSideExactLin::value_list(const std::vector<Point<3>> &points,
-                                      std::vector<Tensor<1, 3>> &  values) const
+    RightHandSideExactLin::tensor_value_list(
+      const std::vector<Point<3>> &points,
+      std::vector<Tensor<1, 3>> &  values) const
   {
     Assert(points.size() == values.size(),
            ExcDimensionMismatch(points.size(), values.size()));
@@ -54,146 +55,54 @@ namespace EquationData
       }
   }
 
-  void
-    RightHandSideParsed::value_list(const std::vector<Point<3>> &points,
-                                    std::vector<Tensor<1, 3>> &  values) const
+  RightHandSideParsed::RightHandSideParsed(
+    const std::string &parameter_filename,
+    unsigned int       n_components)
+    : RightHandSide(n_components)
   {
-    Assert(points.size() == values.size(),
-           ExcDimensionMismatch(points.size(), values.size()));
+    // A parameter handler
+    ParameterHandler prm;
 
-    for (unsigned int i = 0; i < values.size(); ++i)
-      {
-        values.at(i).clear();
+    // Declare a section for the function we need
+    prm.enter_subsection("Equation parameters");
+    prm.enter_subsection("Right-hand side");
+    Functions::ParsedFunction<3>::declare_parameters(prm, n_components);
+    prm.leave_subsection();
+    prm.leave_subsection();
 
-        //////////////////////////////////////////////////////////
-        ////   Zero BCs   ////////////////////////////////////////
-        //////////////////////////////////////////////////////////
+    // open file
+    std::ifstream parameter_file(parameter_filename);
 
-        /*
-         * Gradient_0 of
-         * V = sin(2*PI*j*x)*sin(2*PI*k*y)*sin(2*PI*l*z)
-         */
-        //		const double a = 1;
-        //		const unsigned int j = 2, k = 2, l = 2;
-        //		values.at(i)[0] =
-        // a*2*numbers::PI*j*cos(2*numbers::PI*j*points[i](0))*sin(2*numbers::PI*k*points[i](1))*sin(2*numbers::PI*l*points[i](2));
-        //		values.at(i)[1] =
-        // a*2*numbers::PI*k*sin(2*numbers::PI*j*points[i](0))*cos(2*numbers::PI*k*points[i](1))*sin(2*numbers::PI*l*points[i](2));
-        //		values.at(i)[2] =
-        // a*2*numbers::PI*l*sin(2*numbers::PI*j*points[i](0))*sin(2*numbers::PI*k*points[i](1))*cos(2*numbers::PI*l*points[i](2));
+    // Parse an input file.
+    prm.parse_input(parameter_file,
+                    /* filename = */ "generated_parameter.in",
+                    /* last_line = */ "",
+                    /* skip_undefined = */ true);
 
-        /*
-         * Gradient_0 of
-         * V = x(x-1)y(y-1)z(z-1)
-         */
-        double x2       = points[i](0) * points[i](0) - points[i](0);
-        double y2       = points[i](1) * points[i](1) - points[i](1);
-        double z2       = points[i](2) * points[i](2) - points[i](2);
-        values.at(i)[0] = 10 * (2 * points[i](0) - 1) * y2 * z2;
-        values.at(i)[1] = 10 * (2 * points[i](1) - 1) * x2 * z2;
-        values.at(i)[2] = 10 * (2 * points[i](2) - 1) * x2 * y2;
-
-        /*
-         * Curl_0
-         */
-        //		const double a = 1, b = 0.7, c = 0.5;
-        //		const unsigned int j = 1, k = 1, l = 1;
-        //		values.at(i)[0] +=
-        // c*2*numbers::PI*k*sin(2*numbers::PI*j*points[i](0))*cos(2*numbers::PI*k*points[i](1))*sin(2*numbers::PI*l*points[i](2))
-        //						-
-        // b*2*numbers::PI*k*sin(2*numbers::PI*j*points[i](0))*sin(2*numbers::PI*k*points[i](1))*cos(2*numbers::PI*l*points[i](2));
-        //		values.at(i)[1] +=
-        // a*2*numbers::PI*k*sin(2*numbers::PI*j*points[i](0))*sin(2*numbers::PI*k*points[i](1))*cos(2*numbers::PI*l*points[i](2))
-        //						-
-        // c*2*numbers::PI*k*cos(2*numbers::PI*j*points[i](0))*sin(2*numbers::PI*k*points[i](1))*sin(2*numbers::PI*l*points[i](2));
-        //		values.at(i)[2] +=
-        // b*2*numbers::PI*k*cos(2*numbers::PI*j*points[i](0))*sin(2*numbers::PI*k*points[i](1))*sin(2*numbers::PI*l*points[i](2))
-        //						-
-        // a*2*numbers::PI*k*sin(2*numbers::PI*j*points[i](0))*cos(2*numbers::PI*k*points[i](1))*sin(2*numbers::PI*l*points[i](2));
-        //////////////////////////////////////////////////////////
-        //////////////////////////////////////////////////////////
-        //////////////////////////////////////////////////////////
-
-        //////////////////////////////////////////////////////////
-        ////   No BCs   //////////////////////////////////////////
-        //////////////////////////////////////////////////////////
-
-        // Gradient
-        //		values.at(i)[0] = points[i](1) * points[i](2);
-        //		values.at(i)[1] = points[i](0) * points[i](2);
-        //		values.at(i)[2] = points[i](0) * points[i](1);
-
-        // Curl
-        //		const unsigned int k = 1;
-        //		values.at(i)[0] = - 2 * numbers::PI * k * cos(2 *
-        // numbers::PI * k
-        //* points[i](1) * points[i](2)) * points[i](1);
-        // values.at(i)[1] = -
-        // 2 * numbers::PI * k * cos(2 * numbers::PI * k * points[i](0)
-        // * points[i](2)) * points[i](2); 		values.at(i)[2] = - 2 *
-        // numbers::PI
-        // *
-        // k
-        //* cos(2 * numbers::PI * k * points[i](0) * points[i](1)) *
-        // points[i](0);
-
-        // Curl
-        //		const unsigned int k = 1;
-        //		values.at(i)[0] = 2 * numbers::PI * k * (cos(2 *
-        // numbers::PI * k *
-        // points[i](0) * points[i](1))
-        //						- cos(2 * numbers::PI * k *
-        // points[i](0) * points[i](2)))
-        //* points[i](0); 		values.at(i)[1] = 2 * numbers::PI * k *
-        //(cos(2 *
-        // numbers::PI * k * points[i](1) * points[i](2))
-        //						- cos(2 * numbers::PI * k *
-        // points[i](0) * points[i](1)))
-        //* points[i](1); 		values.at(i)[2] = 2 * numbers::PI * k *
-        //(cos(2 *
-        // numbers::PI * k * points[i](0) * points[i](2))
-        //						- cos(2 * numbers::PI * k *
-        // points[i](1) * points[i](2)))
-        //* points[i](2);
-
-        // Curl
-        values.at(i)[0] += -10 * points[i](1);
-        values.at(i)[1] += -10 * points[i](2);
-        values.at(i)[2] += -10 * points[i](0);
-        //////////////////////////////////////////////////////////
-        //////////////////////////////////////////////////////////
-        //////////////////////////////////////////////////////////
-
-        //////////////////////////////////////////////////////////
-        ////   Anything   ////////////////////////////////////////
-        //////////////////////////////////////////////////////////
-        //		values.at(i)[0] = 0;
-        //		values.at(i)[1] = std::pow(sin(numbers::PI*points[i](0))
-        //										*
-        // sin(numbers::PI*points[i](1))
-        //										*
-        // sin(numbers::PI*points[i](2)), 2);; 		values.at(i)[2] = 0;
-
-        //		values.at(i)[0] += 1;
-        //		values.at(i)[1] += 1;
-        //		values.at(i)[2] += 1;
-        //////////////////////////////////////////////////////////
-        //////////////////////////////////////////////////////////
-        //////////////////////////////////////////////////////////
-      }
+    // Initialize the ParsedFunction object with the given file
+    prm.enter_subsection("Equation parameters");
+    prm.enter_subsection("Right-hand side");
+    this->parse_parameters(prm);
+    prm.leave_subsection();
+    prm.leave_subsection();
   }
 
   void
-    RightHandSideScalarParsed::value_list(const std::vector<Point<3>> &points,
-                                          std::vector<double> &        values,
-                                          unsigned int /* component */) const
+    RightHandSideParsed::tensor_value_list(
+      const std::vector<Point<3>> &points,
+      std::vector<Tensor<1, 3>> &  values) const
   {
     Assert(points.size() == values.size(),
            ExcDimensionMismatch(points.size(), values.size()));
 
     for (unsigned int i = 0; i < values.size(); ++i)
       {
-        values[i] = 1;
+        values[i].clear();
+
+        for (unsigned int d = 0; d < 3; ++d)
+          {
+            values[i][d] = value(points[i], /* component */ d);
+          }
       }
   }
 

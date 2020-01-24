@@ -453,9 +453,10 @@ namespace RTDQ
     std::vector<types::global_dof_index> local_dof_indices(dofs_per_cell);
 
     // equation data
-    const EquationData::RightHandSideScalarParsed right_hand_side;
-    const EquationData::DiffusionInverse_A        a_inverse(parameter_filename);
-    const EquationData::ReactionRate              reaction_rate;
+    const EquationData::RightHandSideParsed right_hand_side(
+      parameter_filename, /* n_components */ 1);
+    const EquationData::DiffusionInverse_A a_inverse(parameter_filename);
+    const EquationData::ReactionRate       reaction_rate;
 
     // allocate
     std::vector<double>       rhs_values(n_q_points);
@@ -573,22 +574,6 @@ namespace RTDQ
                   }
               } // end for ++i
           }     // end for ++q
-
-        //		for (unsigned int face_number=0;
-        //				face_number<GeometryInfo<3>::faces_per_cell;
-        //				++face_number)
-        //		{
-        //			if (cell->face(face_number)->at_boundary()
-        ////				&&
-        ////				(cell->face(face_number)->boundary_id() ==
-        /// 0)
-        //				)
-        //			{
-        //				fe_face_values.reinit (cell,
-        // face_number);
-        //		.....
-        //			} // end if cell->at_boundary()
-        //		} // end face_number++
 
         // Only for use in global assembly.
         cell->get_dof_indices(local_dof_indices);
@@ -1007,6 +992,11 @@ namespace RTDQ
                              solution_names,
                              DataOut<3>::type_dof_data,
                              data_component_interpretation);
+
+    // Postprocess
+	std::unique_ptr<RTDQ_PostProcessor> postprocessor(
+	  new RTDQ_PostProcessor(parameter_filename));
+	data_out.add_data_vector(global_solution, *postprocessor);
 
     data_out.build_patches();
 

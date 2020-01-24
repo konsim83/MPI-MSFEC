@@ -6,6 +6,7 @@ namespace RTDQ
 
   ParametersStd::ParametersStd(const std::string &parameter_filename)
     : compute_solution(true)
+  , is_pure_neumann(false)
     , verbose(true)
     , use_direct_solver(false)
     , renumber_dofs(true)
@@ -56,6 +57,10 @@ namespace RTDQ
                           "true",
                           Patterns::Bool(),
                           "Choose whether to compute the solution or not.");
+        prm.declare_entry("pure neumann",
+							  "false",
+							  Patterns::Bool(),
+							  "Choose whether to compute a pure Neumann problem.");
         prm.declare_entry("verbose",
                           "true",
                           Patterns::Bool(),
@@ -94,6 +99,7 @@ namespace RTDQ
       prm.enter_subsection("Control flow");
       {
         compute_solution  = prm.get_bool("compute solution");
+        is_pure_neumann  = prm.get_bool("pure neumann");
         verbose           = prm.get_bool("verbose");
         use_direct_solver = prm.get_bool("use direct solver");
         renumber_dofs     = prm.get_bool("dof renumbering");
@@ -107,6 +113,7 @@ namespace RTDQ
 
   ParametersMs::ParametersMs(const std::string &parameter_filename)
     : compute_solution(true)
+  , is_pure_neumann(false)
     , verbose(true)
     , use_direct_solver(false)
     , renumber_dofs(true)
@@ -162,6 +169,10 @@ namespace RTDQ
                           "true",
                           Patterns::Bool(),
                           "Choose whether to compute the solution or not.");
+        prm.declare_entry("pure neumann",
+						  "false",
+						  Patterns::Bool(),
+						  "Choose whether to compute a pure Neumann problem.");
         prm.declare_entry("verbose",
                           "true",
                           Patterns::Bool(),
@@ -214,6 +225,7 @@ namespace RTDQ
       prm.enter_subsection("Control flow");
       {
         compute_solution        = prm.get_bool("compute solution");
+        is_pure_neumann  = prm.get_bool("pure neumann");
         verbose                 = prm.get_bool("verbose");
         verbose_basis           = prm.get_bool("verbose basis");
         use_direct_solver       = prm.get_bool("use direct solver");

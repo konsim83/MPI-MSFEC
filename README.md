@@ -9,6 +9,10 @@ For further information build the documentation of the project.
 
 Note that there is still room to optimize the implementation (e.g., faster linear solvers).
 
+| **Documentation** |
+|:-----------------:|
+| [![][docs-latest-img]][docs-latest-url] |
+
 ---
 **NOTE**
 
@@ -91,3 +95,6 @@ doxygen Doxyfile
 ```
 This will generate a html documentation of classes in the `MPI_MSFEC/documentation/html` directory.
 To open it open the `index.html` in a web browser.
+
+[docs-latest-img]: https://img.shields.io/badge/Documentation-current-blue
+[docs-latest-url]: https://konsim83.github.io/MPI-MSFEC/

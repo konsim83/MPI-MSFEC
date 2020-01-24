@@ -18,7 +18,10 @@ subsection Standard method parameters
   	end
   	
   	# name of outputfile without ending
-  	set filename output = RT-DQ-Std
+  	set filename output = test-04_Q-NED-Std
+  	
+  	# compare to exact solution
+  	set use exact solution = false
 end
 
 
@@ -38,7 +41,7 @@ subsection Multiscale method parameters
 	  
 	  	# what solver to use
 	  	set use direct solver = false
-	  	set use direct solver basis = true
+	  	set use direct solver basis = false
 	  
 	  	# renumbering to reduce bandwidth
 	  	set dof renumbering = false
@@ -48,27 +51,54 @@ subsection Multiscale method parameters
   	end
   	
   	# name of outputfile without ending
-  	set filename output = RT-DQ-Ms
+  	set filename output = test-04_Q-NED-Ms
+  	
+  	# compare to exact solution
+  	set use exact solution = false
 end
 
 
 subsection Equation parameters
 	subsection Right-hand side
-		set Function constants  = 
+		set Function constants  = scale=10
 		
-		# Separate vector valued expressions by ';' as ',' is used internally by the
-		# function parser.
-		set Function expression = 1; 1; 1
+		set Function expression = scale*x*y*z; scale*x*y*z; scale*x*y*z
+	
+		# The name of the variables as they will be used in the function, separated
+		# by ','.
+		set Variable names      = x,y,z
 	
 		# The name of the variables as they will be used in the function, separated
 		# by ','.
 		set Variable names      = x,y,z
 	end
 	
+	# Note that the exact solution is only there 
+	# to verify the standard method
+	subsection Exact solution
+		# The exact solution is just a linear function.
+		# The right hand side is computed automatically
+		set a_00 = 1
+		set a_01 = 1
+		set a_02 = 0
+		
+		set a_10 = 0.5
+		set a_11 = 2
+		set a_12 = -1
+		
+		set a_20 = 0
+		set a_21 = -1
+		set a_22 = -1
+		
+		set b_0 = 1
+		set b_1 = 1
+		set b_2 = 1		
+	end
+	
 	subsection Diffusion A
-		set frequency x = 8
-		set frequency y = 7
-		set frequency z = 9
+		set frequency x = 1
+		set frequency y = 1
+		set frequency z = 1
 		
 		# scaling parameter
 		set scale x = 1.0
@@ -81,6 +111,16 @@ subsection Equation parameters
 		set alpha z = 0.9
 		
 		# Rotate with fixed Euler angles
-		set rotate = true
+		set rotate = false
+	end
+	
+	subsection Diffusion B
+		set frequency = 2
+		set scale = 1
+		set alpha = 0.9
+		
+		# Separate vector valued expressions by ';' as ',' is used internally by the
+		# function parser.
+		set Function expression = scale * (1.0 - alpha * sin(2*pi*frequency*x))
 	end
 end

@@ -1,36 +1,33 @@
-#ifndef INCLUDE_NED_RT_POST_PROCESSOR_H_
-#define INCLUDE_NED_RT_POST_PROCESSOR_H_
+#ifndef INCLUDE_Q_POSTPROCESSOR_H_
+#define INCLUDE_Q_POSTPROCESSOR_H_
 
 // deal.ii
 #include <deal.II/numerics/data_postprocessor.h>
 #include <equation_data/eqn_coeff_A.h>
-#include <equation_data/eqn_coeff_B.h>
 
 #include <vector>
 
 // my headers
 #include <config.h>
 
-namespace NedRT
+namespace Q
 {
   using namespace dealii;
 
-  class NedRT_PostProcessor : public DataPostprocessor<3>
+  class Q_PostProcessor : public DataPostprocessor<3>
   {
   public:
     /**
      * Constructor.
      */
-    NedRT_PostProcessor(const std::string &parameter_filename,
-                        const bool         use_exact_solution,
-                        const std::string  exact = "");
+    Q_PostProcessor(const std::string &parameter_filename);
 
     /**
      * This is the actual evaluation routine of the  post processor.
      */
     virtual void
-      evaluate_vector_field(
-        const DataPostprocessorInputs::Vector<3> &inputs,
+      evaluate_scalar_field(
+        const DataPostprocessorInputs::Scalar<3> &inputs,
         std::vector<Vector<double>> &computed_quantities) const override;
 
     /**
@@ -54,12 +51,9 @@ namespace NedRT
       get_needed_update_flags() const override;
 
   private:
-    const EquationData::DiffusionInverse_A a_inverse;
-    const EquationData::Diffusion_B        b;
-
-    std::string exact;
+    const EquationData::Diffusion_A        a;
   };
 
-} // end namespace NedRT
+} // end namespace Q
 
-#endif /* INCLUDE_NED_RT_POST_PROCESSOR_H_ */
+#endif /* INCLUDE_Q_POSTPROCESSOR_H_ */
