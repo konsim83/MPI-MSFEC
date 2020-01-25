@@ -17,6 +17,7 @@ addons:
       - graphviz
       - libjs-mathjax
       - fonts-mathjax
+      - fonts-mathjax-extras
 
 # Build your code e.g. by calling make
 script:
