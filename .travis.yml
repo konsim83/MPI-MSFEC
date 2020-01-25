@@ -15,6 +15,8 @@ addons:
       - doxygen-latex
       - doxygen-gui
       - graphviz
+      - libjs-mathjax
+      - fonts-mathjax
 
 # Build your code e.g. by calling make
 script:
