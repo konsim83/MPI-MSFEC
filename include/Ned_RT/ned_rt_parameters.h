@@ -34,6 +34,7 @@ namespace NedRT
     unsigned int n_refine;
 
     std::string filename_output;
+    std::string dirname_output;
 
     bool use_exact_solution;
   };
@@ -59,6 +60,7 @@ namespace NedRT
     unsigned int n_refine_local;
 
     std::string filename_output;
+    std::string dirname_output;
 
     bool use_exact_solution;
   };
@@ -86,6 +88,7 @@ namespace NedRT
     unsigned int n_refine_local;
 
     std::string filename_global;
+    std::string dirname_output;
 
     bool use_exact_solution;
   };

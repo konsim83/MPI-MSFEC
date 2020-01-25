@@ -809,6 +809,7 @@ FILE_PATTERNS         += *.md
 FILE_PATTERNS         += *.dox
 FILE_PATTERNS         += *.py
 FILE_PATTERNS         += *.pyw
+FILE_PATTERNS         += *.dox
 
 # The RECURSIVE tag can be used to specify whether or not subdirectories should
 # be searched for input files as well.
@@ -1659,7 +1660,7 @@ COMPACT_LATEX          = NO
 # The default value is: a4.
 # This tag requires that the tag GENERATE_LATEX is set to YES.
 
-PAPER_TYPE             = a4
+PAPER_TYPE             = a4wide
 
 # The EXTRA_PACKAGES tag can be used to specify one or more LaTeX package names
 # that should be included in the LaTeX output. The package can be specified just
@@ -1671,7 +1672,7 @@ PAPER_TYPE             = a4
 # If left blank no extra packages will be included.
 # This tag requires that the tag GENERATE_LATEX is set to YES.
 
-EXTRA_PACKAGES         ={times, amsmath, amsfonts, mathtools}
+EXTRA_PACKAGES         ={times, amsmath, amsfonts, mathtools, tikz, tikz-cd, color, graphicx}
 
 # The LATEX_HEADER tag can be used to specify a personal LaTeX header for the
 # generated LaTeX document. The header should contain everything until the first

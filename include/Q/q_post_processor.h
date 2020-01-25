@@ -51,7 +51,7 @@ namespace Q
       get_needed_update_flags() const override;
 
   private:
-    const EquationData::Diffusion_A        a;
+    const EquationData::Diffusion_A a;
   };
 
 } // end namespace Q

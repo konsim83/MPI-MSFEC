@@ -9,12 +9,13 @@ namespace Q
 
   ParametersStd::ParametersStd(const std::string &parameter_filename)
     : compute_solution(true)
-  , is_pure_neumann(false)
+    , is_pure_neumann(false)
     , verbose(true)
     , use_direct_solver(false)
     , renumber_dofs(true)
     , n_refine(3)
     , filename_output("Q_Std")
+    , dirname_output("Q")
   {
     ParameterHandler prm;
 
@@ -61,9 +62,9 @@ namespace Q
                           Patterns::Bool(),
                           "Choose whether to compute the solution or not.");
         prm.declare_entry("pure neumann",
-						  "false",
-						  Patterns::Bool(),
-						  "Choose whether to compute a pure Neumann problem.");
+                          "false",
+                          Patterns::Bool(),
+                          "Choose whether to compute a pure Neumann problem.");
         prm.declare_entry("verbose",
                           "true",
                           Patterns::Bool(),
@@ -81,6 +82,7 @@ namespace Q
       prm.leave_subsection();
 
       prm.declare_entry("filename output", "Q_Std", Patterns::FileName(), ".");
+      prm.declare_entry("dirname output", "Q", Patterns::FileName(), ".");
     }
     prm.leave_subsection();
   }
@@ -99,7 +101,7 @@ namespace Q
       prm.enter_subsection("Control flow");
       {
         compute_solution  = prm.get_bool("compute solution");
-        is_pure_neumann  = prm.get_bool("pure neumann");
+        is_pure_neumann   = prm.get_bool("pure neumann");
         verbose           = prm.get_bool("verbose");
         use_direct_solver = prm.get_bool("use direct solver");
         renumber_dofs     = prm.get_bool("dof renumbering");
@@ -107,19 +109,21 @@ namespace Q
       prm.leave_subsection();
 
       filename_output = prm.get("filename output");
+      dirname_output  = prm.get("dirname output");
     }
     prm.leave_subsection();
   }
 
   ParametersMs::ParametersMs(const std::string &parameter_filename)
     : compute_solution(true)
-  , is_pure_neumann(false)
+    , is_pure_neumann(false)
     , verbose(true)
     , use_direct_solver(false)
     , renumber_dofs(true)
     , n_refine_global(2)
     , n_refine_local(2)
     , filename_output("Q_Ms")
+    , dirname_output("Q")
   {
     ParameterHandler prm;
 
@@ -170,9 +174,9 @@ namespace Q
                           Patterns::Bool(),
                           "Choose whether to compute the solution or not.");
         prm.declare_entry("pure neumann",
-						  "false",
-						  Patterns::Bool(),
-						  "Choose whether to compute a pure Neumann problem.");
+                          "false",
+                          Patterns::Bool(),
+                          "Choose whether to compute a pure Neumann problem.");
         prm.declare_entry("verbose",
                           "true",
                           Patterns::Bool(),
@@ -203,6 +207,7 @@ namespace Q
       prm.leave_subsection();
 
       prm.declare_entry("filename output", "Q_Ms", Patterns::FileName(), ".");
+      prm.declare_entry("dirname output", "Q", Patterns::FileName(), ".");
     }
     prm.leave_subsection();
   }
@@ -222,7 +227,7 @@ namespace Q
       prm.enter_subsection("Control flow");
       {
         compute_solution        = prm.get_bool("compute solution");
-        is_pure_neumann  = prm.get_bool("pure neumann");
+        is_pure_neumann         = prm.get_bool("pure neumann");
         verbose                 = prm.get_bool("verbose");
         verbose_basis           = prm.get_bool("verbose basis");
         use_direct_solver       = prm.get_bool("use direct solver");
@@ -233,6 +238,7 @@ namespace Q
       prm.leave_subsection();
 
       filename_output = prm.get("filename output");
+      dirname_output  = prm.get("dirname output");
     }
     prm.leave_subsection();
   }
@@ -246,6 +252,7 @@ namespace Q
     , n_refine_global(parameters_ms.n_refine_global)
     , n_refine_local(parameters_ms.n_refine_local)
     , filename_global(parameters_ms.filename_output)
+    , dirname_output(parameters_ms.dirname_output)
   {}
 
   ParametersBasis::ParametersBasis(const ParametersBasis &other)
@@ -257,6 +264,7 @@ namespace Q
     , n_refine_global(other.n_refine_global)
     , n_refine_local(other.n_refine_local)
     , filename_global(other.filename_global)
+    , dirname_output(other.dirname_output)
   {}
 
   void

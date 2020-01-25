@@ -11,6 +11,7 @@ namespace NedRT
     , renumber_dofs(true)
     , n_refine(3)
     , filename_output("NED_RT_Std")
+    , dirname_output("NED_RT")
     , use_exact_solution(false)
   {
     ParameterHandler prm;
@@ -77,6 +78,7 @@ namespace NedRT
                         "NED_RT_Std",
                         Patterns::FileName(),
                         ".");
+      prm.declare_entry("dirname output", "NED_RT", Patterns::FileName(), ".");
 
       prm.declare_entry("use exact solution",
                         "false",
@@ -107,6 +109,7 @@ namespace NedRT
       prm.leave_subsection();
 
       filename_output = prm.get("filename output");
+      dirname_output  = prm.get("dirname output");
 
       use_exact_solution = prm.get_bool("use exact solution");
     }
@@ -121,6 +124,7 @@ namespace NedRT
     , n_refine_global(2)
     , n_refine_local(2)
     , filename_output("NED_RT_Ms")
+    , dirname_output("NED_RT")
     , use_exact_solution(false)
   {
     ParameterHandler prm;
@@ -204,6 +208,7 @@ namespace NedRT
                         "NED_RT_Ms",
                         Patterns::FileName(),
                         ".");
+      prm.declare_entry("dirname output", "NED_RT", Patterns::FileName(), ".");
 
       prm.declare_entry("use exact solution",
                         "false",
@@ -238,6 +243,7 @@ namespace NedRT
       prm.leave_subsection();
 
       filename_output = prm.get("filename output");
+      dirname_output  = prm.get("dirname output");
 
       use_exact_solution = prm.get_bool("use exact solution");
     }
@@ -253,6 +259,7 @@ namespace NedRT
     , n_refine_global(parameters_ms.n_refine_global)
     , n_refine_local(parameters_ms.n_refine_local)
     , filename_global(parameters_ms.filename_output)
+    , dirname_output(parameters_ms.dirname_output)
     , use_exact_solution(parameters_ms.use_exact_solution)
   {}
 
@@ -265,6 +272,7 @@ namespace NedRT
     , n_refine_global(other.n_refine_global)
     , n_refine_local(other.n_refine_local)
     , filename_global(other.filename_global)
+    , dirname_output(other.dirname_output)
     , use_exact_solution(other.use_exact_solution)
   {}
 

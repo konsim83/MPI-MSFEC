@@ -81,9 +81,9 @@ int
         dealii::deallog.depth_console(0);
 
         // multiscale solution
-                Q::ParametersMs   parameters(input_file);
-                Q::QMultiscale standard_laplace_global(parameters,
-                input_file); standard_laplace_global.run();
+        Q::ParametersMs parameters(input_file);
+        Q::QMultiscale  standard_laplace_global(parameters, input_file);
+        standard_laplace_global.run();
       }
     } /* try */
 

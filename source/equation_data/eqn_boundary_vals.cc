@@ -52,7 +52,7 @@ namespace EquationData
 
 
   Tensor<1, 3>
-    Boundary_A_grad_u::value(const Point<3> &/* point */) const
+    Boundary_A_grad_u::value(const Point<3> & /* point */) const
   {
     Tensor<1, 3> value;
     for (unsigned int d = 0; d < 3; ++d)

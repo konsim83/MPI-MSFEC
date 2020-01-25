@@ -656,7 +656,7 @@ namespace QNed
       Utilities::int_to_string(triangulation.locally_owned_subdomain(), 4);
     filename += ".vtu";
 
-    std::ofstream output(filename);
+    std::ofstream output(parameters.dirname_output + "/" + filename);
     data_out.write_vtu(output);
 
     // pvtu-record for all local coarse outputs
@@ -678,7 +678,8 @@ namespace QNed
         std::string master_file =
           parameters.filename_output + "_n_refine-" +
           Utilities::int_to_string(parameters.n_refine_global, 2) + ".pvtu";
-        std::ofstream master_output(master_file.c_str());
+        std::ofstream master_output(parameters.dirname_output + "/" +
+                                    master_file);
         data_out.write_pvtu_record(master_output, local_filenames);
       }
 
@@ -692,7 +693,8 @@ namespace QNed
           "-" + Utilities::int_to_string(parameters.n_refine_local, 2) +
           ".pvtu";
 
-        std::ofstream master_output(filename_master.c_str());
+        std::ofstream master_output(parameters.dirname_output + "/" +
+                                    filename_master);
         data_out.write_pvtu_record(master_output, filenames_on_cell);
       }
   }
@@ -709,8 +711,9 @@ namespace QNed
       }
 
     pcout << std::endl
-                  << "===========================================" << std::endl
-                  << "Solving >> modified Q1-Ned MULTISCALE << problem in 3D." << std::endl;
+          << "===========================================" << std::endl
+          << "Solving >> modified Q1-Ned MULTISCALE << problem in 3D."
+          << std::endl;
 
 #ifdef USE_PETSC_LA
     pcout << "Running multiscale algorithm using PETSc." << std::endl;
@@ -745,6 +748,14 @@ namespace QNed
 
     {
       TimerOutput::Scope t(computing_timer, "vtu output fine");
+      try
+        {
+          Tools::create_data_directory(parameters.dirname_output);
+        }
+      catch (std::runtime_error &e)
+        {
+          // No exception handling here.
+        }
       output_results();
     }
 
@@ -755,7 +766,7 @@ namespace QNed
       }
 
     pcout << std::endl
-              << "===========================================" << std::endl;
+          << "===========================================" << std::endl;
   }
 
 } // end namespace QNed

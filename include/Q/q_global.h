@@ -51,8 +51,8 @@
 #include <fstream>
 #include <iostream>
 #include <map>
-#include <vector>
 #include <memory>
+#include <vector>
 
 // My Headers
 #include <Q/q_basis.h>
@@ -60,6 +60,7 @@
 #include <Q/q_post_processor.h>
 #include <config.h>
 #include <equation_data/eqn_boundary_vals.h>
+#include <my_other_tools.h>
 
 /*!
  * @namespace Q
@@ -84,7 +85,7 @@ namespace Q
      * Constructor.
      */
     QMultiscale(ParametersMs &     parameters_,
-            const std::string &parameter_filename_);
+                const std::string &parameter_filename_);
 
     /*!
      * Destructor.
@@ -137,13 +138,13 @@ namespace Q
       assemble_system();
 
     /*!
-	 * @brief Sparse direct solver.
-	 *
-	 * Apply parallel sparse direct MUMPS through the Amesos2 package of
-	 * Trilinos.
-	 */
-	void
-	  solve_direct();
+     * @brief Sparse direct solver.
+     *
+     * Apply parallel sparse direct MUMPS through the Amesos2 package of
+     * Trilinos.
+     */
+    void
+      solve_direct();
 
     /*!
      * @brief Iterative solver.
@@ -180,7 +181,7 @@ namespace Q
     MPI_Comm mpi_communicator;
 
     ParametersMs &     parameters;
-	const std::string &parameter_filename;
+    const std::string &parameter_filename;
 
     parallel::distributed::Triangulation<3> triangulation;
 

@@ -961,7 +961,8 @@ namespace RTDQ
         filename += Utilities::int_to_string(n_basis, 2);
         filename += ".vtu";
 
-        std::ofstream output(filename);
+        std::ofstream output(parameters.dirname_output + "/" +
+                             parameters.dirname_output + "/" + filename);
         data_out.write_vtu(output);
       }
 
@@ -994,13 +995,14 @@ namespace RTDQ
                              data_component_interpretation);
 
     // Postprocess
-	std::unique_ptr<RTDQ_PostProcessor> postprocessor(
-	  new RTDQ_PostProcessor(parameter_filename));
-	data_out.add_data_vector(global_solution, *postprocessor);
+    std::unique_ptr<RTDQ_PostProcessor> postprocessor(
+      new RTDQ_PostProcessor(parameter_filename));
+    data_out.add_data_vector(global_solution, *postprocessor);
 
     data_out.build_patches();
 
-    std::ofstream output(parameters.filename_global.c_str());
+    std::ofstream output(parameters.dirname_output + "/" +
+                         parameters.filename_global);
     data_out.write_vtu(output);
   }
 
@@ -1180,7 +1182,17 @@ namespace RTDQ
     // Write basis output only if desired
     set_output_flag();
     if (parameters.output_flag)
-      output_basis();
+      {
+        try
+          {
+            Tools::create_data_directory(parameters.dirname_output);
+          }
+        catch (std::runtime_error &e)
+          {
+            // No exception handling here.
+          }
+        output_basis();
+      }
 
     {
       // Free memory as much as possible

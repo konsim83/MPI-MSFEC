@@ -608,7 +608,7 @@ namespace NedRT
       Utilities::int_to_string(triangulation.locally_owned_subdomain(), 4);
     filename += ".vtu";
 
-    std::ofstream output(filename);
+    std::ofstream output(parameters.dirname_output + "/" + filename);
     data_out.write_vtu(output);
 
     // pvtu-record for all local outputs
@@ -629,7 +629,8 @@ namespace NedRT
         std::string master_file =
           parameters.filename_output + "_n_refine-" +
           Utilities::int_to_string(parameters.n_refine, 2) + ".pvtu";
-        std::ofstream master_output(master_file.c_str());
+        std::ofstream master_output(parameters.dirname_output + "/" +
+                                    master_file);
         data_out.write_pvtu_record(master_output, local_filenames);
       }
   }
@@ -646,8 +647,8 @@ namespace NedRT
       }
 
     pcout << std::endl
-              << "===========================================" << std::endl
-              << "Solving >> Ned-RT STANDARD << problem in 3D." << std::endl;
+          << "===========================================" << std::endl
+          << "Solving >> Ned-RT STANDARD << problem in 3D." << std::endl;
 
 #ifdef USE_PETSC_LA
     pcout << "Running using PETSc." << std::endl;
@@ -676,6 +677,14 @@ namespace NedRT
 
     {
       TimerOutput::Scope t(computing_timer, "vtu output");
+      try
+        {
+          Tools::create_data_directory(parameters.dirname_output);
+        }
+      catch (std::runtime_error &e)
+        {
+          // No exception handling here.
+        }
       output_results();
     }
 
@@ -686,7 +695,7 @@ namespace NedRT
       }
 
     pcout << std::endl
-              << "===========================================" << std::endl;
+          << "===========================================" << std::endl;
   }
 
 } // end namespace NedRT

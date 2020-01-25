@@ -51,7 +51,7 @@ namespace RTDQ
       get_needed_update_flags() const override;
 
   private:
-    const EquationData::DiffusionInverse_A       a_inverse;
+    const EquationData::DiffusionInverse_A a_inverse;
   };
 
 } // end namespace RTDQ
