@@ -67,6 +67,7 @@
 #include <linear_algebra/inverse_matrix.tpp>
 #include <linear_algebra/preconditioner.h>
 #include <linear_algebra/schur_complement.tpp>
+#include <my_other_tools.h>
 #include <vector_tools/my_vector_tools.h>
 
 namespace NedRT

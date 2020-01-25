@@ -169,17 +169,17 @@ namespace RTDQ
      */
     if (parameters.is_pure_neumann)
       {
-		EquationData::Boundary_A_grad_u     tensor_boundary_A_grad_u;
-		VectorFunctionFromTensorFunction<3> boundary_A_grad_u(
-		  tensor_boundary_A_grad_u);
+        EquationData::Boundary_A_grad_u     tensor_boundary_A_grad_u;
+        VectorFunctionFromTensorFunction<3> boundary_A_grad_u(
+          tensor_boundary_A_grad_u);
 
-		for (unsigned int i = 0; i < GeometryInfo<3>::faces_per_cell; ++i)
-		  VectorTools::project_boundary_values_div_conforming(
-			dof_handler,
-			/*first vector component */ 0,
-			boundary_A_grad_u,
-			/*boundary id*/ i,
-			constraints);
+        for (unsigned int i = 0; i < GeometryInfo<3>::faces_per_cell; ++i)
+          VectorTools::project_boundary_values_div_conforming(
+            dof_handler,
+            /*first vector component */ 0,
+            boundary_A_grad_u,
+            /*boundary id*/ i,
+            constraints);
       }
 
     /*
@@ -189,24 +189,24 @@ namespace RTDQ
      */
     if (parameters.is_laplace && parameters.is_pure_neumann)
       {
-    	IndexSet locally_relevant_dofs_u(relevant_partitioning[1]);
+        IndexSet locally_relevant_dofs_u(relevant_partitioning[1]);
 
-		// initially set a non-admissible value
-		unsigned int first_local_dof_u = dof_handler.n_dofs()+1;
-		if (locally_relevant_dofs_u.n_elements() > 0)
-			first_local_dof_u = locally_relevant_dofs_u.nth_index_in_set(0);
+        // initially set a non-admissible value
+        unsigned int first_local_dof_u = dof_handler.n_dofs() + 1;
+        if (locally_relevant_dofs_u.n_elements() > 0)
+          first_local_dof_u = locally_relevant_dofs_u.nth_index_in_set(0);
 
-		const unsigned int first_dof_u
-		   = dealii::Utilities::MPI::min (first_local_dof_u, mpi_communicator);
+        const unsigned int first_dof_u =
+          dealii::Utilities::MPI::min(first_local_dof_u, mpi_communicator);
 
-		/*
-		 * This constrains only the first dof on the first processor. We set it
-		 * to zero. Note that setting a point value may be problematic for an
-		 * H1-Function but in parallel adding mean value constraints should not
-		 * be done.
-		 */
-		if (first_dof_u == first_local_dof_u)
-			constraints.add_line(first_dof_u);
+        /*
+         * This constrains only the first dof on the first processor. We set it
+         * to zero. Note that setting a point value may be problematic for an
+         * H1-Function but in parallel adding mean value constraints should not
+         * be done.
+         */
+        if (first_dof_u == first_local_dof_u)
+          constraints.add_line(first_dof_u);
       }
 
     constraints.close();
@@ -562,9 +562,9 @@ namespace RTDQ
     data_out.add_data_vector(subdomain, "subdomain_id");
 
     // Postprocess
-	std::unique_ptr<RTDQ_PostProcessor> postprocessor(
-	  new RTDQ_PostProcessor(parameter_filename));
-	data_out.add_data_vector(locally_relevant_solution, *postprocessor);
+    std::unique_ptr<RTDQ_PostProcessor> postprocessor(
+      new RTDQ_PostProcessor(parameter_filename));
+    data_out.add_data_vector(locally_relevant_solution, *postprocessor);
 
     data_out.build_patches();
 
@@ -576,7 +576,7 @@ namespace RTDQ
       Utilities::int_to_string(triangulation.locally_owned_subdomain(), 4);
     filename += ".vtu";
 
-    std::ofstream output(filename);
+    std::ofstream output(parameters.dirname_output + "/" + filename);
     data_out.write_vtu(output);
 
     // pvtu-record for all local coarse outputs
@@ -598,7 +598,8 @@ namespace RTDQ
         std::string master_file =
           parameters.filename_output + "_n_refine-" +
           Utilities::int_to_string(parameters.n_refine_global, 2) + ".pvtu";
-        std::ofstream master_output(master_file.c_str());
+        std::ofstream master_output(parameters.dirname_output + "/" +
+                                    master_file);
         data_out.write_pvtu_record(master_output, local_filenames);
       }
 
@@ -612,7 +613,8 @@ namespace RTDQ
           "-" + Utilities::int_to_string(parameters.n_refine_local, 2) +
           ".pvtu";
 
-        std::ofstream master_output(filename_master.c_str());
+        std::ofstream master_output(parameters.dirname_output + "/" +
+                                    filename_master);
         data_out.write_pvtu_record(master_output, filenames_on_cell);
       }
   }
@@ -629,8 +631,9 @@ namespace RTDQ
       }
 
     pcout << std::endl
-              << "===========================================" << std::endl
-              << "Solving >> modified RT-DQ MULTISCALE << problem in 3D." << std::endl;
+          << "===========================================" << std::endl
+          << "Solving >> modified RT-DQ MULTISCALE << problem in 3D."
+          << std::endl;
 
 #ifdef USE_PETSC_LA
     pcout << "Running multiscale algorithm using PETSc." << std::endl;
@@ -659,6 +662,14 @@ namespace RTDQ
 
     {
       TimerOutput::Scope t(computing_timer, "vtu output");
+      try
+        {
+          Tools::create_data_directory(parameters.dirname_output);
+        }
+      catch (std::runtime_error &e)
+        {
+          // No exception handling here.
+        }
       output_results();
     }
 
@@ -669,7 +680,7 @@ namespace RTDQ
       }
 
     pcout << std::endl
-              << "===========================================" << std::endl;
+          << "===========================================" << std::endl;
   }
 
 } // end namespace RTDQ

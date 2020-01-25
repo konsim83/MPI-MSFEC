@@ -34,9 +34,10 @@ namespace Q
 
     unsigned int n_refine;
 
-    const bool is_laplace      = true;
+    const bool is_laplace = true;
 
     std::string filename_output;
+    std::string dirname_output;
   };
 
 
@@ -61,9 +62,10 @@ namespace Q
     unsigned int n_refine_global;
     unsigned int n_refine_local;
 
-    const bool is_laplace      = true;
+    const bool is_laplace = true;
 
     std::string filename_output;
+    std::string dirname_output;
   };
 
 
@@ -89,9 +91,10 @@ namespace Q
     unsigned int n_refine_global;
     unsigned int n_refine_local;
 
-    const bool is_laplace      = true;
+    const bool is_laplace = true;
 
     std::string filename_global;
+    std::string dirname_output;
   };
 
 } // namespace Q

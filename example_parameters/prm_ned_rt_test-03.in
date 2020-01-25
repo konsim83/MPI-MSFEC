@@ -20,6 +20,9 @@ subsection Standard method parameters
   	# name of outputfile without ending
   	set filename output = test-03_NED-RT-Std
   	
+  	# name of outputfile without ending
+  	set dirname output = data_test-03_NED-RT
+  	
   	# compare to exact solution
   	set use exact solution = false
 end
@@ -52,6 +55,9 @@ subsection Multiscale method parameters
   	
   	# name of outputfile without ending
   	set filename output = test-03_NED-RT-Ms
+  	
+  	# name of outputfile without ending
+  	set dirname output = data_test-03_NED-RT
   	
   	# compare to exact solution
   	set use exact solution = false

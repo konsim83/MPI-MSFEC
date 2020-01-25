@@ -1007,7 +1007,7 @@ namespace QNed
           }
         filename += ".vtu";
 
-        std::ofstream output(filename);
+        std::ofstream output(parameters.dirname_output + "/" + filename);
         data_out.write_vtu(output);
       }
 
@@ -1142,7 +1142,8 @@ namespace QNed
 
     data_out.build_patches();
 
-    std::ofstream output(parameters.filename_global.c_str());
+    std::ofstream output(parameters.dirname_output + "/" +
+                         parameters.filename_global);
     data_out.write_vtu(output);
   }
 
@@ -1401,7 +1402,17 @@ namespace QNed
     // Write basis output only if desired
     set_output_flag();
     if (parameters.output_flag)
-      output_basis();
+      {
+        try
+          {
+            Tools::create_data_directory(parameters.dirname_output);
+          }
+        catch (std::runtime_error &e)
+          {
+            // No exception handling here.
+          }
+        output_basis();
+      }
 
     if (true)
       {

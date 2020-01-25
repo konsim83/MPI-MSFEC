@@ -23,11 +23,12 @@ namespace Q
   }
 
   std::vector<DataComponentInterpretation::DataComponentInterpretation>
-  Q_PostProcessor::get_data_component_interpretation() const
+    Q_PostProcessor::get_data_component_interpretation() const
   {
     // grad u
     std::vector<DataComponentInterpretation::DataComponentInterpretation>
-      interpretation(3, DataComponentInterpretation::component_is_part_of_vector);
+      interpretation(3,
+                     DataComponentInterpretation::component_is_part_of_vector);
 
     // -A grad u
     interpretation.push_back(
@@ -68,9 +69,10 @@ namespace Q
 
     for (unsigned int q = 0; q < n_quadrature_points; ++q)
       {
-    	// gradients
-    	for (unsigned int d = 0; d < 3; ++d)
-        	  computed_quantities[q](d) = inputs.solution_gradients[q][d]; // assign row-wise
+        // gradients
+        for (unsigned int d = 0; d < 3; ++d)
+          computed_quantities[q](d) =
+            inputs.solution_gradients[q][d]; // assign row-wise
 
         // -A*grad u
         for (unsigned int d = 3; d < 6; ++d)
@@ -78,7 +80,7 @@ namespace Q
             computed_quantities[q](d) = 0; // erase old stuff
             for (unsigned int i = 0; i < 3; ++i)
               computed_quantities[q](d) -=
-            		  a_values[q][d - 3][i] * computed_quantities[q](i);
+                a_values[q][d - 3][i] * computed_quantities[q](i);
           }
       }
   }

@@ -57,6 +57,7 @@
 #include <equation_data/eqn_coeff_A.h>
 #include <equation_data/eqn_coeff_R.h>
 #include <equation_data/eqn_rhs.h>
+#include <my_other_tools.h>
 #include <vector_tools/my_vector_tools.h>
 
 /*!

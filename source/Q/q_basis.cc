@@ -102,14 +102,14 @@ namespace Q
 
 
   QBasis::~QBasis()
-    {
-      system_matrix.clear();
-      for (unsigned int n_basis = 0; n_basis < solution_vector.size(); ++n_basis)
-	{
-    	  constraints_vector[n_basis].clear();
-	}
-      dof_handler.clear();
-    }
+  {
+    system_matrix.clear();
+    for (unsigned int n_basis = 0; n_basis < solution_vector.size(); ++n_basis)
+      {
+        constraints_vector[n_basis].clear();
+      }
+    dof_handler.clear();
+  }
 
 
   void
@@ -199,8 +199,8 @@ namespace Q
      * Right hand side and vector to store the values.
      */
     const EquationData::RightHandSideParsed right_hand_side(
-    	      parameter_filename, /* n_components */ 1);
-    std::vector<double>               rhs_values(n_q_points);
+      parameter_filename, /* n_components */ 1);
+    std::vector<double> rhs_values(n_q_points);
 
     /*
      * Integration over cells.
@@ -466,7 +466,7 @@ namespace Q
         filename += Utilities::int_to_string(n_basis, 2);
         filename += ".vtu";
 
-        std::ofstream output(filename);
+        std::ofstream output(parameters.dirname_output + "/" + filename);
         data_out.write_vtu(output);
       }
 
@@ -500,13 +500,14 @@ namespace Q
                              data_component_interpretation);
 
     // Postprocess
-            std::unique_ptr<Q_PostProcessor> postprocessor(
-              new Q_PostProcessor(parameter_filename));
-            data_out.add_data_vector(global_solution, *postprocessor);
+    std::unique_ptr<Q_PostProcessor> postprocessor(
+      new Q_PostProcessor(parameter_filename));
+    data_out.add_data_vector(global_solution, *postprocessor);
 
     data_out.build_patches();
 
-    std::ofstream output(parameters.filename_global.c_str());
+    std::ofstream output(parameters.dirname_output + "/" +
+                         parameters.filename_global);
     data_out.write_vtu(output);
   }
 
@@ -546,32 +547,42 @@ namespace Q
         constraints_vector[index_basis].condense(system_matrix, system_rhs);
 
         // Now solve
-                        if (parameters.use_direct_solver)
-                          solve_direct(index_basis);
-                        else
-                          {
-                            solve_iterative(index_basis);
-                          }
+        if (parameters.use_direct_solver)
+          solve_direct(index_basis);
+        else
+          {
+            solve_iterative(index_basis);
+          }
       }
 
     assemble_global_element_matrix();
 
     // We need to set a filename for the global solution on the current cell
-	set_filename_global();
+    set_filename_global();
 
     // Write basis output only if desired
-	set_output_flag();
+    set_output_flag();
     if (parameters.output_flag)
-      output_basis();
+      {
+        try
+          {
+            Tools::create_data_directory(parameters.dirname_output);
+          }
+        catch (std::runtime_error &e)
+          {
+            // No exception handling here.
+          }
+        output_basis();
+      }
 
     {
-          // Free memory as much as possible
-          system_matrix.clear();
-          for (unsigned int i = 0; i < GeometryInfo<3>::vertices_per_cell; ++i)
-            {
-              constraints_vector[i].clear();
-            }
+      // Free memory as much as possible
+      system_matrix.clear();
+      for (unsigned int i = 0; i < GeometryInfo<3>::vertices_per_cell; ++i)
+        {
+          constraints_vector[i].clear();
         }
+    }
 
     if (true)
       {

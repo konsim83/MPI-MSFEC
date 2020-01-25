@@ -42,6 +42,7 @@
 #include <equation_data/eqn_exact_solution_lin.h>
 #include <equation_data/eqn_rhs.h>
 #include <functions/basis_q1.h>
+#include <my_other_tools.h>
 #include <vector_tools/my_vector_tools.h>
 
 namespace Q

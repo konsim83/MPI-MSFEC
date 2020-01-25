@@ -24,7 +24,8 @@ namespace RTDQ
   {
     // grad u = -A_inverse*sigma
     std::vector<DataComponentInterpretation::DataComponentInterpretation>
-      interpretation(3, DataComponentInterpretation::component_is_part_of_vector);
+      interpretation(3,
+                     DataComponentInterpretation::component_is_part_of_vector);
 
     return interpretation;
   }
@@ -57,14 +58,14 @@ namespace RTDQ
 
     for (unsigned int q = 0; q < n_quadrature_points; ++q)
       {
-    	// gradients
-    	for (unsigned int d = 0; d < 3; ++d)
-    	{
-    		computed_quantities[q](d) = 0; // erase old stuff
-			for (unsigned int i = 0; i < 3; ++i)
-			  computed_quantities[q](d) -=
-				a_inverse_values[q][d][i] * inputs.solution_values[q](i);
-    	}
+        // gradients
+        for (unsigned int d = 0; d < 3; ++d)
+          {
+            computed_quantities[q](d) = 0; // erase old stuff
+            for (unsigned int i = 0; i < 3; ++i)
+              computed_quantities[q](d) -=
+                a_inverse_values[q][d][i] * inputs.solution_values[q](i);
+          }
       }
   }
 
