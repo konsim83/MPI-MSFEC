@@ -242,8 +242,9 @@ namespace NedRT
       global_cell_it,
       /*verbose =*/false);
 
+    Functions::ZeroFunction<3> zero_fun(3);
     ShapeFun::ShapeFunctionConcatinateVector<3> std_shape_function(
-      std_shape_function_Ned, std_shape_function_Ned_curl);
+      std_shape_function_Ned, zero_fun);
 
     std::vector<types::global_dof_index> dofs_per_block(2);
     DoFTools::count_dofs_per_block(dof_handler, dofs_per_block);
@@ -407,6 +408,14 @@ namespace NedRT
     std::vector<double>       diffusion_b_values(n_q_points);
     std::vector<double>       reaction_rate_values(n_q_points);
 
+    ////////////////////////////////////////
+    ShapeFun::ShapeFunctionVectorCurl<3> std_shape_function_Ned_curl(
+          fe.base_element(0),
+          global_cell_it,
+          /*verbose =*/false);
+    std::vector<std::vector<Tensor<1, 3>>> local_rhs_values(GeometryInfo<3>::lines_per_cell, std::vector<Tensor<1, 3>>(n_q_points));
+    ////////////////////////////////////////
+
     const FEValuesExtractors::Vector curl(/* first_vector_component */ 0);
     const FEValuesExtractors::Vector flux(/* first_vector_component */ 3);
 
@@ -425,6 +434,15 @@ namespace NedRT
         for (unsigned int n_basis = 0; n_basis < length_system_basis; ++n_basis)
           {
             local_rhs_v[n_basis] = 0;
+
+            if ((n_basis < GeometryInfo<3>::lines_per_cell)
+            		&& (parameters.full_rhs))
+			  {
+				std_shape_function_Ned_curl.set_shape_fun_index(n_basis);
+
+				std_shape_function_Ned_curl.tensor_value_list(fe_values.get_quadrature_points(),
+																   local_rhs_values[n_basis]);
+			  }
           }
 
         right_hand_side->tensor_value_list(fe_values.get_quadrature_points(),
@@ -477,16 +495,11 @@ namespace NedRT
                 local_rhs(i) += v_i * rhs_values[q] * fe_values.JxW(q);
 
                 // Only for use in local solving.
-                for (unsigned int n_basis = 0; n_basis < length_system_basis;
+                if (parameters.full_rhs)
+                for (unsigned int n_basis = 0; n_basis < GeometryInfo<3>::lines_per_cell;
                      ++n_basis)
                   {
-                    if (n_basis < GeometryInfo<3>::lines_per_cell)
-                      {
-                        local_rhs_v[n_basis](i) += 0;
-                      }
-                    else
-                      // This is rhs for div.
-                      local_rhs_v[n_basis](i) += 0;
+                	local_rhs_v[n_basis](i) += v_i * local_rhs_values[n_basis][q] * fe_values.JxW(q);
                   }
               } // end for ++i
           }     // end for ++q

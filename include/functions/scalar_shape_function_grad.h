@@ -69,6 +69,16 @@ namespace ShapeFun
                         std::vector<Vector<double>> &  values) const override;
 
     /**
+         * Evaluate shape function at point list <code> points <\code>
+         *
+         * @param[in] points
+         * @param[out] values
+         */
+        void
+          tensor_value_list(const std::vector<Point<dim>> &points,
+                            std::vector<Tensor<1, dim>> &  values) const;
+
+    /**
      * Set pointer to current cell (actually and iterator).
      *
      * @param cell

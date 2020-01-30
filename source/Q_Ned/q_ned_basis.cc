@@ -227,7 +227,7 @@ namespace QNed
 
     if (parameters.verbose)
       {
-        std::cout << "	Setting up dofs for H(div) part.....";
+        std::cout << "	Setting up dofs for H(grad) part.....";
 
         timer.restart();
       }
@@ -240,8 +240,12 @@ namespace QNed
       global_cell_it,
       /*verbose =*/false);
 
-    ShapeFun::ShapeFunctionConcatinateVector<3> std_shape_function(
-      std_shape_function_h1, std_shape_function_h1_grad);
+    Functions::ZeroFunction<3> zero_fun_scalar(1);
+    Functions::ZeroFunction<3> zero_fun_vector(3);
+    ShapeFun::ShapeFunctionConcatinateVector<3> std_shape_function_1(
+      std_shape_function_h1, zero_fun_vector);
+    ShapeFun::ShapeFunctionConcatinateVector<3> std_shape_function_2(
+          zero_fun_scalar, std_shape_function_h1_grad);
 
     FEValuesExtractors::Scalar q1(0);
     ComponentMask              q1_mask = fe.component_mask(q1);
@@ -260,20 +264,17 @@ namespace QNed
         std_shape_function_h1.set_shape_fun_index(n_basis);
         std_shape_function_h1_grad.set_shape_fun_index(n_basis);
 
-        for (unsigned int i = 0; i < GeometryInfo<3>::faces_per_cell; ++i)
-          {
-            VectorTools::interpolate_boundary_values(dof_handler,
-                                                     /*boundary id*/ i,
-                                                     std_shape_function,
-                                                     constraints_h1_v[n_basis],
-                                                     q1_mask);
-            VectorTools::project_boundary_values_curl_conforming(
-              dof_handler,
-              /*first vector component */ 1,
-              std_shape_function,
-              /*boundary id*/ i,
-              constraints_h1_v[n_basis]);
-          }
+        VectorTools::interpolate_boundary_values(dof_handler,
+												 /*boundary id*/ 0,
+												 std_shape_function_1,
+												 constraints_h1_v[n_basis],
+												 q1_mask);
+		VectorTools::project_boundary_values_curl_conforming(
+		  dof_handler,
+		  /*first vector component */ 1,
+		  std_shape_function_2,
+		  /*boundary id*/ 0,
+		  constraints_h1_v[n_basis]);
 
         constraints_h1_v[n_basis].close();
       }
@@ -331,21 +332,19 @@ namespace QNed
         FEValuesExtractors::Scalar q1(0);
         ComponentMask              q1_mask = fe.component_mask(q1);
 
-        for (unsigned int i = 0; i < GeometryInfo<3>::faces_per_cell; ++i)
-          {
-            VectorTools::interpolate_boundary_values(
-              dof_handler,
-              /*boundary id*/ i,
-              Functions::ZeroFunction<3>(4),
-              constraints_curl_v[n_basis],
-              q1_mask);
-            VectorTools::project_boundary_values_curl_conforming(
-              dof_handler,
-              /*first vector component */ 1,
-              std_shape_function,
-              /*boundary id*/ i,
-              constraints_curl_v[n_basis]);
-          }
+
+	VectorTools::interpolate_boundary_values(
+	  dof_handler,
+	  /*boundary id*/ 0,
+	  Functions::ZeroFunction<3>(4),
+	  constraints_curl_v[n_basis],
+	  q1_mask);
+	VectorTools::project_boundary_values_curl_conforming(
+	  dof_handler,
+	  /*first vector component */ 1,
+	  std_shape_function,
+	  /*boundary id*/ 0,
+	  constraints_curl_v[n_basis]);
 
         constraints_curl_v[n_basis].close();
       }
@@ -418,6 +417,14 @@ namespace QNed
     std::vector<double>       diffusion_inverse_b_values(n_q_points);
     std::vector<double>       reaction_rate_values(n_q_points);
 
+    ////////////////////////////////////////
+    ShapeFun::ShapeFunctionScalarGrad<3> std_shape_function_h1_grad(
+          fe.base_element(0),
+          global_cell_it,
+          /*verbose =*/false);
+    std::vector<std::vector<Tensor<1, 3>>> local_rhs_values(GeometryInfo<3>::lines_per_cell, std::vector<Tensor<1, 3>>(n_q_points));
+    ////////////////////////////////////////
+
     const FEValuesExtractors::Scalar q1(/* first_vector_component */ 0);
     const FEValuesExtractors::Vector curl(/* first_vector_component */ 1);
 
@@ -436,6 +443,15 @@ namespace QNed
         for (unsigned int n_basis = 0; n_basis < length_system_basis; ++n_basis)
           {
             local_rhs_v[n_basis] = 0;
+
+            if ((n_basis < GeometryInfo<3>::vertices_per_cell)
+            		&& (parameters.full_rhs))
+			  {
+            	std_shape_function_h1_grad.set_shape_fun_index(n_basis);
+
+            	std_shape_function_h1_grad.tensor_value_list(fe_values.get_quadrature_points(),
+																   local_rhs_values[n_basis]);
+			  }
           }
 
         right_hand_side->tensor_value_list(fe_values.get_quadrature_points(),
@@ -488,16 +504,12 @@ namespace QNed
                 local_rhs(i) += v_i * rhs_values[q] * fe_values.JxW(q);
 
                 // Only for use in local solving.
-                for (unsigned int n_basis = 0; n_basis < length_system_basis;
+                if (parameters.full_rhs)
+                for (unsigned int n_basis = 0;
+                		n_basis < GeometryInfo<3>::vertices_per_cell;
                      ++n_basis)
                   {
-                    if (n_basis < GeometryInfo<3>::lines_per_cell)
-                      {
-                        local_rhs_v[n_basis](i) += 0;
-                      }
-                    else
-                      // This is rhs for div.
-                      local_rhs_v[n_basis](i) += 0;
+                	local_rhs_v[n_basis](i) += v_i * local_rhs_values[n_basis][q] * fe_values.JxW(q);
                   }
               } // end for ++i
           }     // end for ++q
