@@ -92,7 +92,7 @@ namespace RTDQ
     unsigned int n_refine_local;
 
     const bool is_laplace            = true;
-    const bool fast_constraint_setup = false; // false is safer but slower
+    const bool fast_constraint_setup = true; // false is safer but way slower
 
     std::string filename_global;
     std::string dirname_output;

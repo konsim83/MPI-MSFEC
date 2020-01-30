@@ -91,6 +91,8 @@ namespace NedRT
     std::string dirname_output;
 
     bool use_exact_solution;
+
+    const bool full_rhs = false;
   };
 
 } // namespace NedRT

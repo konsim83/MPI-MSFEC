@@ -333,30 +333,20 @@ namespace RTDQ
                       {
                         if (cell->at_boundary(face_n))
                           {
+                        	cell->face(face_n)->get_dof_indices(
+                        	                                  local_dof_face_indices);
                             if (cell->face(face_n)->boundary_id() == n_basis)
                               {
-                                cell->face(face_n)->get_dof_indices(
-                                  local_dof_face_indices);
                                 for (unsigned int i = 0; i < dofs_per_face; ++i)
                                   {
-                                    const double dof_scale =
-                                      face_measure.at(n_basis) /
-                                      std::pow(2,
-                                               parameters.n_refine_local * 2);
-                                    //                                    const
-                                    //                                    double
-                                    //                                    dof_scale
-                                    //                                    =
-                                    //                                    cell->face(face_n)->measure();
+                                    const double dof_scale = cell->face(face_n)->measure()/face_measure.at(n_basis);
+
                                     constraints_div_v[n_basis].add_line(
                                       local_dof_face_indices.at(i));
                                     constraints_div_v[n_basis]
                                       .set_inhomogeneity(
                                         local_dof_face_indices.at(i),
                                         dof_scale);
-                                    std::cout
-                                      << cell->face(face_n)->boundary_id()
-                                      << "  ";
                                   }
                               }
                             else
@@ -961,8 +951,7 @@ namespace RTDQ
         filename += Utilities::int_to_string(n_basis, 2);
         filename += ".vtu";
 
-        std::ofstream output(parameters.dirname_output + "/" +
-                             parameters.dirname_output + "/" + filename);
+        std::ofstream output(parameters.dirname_output + "/" + filename);
         data_out.write_vtu(output);
       }
 

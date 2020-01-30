@@ -1,5 +1,5 @@
-#ifndef INCLUDE_Q_NED_Q_NED_PARAMETERS_H_
-#define INCLUDE_Q_NED_Q_NED_PARAMETERS_H_
+#ifndef INCLUDE_Q_NED_PARAMETERS_H_
+#define INCLUDE_Q_NED_PARAMETERS_H_
 
 #include <deal.II/base/parameter_handler.h>
 #include <deal.II/grid/cell_id.h>
@@ -91,8 +91,10 @@ namespace QNed
     std::string dirname_output;
 
     bool use_exact_solution;
+
+    const bool full_rhs = false;
   };
 
 } // namespace QNed
 
-#endif /* INCLUDE_Q_NED_Q_NED_PARAMETERS_H_ */
+#endif /* INCLUDE_Q_NED_PARAMETERS_H_ */
