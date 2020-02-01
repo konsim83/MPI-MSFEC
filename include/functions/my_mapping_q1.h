@@ -34,14 +34,30 @@ namespace ShapeFun
 
     void
       map_real_to_unit_cell(const std::vector<Point<dim>> &points_in,
-                            std::vector<Point<dim>> &points_out) const;
+                            std::vector<Point<dim>> &      points_out) const;
 
     Point<dim>
       map_unit_cell_to_real(const Point<dim> &p) const;
 
     void
       map_unit_cell_to_real(const std::vector<Point<dim>> &points_in,
-                            std::vector<Point<dim>> &points_out) const;
+                            std::vector<Point<dim>> &      points_out) const;
+
+    FullMatrix<double>
+      jacobian_map_real_to_unit_cell(const Point<dim> &p) const;
+
+    void
+      jacobian_map_real_to_unit_cell(
+        const std::vector<Point<dim>> &  points_in,
+        std::vector<FullMatrix<double>> &jacobian_out) const;
+
+    FullMatrix<double>
+      jacobian_map_unit_cell_to_real(const Point<dim> &p) const;
+
+    void
+      jacobian_map_unit_cell_to_real(
+        const std::vector<Point<dim>> &  points_in,
+        std::vector<FullMatrix<double>> &jacobian_out) const;
 
   private:
     /*!
@@ -72,7 +88,7 @@ namespace ShapeFun
   void
     MyMappingQ1<2>::map_real_to_unit_cell(
       const std::vector<Point<2>> &points_in,
-      std::vector<Point<2>> &points_out) const;
+      std::vector<Point<2>> &      points_out) const;
 
   template <>
   Point<2>
@@ -82,7 +98,27 @@ namespace ShapeFun
   void
     MyMappingQ1<2>::map_unit_cell_to_real(
       const std::vector<Point<2>> &points_in,
-      std::vector<Point<2>> &points_out) const;
+      std::vector<Point<2>> &      points_out) const;
+
+  template <>
+  FullMatrix<double>
+    MyMappingQ1<2>::jacobian_map_real_to_unit_cell(const Point<2> &p) const;
+
+  template <>
+  void
+    MyMappingQ1<2>::jacobian_map_real_to_unit_cell(
+      const std::vector<Point<2>> &    points_in,
+      std::vector<FullMatrix<double>> &jacobian_out) const;
+
+  template <>
+  FullMatrix<double>
+    MyMappingQ1<2>::jacobian_map_unit_cell_to_real(const Point<2> &p) const;
+
+  template <>
+  void
+    MyMappingQ1<2>::jacobian_map_unit_cell_to_real(
+      const std::vector<Point<2>> &    points_in,
+      std::vector<FullMatrix<double>> &jacobian_out) const;
 
   /*
    * 3D declarations of specializations
@@ -99,7 +135,7 @@ namespace ShapeFun
   void
     MyMappingQ1<3>::map_real_to_unit_cell(
       const std::vector<Point<3>> &points_in,
-      std::vector<Point<3>> &points_out) const;
+      std::vector<Point<3>> &      points_out) const;
 
   template <>
   Point<3>
@@ -109,7 +145,27 @@ namespace ShapeFun
   void
     MyMappingQ1<3>::map_unit_cell_to_real(
       const std::vector<Point<3>> &points_in,
-      std::vector<Point<3>> &points_out) const;
+      std::vector<Point<3>> &      points_out) const;
+
+  template <>
+  FullMatrix<double>
+    MyMappingQ1<3>::jacobian_map_real_to_unit_cell(const Point<3> &p) const;
+
+  template <>
+  void
+    MyMappingQ1<3>::jacobian_map_real_to_unit_cell(
+      const std::vector<Point<3>> &    points_in,
+      std::vector<FullMatrix<double>> &jacobian_out) const;
+
+  template <>
+  FullMatrix<double>
+    MyMappingQ1<3>::jacobian_map_unit_cell_to_real(const Point<3> &p) const;
+
+  template <>
+  void
+    MyMappingQ1<3>::jacobian_map_unit_cell_to_real(
+      const std::vector<Point<3>> &    points_in,
+      std::vector<FullMatrix<double>> &jacobian_out) const;
 
 
   /*

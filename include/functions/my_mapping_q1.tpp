@@ -96,7 +96,7 @@ namespace ShapeFun
   Point<2>
     MyMappingQ1<2>::map_unit_cell_to_real(const Point<2> &p) const
   {
-	  Point<2> p_out;
+    Point<2> p_out;
 
     for (unsigned d = 0; d < 2; ++d)
       p_out(d) = coeff_matrix(d, 0) + coeff_matrix(d, 1) * p(0) +
@@ -110,7 +110,7 @@ namespace ShapeFun
   void
     MyMappingQ1<2>::map_real_to_unit_cell(
       const std::vector<Point<2>> &points_in,
-      std::vector<Point<2>> &points_out) const
+      std::vector<Point<2>> &      points_out) const
   {
     Assert(points_in.size() == points_out.size(),
            ExcDimensionMismatch(points_in.size(), points_out.size()));
@@ -131,7 +131,7 @@ namespace ShapeFun
   void
     MyMappingQ1<2>::map_unit_cell_to_real(
       const std::vector<Point<2>> &points_in,
-      std::vector<Point<2>> &points_out) const
+      std::vector<Point<2>> &      points_out) const
   {
     Assert(points_in.size() == points_out.size(),
            ExcDimensionMismatch(points_in.size(), points_out.size()));
@@ -143,6 +143,83 @@ namespace ShapeFun
             coeff_matrix(d, 0) + coeff_matrix(d, 1) * points_in[i](0) +
             coeff_matrix(d, 2) * points_in[i](1) +
             coeff_matrix(d, 3) * points_in[i](0) * points_in[i](1);
+      }
+  }
+
+
+  template <>
+  FullMatrix<double>
+    MyMappingQ1<2>::jacobian_map_real_to_unit_cell(const Point<2> &p) const
+  {
+    FullMatrix<double> jacobian(2, 2);
+
+    jacobian(0, 0) =
+      coeff_matrix_inverse(0, 1) + coeff_matrix_inverse(0, 3) * p(1);
+    jacobian(0, 1) =
+      coeff_matrix_inverse(0, 2) + coeff_matrix_inverse(0, 3) * p(0);
+    jacobian(1, 0) =
+      coeff_matrix_inverse(1, 1) + coeff_matrix_inverse(1, 3) * p(1);
+    jacobian(1, 1) =
+      coeff_matrix_inverse(1, 2) + coeff_matrix_inverse(1, 3) * p(0);
+
+    return jacobian;
+  }
+
+  template <>
+  void
+    MyMappingQ1<2>::jacobian_map_real_to_unit_cell(
+      const std::vector<Point<2>> &    points_in,
+      std::vector<FullMatrix<double>> &jacobian_out) const
+  {
+    Assert(points_in.size() == points_out.size(),
+           ExcDimensionMismatch(points_in.size(), jacobian_out.size()));
+
+    for (unsigned int i = 0; i < points_in.size(); ++i)
+      {
+        jacobian_out[i](0, 0) = coeff_matrix_inverse(0, 1) +
+                                coeff_matrix_inverse(0, 3) * points_in[i](1);
+        jacobian_out[i](0, 1) = coeff_matrix_inverse(0, 2) +
+                                coeff_matrix_inverse(0, 3) * points_in[i](0);
+        jacobian_out[i](1, 0) = coeff_matrix_inverse(1, 1) +
+                                coeff_matrix_inverse(1, 3) * points_in[i](1);
+        jacobian_out[i](1, 1) = coeff_matrix_inverse(1, 2) +
+                                coeff_matrix_inverse(1, 3) * points_in[i](0);
+      }
+  }
+
+  template <>
+  FullMatrix<double>
+    MyMappingQ1<2>::jacobian_map_unit_cell_to_real(const Point<2> &p) const
+  {
+    FullMatrix<double> jacobian(2, 2);
+
+    jacobian(0, 0) = coeff_matrix(0, 1) + coeff_matrix(0, 3) * p(1);
+    jacobian(0, 1) = coeff_matrix(0, 2) + coeff_matrix(0, 3) * p(0);
+    jacobian(1, 0) = coeff_matrix(1, 1) + coeff_matrix(1, 3) * p(1);
+    jacobian(1, 1) = coeff_matrix(1, 2) + coeff_matrix(1, 3) * p(0);
+
+    return jacobian;
+  }
+
+  template <>
+  void
+    MyMappingQ1<2>::jacobian_map_unit_cell_to_real(
+      const std::vector<Point<2>> &    points_in,
+      std::vector<FullMatrix<double>> &jacobian_out) const
+  {
+    Assert(points_in.size() == points_out.size(),
+           ExcDimensionMismatch(points_in.size(), jacobian_out.size()));
+
+    for (unsigned int i = 0; i < points_in.size(); ++i)
+      {
+        jacobian_out[i](0, 0) =
+          coeff_matrix(0, 1) + coeff_matrix(0, 3) * points_in[i](1);
+        jacobian_out[i](0, 1) =
+          coeff_matrix(0, 2) + coeff_matrix(0, 3) * points_in[i](0);
+        jacobian_out[i](1, 0) =
+          coeff_matrix(1, 1) + coeff_matrix(1, 3) * points_in[i](1);
+        jacobian_out[i](1, 1) =
+          coeff_matrix(1, 2) + coeff_matrix(1, 3) * points_in[i](0);
       }
   }
 
@@ -260,7 +337,7 @@ namespace ShapeFun
   void
     MyMappingQ1<3>::map_real_to_unit_cell(
       const std::vector<Point<3>> &points_in,
-      std::vector<Point<3>> &points_out) const
+      std::vector<Point<3>> &      points_out) const
   {
     Assert(points_in.size() == points_out.size(),
            ExcDimensionMismatch(points_in.size(), points_out.size()));
@@ -286,7 +363,7 @@ namespace ShapeFun
   void
     MyMappingQ1<3>::map_unit_cell_to_real(
       const std::vector<Point<3>> &points_in,
-      std::vector<Point<3>> &points_out) const
+      std::vector<Point<3>> &      points_out) const
   {
     Assert(points_in.size() == points_out.size(),
            ExcDimensionMismatch(points_in.size(), points_out.size()));
@@ -303,6 +380,117 @@ namespace ShapeFun
             coeff_matrix(d, 6) * points_in[i](0) * points_in[i](2) +
             coeff_matrix(d, 7) * points_in[i](0) * points_in[i](1) *
               points_in[i](2);
+      }
+  }
+
+
+  template <>
+  FullMatrix<double>
+    MyMappingQ1<3>::jacobian_map_real_to_unit_cell(const Point<3> &p) const
+  {
+    FullMatrix<double> jacobian(3, 3);
+
+    for (unsigned int d = 0; d < 3; ++d)
+      {
+        jacobian(d, 0) = coeff_matrix_inverse(d, 1) +
+                         coeff_matrix_inverse(d, 4) * p(1) +
+                         coeff_matrix_inverse(d, 6) * p(2) +
+                         coeff_matrix_inverse(d, 7) * p(1) * p(2);
+        jacobian(d, 1) = coeff_matrix_inverse(d, 2) +
+                         coeff_matrix_inverse(d, 4) * p(0) +
+                         coeff_matrix_inverse(d, 5) * p(2) +
+                         coeff_matrix_inverse(d, 7) * p(0) * p(2);
+        jacobian(d, 2) = coeff_matrix_inverse(d, 3) +
+                         coeff_matrix_inverse(d, 5) * p(2) +
+                         coeff_matrix_inverse(d, 6) * p(1) +
+                         coeff_matrix_inverse(d, 7) * p(1) * p(2);
+      }
+
+    return jacobian;
+  }
+
+  template <>
+  void
+    MyMappingQ1<3>::jacobian_map_real_to_unit_cell(
+      const std::vector<Point<3>> &    points_in,
+      std::vector<FullMatrix<double>> &jacobian_out) const
+  {
+    Assert(points_in.size() == points_out.size(),
+           ExcDimensionMismatch(points_in.size(), jacobian_out.size()));
+
+    for (unsigned int i = 0; i < points_in.size(); ++i)
+      {
+        for (unsigned int d = 0; d < 3; ++d)
+          {
+            jacobian_out[i](d, 0) =
+              coeff_matrix_inverse(d, 1) +
+              coeff_matrix_inverse(d, 4) * points_in[i](1) +
+              coeff_matrix_inverse(d, 6) * points_in[i](2) +
+              coeff_matrix_inverse(d, 7) * points_in[i](1) * points_in[i](2);
+            jacobian_out[i](d, 1) =
+              coeff_matrix_inverse(d, 2) +
+              coeff_matrix_inverse(d, 4) * points_in[i](0) +
+              coeff_matrix_inverse(d, 5) * points_in[i](2) +
+              coeff_matrix_inverse(d, 7) * points_in[i](0) * points_in[i](2);
+            jacobian_out[i](d, 2) =
+              coeff_matrix_inverse(d, 3) +
+              coeff_matrix_inverse(d, 5) * points_in[i](2) +
+              coeff_matrix_inverse(d, 6) * points_in[i](1) +
+              coeff_matrix_inverse(d, 7) * points_in[i](1) * points_in[i](2);
+          }
+      }
+  }
+
+  template <>
+  FullMatrix<double>
+    MyMappingQ1<3>::jacobian_map_unit_cell_to_real(const Point<3> &p) const
+  {
+    FullMatrix<double> jacobian(3, 3);
+
+    for (unsigned int d = 0; d < 3; ++d)
+      {
+        jacobian(d, 0) = coeff_matrix(d, 1) + coeff_matrix(d, 4) * p(1) +
+                         coeff_matrix(d, 6) * p(2) +
+                         coeff_matrix(d, 7) * p(1) * p(2);
+        jacobian(d, 1) = coeff_matrix(d, 2) + coeff_matrix(d, 4) * p(0) +
+                         coeff_matrix(d, 5) * p(2) +
+                         coeff_matrix(d, 7) * p(0) * p(2);
+        jacobian(d, 2) = coeff_matrix(d, 3) + coeff_matrix(d, 5) * p(2) +
+                         coeff_matrix(d, 6) * p(1) +
+                         coeff_matrix(d, 7) * p(1) * p(2);
+      }
+
+    return jacobian;
+
+    return jacobian;
+  }
+
+  template <>
+  void
+    MyMappingQ1<3>::jacobian_map_unit_cell_to_real(
+      const std::vector<Point<3>> &    points_in,
+      std::vector<FullMatrix<double>> &jacobian_out) const
+  {
+    Assert(points_in.size() == points_out.size(),
+           ExcDimensionMismatch(points_in.size(), jacobian_out.size()));
+
+    for (unsigned int i = 0; i < points_in.size(); ++i)
+      {
+        for (unsigned int d = 0; d < 3; ++d)
+          {
+            jacobian_out[i](d, 0) =
+              coeff_matrix(d, 1) + coeff_matrix(d, 4) * points_in[i](1) +
+              coeff_matrix(d, 6) * points_in[i](2) +
+              coeff_matrix(d, 7) * points_in[i](1) * points_in[i](2);
+            jacobian_out[i](d, 1) =
+              coeff_matrix(d, 2) + coeff_matrix(d, 4) * points_in[i](0) +
+              coeff_matrix(d, 5) * points_in[i](2) +
+              coeff_matrix(d, 7) * points_in[i](0) * points_in[i](2);
+            jacobian_out[i](d, 2) =
+              coeff_matrix(d, 3) + coeff_matrix(d, 5) * points_in[i](2) +
+              coeff_matrix(d, 6) * points_in[i](1) +
+              coeff_matrix(d, 7) * points_in[i](1) * points_in[i](2);
+          }
       }
   }
 
