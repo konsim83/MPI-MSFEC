@@ -333,13 +333,15 @@ namespace RTDQ
                       {
                         if (cell->at_boundary(face_n))
                           {
-                        	cell->face(face_n)->get_dof_indices(
-                        	                                  local_dof_face_indices);
+                            cell->face(face_n)->get_dof_indices(
+                              local_dof_face_indices);
                             if (cell->face(face_n)->boundary_id() == n_basis)
                               {
                                 for (unsigned int i = 0; i < dofs_per_face; ++i)
                                   {
-                                    const double dof_scale = cell->face(face_n)->measure()/face_measure.at(n_basis);
+                                    const double dof_scale =
+                                      cell->face(face_n)->measure() /
+                                      face_measure.at(n_basis);
 
                                     constraints_div_v[n_basis].add_line(
                                       local_dof_face_indices.at(i));

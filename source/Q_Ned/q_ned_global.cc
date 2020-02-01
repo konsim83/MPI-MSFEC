@@ -141,7 +141,7 @@ namespace QNed
       BlockDynamicSparsityPattern dsp(dofs_per_block, dofs_per_block);
 
       DoFTools::make_sparsity_pattern(dof_handler, dsp, constraints, false);
-		SparsityTools::distribute_sparsity_pattern(
+      SparsityTools::distribute_sparsity_pattern(
         dsp,
         dof_handler.locally_owned_dofs_per_processor(),
         mpi_communicator,

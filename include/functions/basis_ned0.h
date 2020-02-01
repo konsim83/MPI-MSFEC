@@ -1,5 +1,5 @@
-#ifndef INCLUDE_BASIS_Q1_GRAD_H_
-#define INCLUDE_BASIS_Q1_GRAD_H_
+#ifndef INCLUDE_BASIS_NED0_H_
+#define INCLUDE_BASIS_NED0_H_
 
 // Deal.ii
 #include <deal.II/base/function.h>
@@ -21,29 +21,29 @@ namespace ShapeFun
   using namespace dealii;
 
   /*!
-   * @class BasisQ1Grad
+   * @class BasisNed0
    *
-   * Class implements gradients of scalar \f$Q_1\f$-basis functions for a given
+   * Class implements \f$Ned_0\f$-basis functions for a given
    * quadrilateral.
    */
   template <int dim>
-  class BasisQ1Grad : public Function<dim>
+  class BasisNed0 : public Function<dim>
   {
   public:
-    BasisQ1Grad() = delete;
+    BasisNed0() = delete;
 
     /*!
      * Constructor.
      * @param cell
      */
-    BasisQ1Grad(const typename Triangulation<dim>::active_cell_iterator &cell);
+    BasisNed0(const typename Triangulation<dim>::active_cell_iterator &cell);
 
     /*!
      * Copy constructor.
      *
      * @param basis
      */
-    BasisQ1Grad(const BasisQ1Grad<dim> &);
+    BasisNed0(const BasisNed0<dim> &);
 
     /*!
      * Set the index of the basis function to be evaluated.
@@ -54,8 +54,8 @@ namespace ShapeFun
       set_index(unsigned int index);
 
     /*!
-     * Evaluate a basis function gradient with a preset index at one given point
-     * in 2D or 3D.
+     * Evaluate a basis function with a preset index at one given point in 2D or
+     * 3D.
      *
      * @param p
      * @param component
@@ -64,8 +64,8 @@ namespace ShapeFun
       vector_value(const Point<dim> &p, Vector<double> &value) const override;
 
     /*!
-     * Evaluate a basis function gradient with a preset index at given point
-     * list in 2D and 3D.
+     * Evaluate a basis function with a preset index at given point list in 2D
+     * and 3D.
      *
      * @param p
      * @param component
@@ -88,39 +88,35 @@ namespace ShapeFun
 
   // declare specializations
   template <>
-  BasisQ1Grad<2>::BasisQ1Grad(
+  BasisNed0<2>::BasisNed0(
     const typename Triangulation<2>::active_cell_iterator &cell);
 
   template <>
-  BasisQ1Grad<3>::BasisQ1Grad(
+  BasisNed0<3>::BasisNed0(
     const typename Triangulation<3>::active_cell_iterator &cell);
 
   template <>
   void
-    BasisQ1Grad<2>::vector_value(const Point<2> &p,
-                                 Vector<double> &value) const;
+    BasisNed0<2>::vector_value(const Point<2> &p, Vector<double> &value) const;
 
   template <>
   void
-    BasisQ1Grad<3>::vector_value(const Point<3> &p,
-                                 Vector<double> &value) const;
+    BasisNed0<3>::vector_value(const Point<3> &p, Vector<double> &value) const;
 
   template <>
   void
-    BasisQ1Grad<2>::vector_value_list(
-      const std::vector<Point<2>> &points,
-      std::vector<Vector<double>> &values) const;
+    BasisNed0<2>::vector_value_list(const std::vector<Point<2>> &points,
+                                    std::vector<Vector<double>> &values) const;
 
   template <>
   void
-    BasisQ1Grad<3>::vector_value_list(
-      const std::vector<Point<3>> &points,
-      std::vector<Vector<double>> &values) const;
+    BasisNed0<3>::vector_value_list(const std::vector<Point<3>> &points,
+                                    std::vector<Vector<double>> &values) const;
 
   // exernal template instantiations
-  extern template class BasisQ1Grad<2>;
-  extern template class BasisQ1Grad<3>;
+  extern template class BasisNed0<2>;
+  extern template class BasisNed0<3>;
 
 } // namespace ShapeFun
 
-#endif /* INCLUDE_BASIS_Q1_GRAD_H_ */
+#endif /* INCLUDE_BASIS_NED0_H_ */

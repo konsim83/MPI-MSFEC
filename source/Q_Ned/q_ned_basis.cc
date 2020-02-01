@@ -232,15 +232,15 @@ namespace QNed
         timer.restart();
       }
 
-    ShapeFun::BasisQ1<3> std_shape_function_h1(global_cell_it);\
+    ShapeFun::BasisQ1<3>       std_shape_function_h1(global_cell_it);
     Functions::ZeroFunction<3> zero_fun_vector(3);
     ShapeFun::ShapeFunctionConcatinateVector<3> std_shape_function_1(
-          std_shape_function_h1, zero_fun_vector);
+      std_shape_function_h1, zero_fun_vector);
 
     Functions::ZeroFunction<3> zero_fun_scalar(1);
-    ShapeFun::BasisQ1Grad<3> std_shape_function_h1_grad(global_cell_it);
+    ShapeFun::BasisQ1Grad<3>   std_shape_function_h1_grad(global_cell_it);
     ShapeFun::ShapeFunctionConcatinateVector<3> std_shape_function_2(
-              zero_fun_scalar, std_shape_function_h1_grad);
+      zero_fun_scalar, std_shape_function_h1_grad);
 
     FEValuesExtractors::Scalar q1(0);
     ComponentMask              q1_mask = fe.component_mask(q1);
@@ -260,16 +260,16 @@ namespace QNed
         std_shape_function_h1_grad.set_index(n_basis);
 
         VectorTools::interpolate_boundary_values(dof_handler,
-												 /*boundary id*/ 0,
-												 std_shape_function_1,
-												 constraints_h1_v[n_basis],
-												 q1_mask);
-		VectorTools::project_boundary_values_curl_conforming(
-		  dof_handler,
-		  /*first vector component */ 1,
-		  std_shape_function_2,
-		  /*boundary id*/ 0,
-		  constraints_h1_v[n_basis]);
+                                                 /*boundary id*/ 0,
+                                                 std_shape_function_1,
+                                                 constraints_h1_v[n_basis],
+                                                 q1_mask);
+        VectorTools::project_boundary_values_curl_conforming(
+          dof_handler,
+          /*first vector component */ 1,
+          std_shape_function_2,
+          /*boundary id*/ 0,
+          constraints_h1_v[n_basis]);
 
         constraints_h1_v[n_basis].close();
       }
@@ -328,18 +328,17 @@ namespace QNed
         ComponentMask              q1_mask = fe.component_mask(q1);
 
 
-	VectorTools::interpolate_boundary_values(
-	  dof_handler,
-	  /*boundary id*/ 0,
-	  Functions::ZeroFunction<3>(4),
-	  constraints_curl_v[n_basis],
-	  q1_mask);
-	VectorTools::project_boundary_values_curl_conforming(
-	  dof_handler,
-	  /*first vector component */ 1,
-	  std_shape_function,
-	  /*boundary id*/ 0,
-	  constraints_curl_v[n_basis]);
+        VectorTools::interpolate_boundary_values(dof_handler,
+                                                 /*boundary id*/ 0,
+                                                 Functions::ZeroFunction<3>(4),
+                                                 constraints_curl_v[n_basis],
+                                                 q1_mask);
+        VectorTools::project_boundary_values_curl_conforming(
+          dof_handler,
+          /*first vector component */ 1,
+          std_shape_function,
+          /*boundary id*/ 0,
+          constraints_curl_v[n_basis]);
 
         constraints_curl_v[n_basis].close();
       }
@@ -414,10 +413,11 @@ namespace QNed
 
     ////////////////////////////////////////
     ShapeFun::ShapeFunctionScalarGrad<3> std_shape_function_h1_grad(
-          fe.base_element(0),
-          global_cell_it,
-          /*verbose =*/false);
-    std::vector<std::vector<Tensor<1, 3>>> local_rhs_values(GeometryInfo<3>::lines_per_cell, std::vector<Tensor<1, 3>>(n_q_points));
+      fe.base_element(0),
+      global_cell_it,
+      /*verbose =*/false);
+    std::vector<std::vector<Tensor<1, 3>>> local_rhs_values(
+      GeometryInfo<3>::lines_per_cell, std::vector<Tensor<1, 3>>(n_q_points));
     ////////////////////////////////////////
 
     const FEValuesExtractors::Scalar q1(/* first_vector_component */ 0);
@@ -439,14 +439,14 @@ namespace QNed
           {
             local_rhs_v[n_basis] = 0;
 
-            if ((n_basis < GeometryInfo<3>::vertices_per_cell)
-            		&& (parameters.full_rhs))
-			  {
-            	std_shape_function_h1_grad.set_shape_fun_index(n_basis);
+            if ((n_basis < GeometryInfo<3>::vertices_per_cell) &&
+                (parameters.full_rhs))
+              {
+                std_shape_function_h1_grad.set_shape_fun_index(n_basis);
 
-            	std_shape_function_h1_grad.tensor_value_list(fe_values.get_quadrature_points(),
-																   local_rhs_values[n_basis]);
-			  }
+                std_shape_function_h1_grad.tensor_value_list(
+                  fe_values.get_quadrature_points(), local_rhs_values[n_basis]);
+              }
           }
 
         right_hand_side->tensor_value_list(fe_values.get_quadrature_points(),
@@ -500,12 +500,13 @@ namespace QNed
 
                 // Only for use in local solving.
                 if (parameters.full_rhs)
-                for (unsigned int n_basis = 0;
-                		n_basis < GeometryInfo<3>::vertices_per_cell;
-                     ++n_basis)
-                  {
-                	local_rhs_v[n_basis](i) += v_i * local_rhs_values[n_basis][q] * fe_values.JxW(q);
-                  }
+                  for (unsigned int n_basis = 0;
+                       n_basis < GeometryInfo<3>::vertices_per_cell;
+                       ++n_basis)
+                    {
+                      local_rhs_v[n_basis](i) +=
+                        v_i * local_rhs_values[n_basis][q] * fe_values.JxW(q);
+                    }
               } // end for ++i
           }     // end for ++q
 

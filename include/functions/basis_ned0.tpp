@@ -1,5 +1,5 @@
-#ifndef INCLUDE_BASIS_Q1_GRAD_TPP_
-#define INCLUDE_BASIS_Q1_GRAD_TPP_
+#ifndef INCLUDE_BASIS_NED0_TPP_
+#define INCLUDE_BASIS_NED0_TPP_
 
 #include <functions/basis_q1_grad.h>
 
@@ -8,7 +8,7 @@ namespace ShapeFun
   using namespace dealii;
 
   template <int dim>
-  BasisQ1Grad<dim>::BasisQ1Grad(const BasisQ1Grad<dim> &basis)
+  BasisNed0<dim>::BasisNed0(const BasisNed0<dim> &basis)
     : Function<dim>(dim)
     , index_basis(0)
     , coeff_matrix(basis.coeff_matrix)
@@ -16,7 +16,7 @@ namespace ShapeFun
 
 
   template <>
-  BasisQ1Grad<2>::BasisQ1Grad(
+  BasisNed0<2>::BasisNed0(
     const typename Triangulation<2>::active_cell_iterator &cell)
     : Function<2>(2)
     , index_basis(0)
@@ -40,7 +40,7 @@ namespace ShapeFun
 
 
   template <>
-  BasisQ1Grad<3>::BasisQ1Grad(
+  BasisNed0<3>::BasisNed0(
     const typename Triangulation<3>::active_cell_iterator &cell)
     : Function<3>(3)
     , index_basis(0)
@@ -69,7 +69,7 @@ namespace ShapeFun
 
   template <int dim>
   void
-    BasisQ1Grad<dim>::set_index(unsigned int index)
+    BasisNed0<dim>::set_index(unsigned int index)
   {
     index_basis = index;
   }
@@ -77,7 +77,7 @@ namespace ShapeFun
 
   template <>
   void
-    BasisQ1Grad<2>::vector_value(const Point<2> &p, Vector<double> &value) const
+    BasisNed0<2>::vector_value(const Point<2> &p, Vector<double> &value) const
   {
     value(0) =
       coeff_matrix(1, index_basis) + coeff_matrix(3, index_basis) * p(1);
@@ -88,7 +88,7 @@ namespace ShapeFun
 
   template <>
   void
-    BasisQ1Grad<3>::vector_value(const Point<3> &p, Vector<double> &value) const
+    BasisNed0<3>::vector_value(const Point<3> &p, Vector<double> &value) const
   {
     value(0) = coeff_matrix(1, index_basis) +
                coeff_matrix(4, index_basis) * p(1) +
@@ -107,8 +107,8 @@ namespace ShapeFun
 
   template <>
   void
-    BasisQ1Grad<2>::vector_value_list(const std::vector<Point<2>> &points,
-                                      std::vector<Vector<double>> &values) const
+    BasisNed0<2>::vector_value_list(const std::vector<Point<2>> &points,
+                                    std::vector<Vector<double>> &values) const
   {
     Assert(points.size() == values.size(),
            ExcDimensionMismatch(points.size(), values.size()));
@@ -122,8 +122,8 @@ namespace ShapeFun
 
   template <>
   void
-    BasisQ1Grad<3>::vector_value_list(const std::vector<Point<3>> &points,
-                                      std::vector<Vector<double>> &values) const
+    BasisNed0<3>::vector_value_list(const std::vector<Point<3>> &points,
+                                    std::vector<Vector<double>> &values) const
   {
     Assert(points.size() == values.size(),
            ExcDimensionMismatch(points.size(), values.size()));
@@ -136,4 +136,4 @@ namespace ShapeFun
 
 } // namespace ShapeFun
 
-#endif /* INCLUDE_BASIS_Q1_GRAD_TPP_ */
+#endif /* INCLUDE_BASIS_NED0_TPP_ */

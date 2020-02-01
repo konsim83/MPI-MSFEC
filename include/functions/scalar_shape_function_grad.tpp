@@ -113,41 +113,41 @@ namespace ShapeFun
 
 
   template <int dim>
-    void
-	ShapeFunctionScalarGrad<dim>::tensor_value_list(
-        const std::vector<Point<dim>> &points,
-        std::vector<Tensor<1, dim>> &  values) const
-    {
-      Assert(points.size() == values.size(),
-             ExcDimensionMismatch(points.size(), values.size()));
+  void
+    ShapeFunctionScalarGrad<dim>::tensor_value_list(
+      const std::vector<Point<dim>> &points,
+      std::vector<Tensor<1, dim>> &  values) const
+  {
+    Assert(points.size() == values.size(),
+           ExcDimensionMismatch(points.size(), values.size()));
 
-      const unsigned int n_q_points = points.size();
+    const unsigned int n_q_points = points.size();
 
-      // Map physical points to reference cell
-      std::vector<Point<dim>> points_on_ref_cell(n_q_points);
-      for (unsigned int i = 0; i < n_q_points; ++i)
-        {
-          points_on_ref_cell.at(i) =
-            mapping.transform_real_to_unit_cell(*current_cell_ptr, points.at(i));
-        }
+    // Map physical points to reference cell
+    std::vector<Point<dim>> points_on_ref_cell(n_q_points);
+    for (unsigned int i = 0; i < n_q_points; ++i)
+      {
+        points_on_ref_cell.at(i) =
+          mapping.transform_real_to_unit_cell(*current_cell_ptr, points.at(i));
+      }
 
-      // Copy-assign a fake quadrature rule form mapped point
-      Quadrature<dim> fake_quadrature(points_on_ref_cell);
+    // Copy-assign a fake quadrature rule form mapped point
+    Quadrature<dim> fake_quadrature(points_on_ref_cell);
 
-      // Update he fe_values object
-      FEValues<dim> fe_values(*fe_ptr,
-                              fake_quadrature,
-                              update_values | update_gradients |
-                                update_quadrature_points);
+    // Update he fe_values object
+    FEValues<dim> fe_values(*fe_ptr,
+                            fake_quadrature,
+                            update_values | update_gradients |
+                              update_quadrature_points);
 
-      fe_values.reinit(*current_cell_ptr);
+    fe_values.reinit(*current_cell_ptr);
 
-      for (unsigned int i = 0; i < n_q_points; ++i)
-        {
-          values.at(i) = fe_values[grad].gradient(shape_fun_index,
-                                              /* q_index */ i);
-        }
-    }
+    for (unsigned int i = 0; i < n_q_points; ++i)
+      {
+        values.at(i) = fe_values[grad].gradient(shape_fun_index,
+                                                /* q_index */ i);
+      }
+  }
 
 } // namespace ShapeFun
 

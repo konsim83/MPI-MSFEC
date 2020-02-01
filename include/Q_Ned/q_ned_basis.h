@@ -53,6 +53,8 @@
 #include <equation_data/eqn_coeff_R.h>
 #include <equation_data/eqn_exact_solution_lin.h>
 #include <equation_data/eqn_rhs.h>
+#include <functions/basis_q1.h>
+#include <functions/basis_q1_grad.h>
 #include <functions/concatinate_functions.h>
 #include <functions/scalar_shape_function.h>
 #include <functions/scalar_shape_function_grad.h>
@@ -64,9 +66,6 @@
 #include <linear_algebra/schur_complement.tpp>
 #include <my_other_tools.h>
 #include <vector_tools/my_vector_tools.h>
-
-#include <functions/basis_q1.h>
-#include <functions/basis_q1_grad.h>
 
 namespace QNed
 {

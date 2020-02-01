@@ -242,7 +242,7 @@ namespace NedRT
       global_cell_it,
       /*verbose =*/false);
 
-    Functions::ZeroFunction<3> zero_fun(3);
+    Functions::ZeroFunction<3>                  zero_fun(3);
     ShapeFun::ShapeFunctionConcatinateVector<3> std_shape_function(
       std_shape_function_Ned, zero_fun);
 
@@ -410,10 +410,11 @@ namespace NedRT
 
     ////////////////////////////////////////
     ShapeFun::ShapeFunctionVectorCurl<3> std_shape_function_Ned_curl(
-          fe.base_element(0),
-          global_cell_it,
-          /*verbose =*/false);
-    std::vector<std::vector<Tensor<1, 3>>> local_rhs_values(GeometryInfo<3>::lines_per_cell, std::vector<Tensor<1, 3>>(n_q_points));
+      fe.base_element(0),
+      global_cell_it,
+      /*verbose =*/false);
+    std::vector<std::vector<Tensor<1, 3>>> local_rhs_values(
+      GeometryInfo<3>::lines_per_cell, std::vector<Tensor<1, 3>>(n_q_points));
     ////////////////////////////////////////
 
     const FEValuesExtractors::Vector curl(/* first_vector_component */ 0);
@@ -435,14 +436,14 @@ namespace NedRT
           {
             local_rhs_v[n_basis] = 0;
 
-            if ((n_basis < GeometryInfo<3>::lines_per_cell)
-            		&& (parameters.full_rhs))
-			  {
-				std_shape_function_Ned_curl.set_shape_fun_index(n_basis);
+            if ((n_basis < GeometryInfo<3>::lines_per_cell) &&
+                (parameters.full_rhs))
+              {
+                std_shape_function_Ned_curl.set_shape_fun_index(n_basis);
 
-				std_shape_function_Ned_curl.tensor_value_list(fe_values.get_quadrature_points(),
-																   local_rhs_values[n_basis]);
-			  }
+                std_shape_function_Ned_curl.tensor_value_list(
+                  fe_values.get_quadrature_points(), local_rhs_values[n_basis]);
+              }
           }
 
         right_hand_side->tensor_value_list(fe_values.get_quadrature_points(),
@@ -496,11 +497,13 @@ namespace NedRT
 
                 // Only for use in local solving.
                 if (parameters.full_rhs)
-                for (unsigned int n_basis = 0; n_basis < GeometryInfo<3>::lines_per_cell;
-                     ++n_basis)
-                  {
-                	local_rhs_v[n_basis](i) += v_i * local_rhs_values[n_basis][q] * fe_values.JxW(q);
-                  }
+                  for (unsigned int n_basis = 0;
+                       n_basis < GeometryInfo<3>::lines_per_cell;
+                       ++n_basis)
+                    {
+                      local_rhs_v[n_basis](i) +=
+                        v_i * local_rhs_values[n_basis][q] * fe_values.JxW(q);
+                    }
               } // end for ++i
           }     // end for ++q
 

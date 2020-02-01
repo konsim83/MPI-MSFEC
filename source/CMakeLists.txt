@@ -29,7 +29,8 @@ set(MsFEC_EQN_DATA_LIBRARY_SRC
 	
 set(MsFEC_SHAPE_FUNCTIONS_LIBRARY_SRC
 	functions/basis_q1.inst.cc
-	functions/basis_q1_grad.inst.cc)
+	functions/basis_q1_grad.inst.cc
+	functions/my_mapping_q1.inst.cc)
 	
 set(MsFEC_VECTOR_TOOLS_LIBRARY_SRC
 	vector_tools/my_vector_tools.inst.cc)
