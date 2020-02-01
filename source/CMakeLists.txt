@@ -28,7 +28,8 @@ set(MsFEC_EQN_DATA_LIBRARY_SRC
 	equation_data/eqn_rhs.cc)
 	
 set(MsFEC_SHAPE_FUNCTIONS_LIBRARY_SRC
-	functions/basis_q1.inst.cc)
+	functions/basis_q1.inst.cc
+	functions/basis_q1_grad.inst.cc)
 	
 set(MsFEC_VECTOR_TOOLS_LIBRARY_SRC
 	vector_tools/my_vector_tools.inst.cc)
@@ -143,7 +144,8 @@ TARGET_LINK_LIBRARIES(MsFEC_Q_Ned
 	MsFEC_Q_NED_LIBRARY
 	MsFEC_EQN_DATA_LIBRARY
 	MsFEC_VECTOR_TOOLS_LIBRARY
-	MsFEC_OTHER_TOOLS_LIBRARY)
+	MsFEC_OTHER_TOOLS_LIBRARY
+	MsFEC_SHAPE_FUNCTIONS_LIBRARY)
 
 add_executable(MsFEC_Ned_RT "main_ned_rt.cxx")
 DEAL_II_SETUP_TARGET(MsFEC_Ned_RT)

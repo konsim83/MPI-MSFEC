@@ -65,6 +65,9 @@
 #include <my_other_tools.h>
 #include <vector_tools/my_vector_tools.h>
 
+#include <functions/basis_q1.h>
+#include <functions/basis_q1_grad.h>
+
 namespace QNed
 {
   using namespace dealii;

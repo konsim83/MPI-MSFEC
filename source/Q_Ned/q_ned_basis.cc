@@ -232,20 +232,15 @@ namespace QNed
         timer.restart();
       }
 
-    ShapeFun::ShapeFunctionScalar<3> std_shape_function_h1(fe.base_element(0),
-                                                           global_cell_it,
-                                                           /*verbose =*/false);
-    ShapeFun::ShapeFunctionScalarGrad<3> std_shape_function_h1_grad(
-      fe.base_element(0),
-      global_cell_it,
-      /*verbose =*/false);
-
-    Functions::ZeroFunction<3> zero_fun_scalar(1);
+    ShapeFun::BasisQ1<3> std_shape_function_h1(global_cell_it);\
     Functions::ZeroFunction<3> zero_fun_vector(3);
     ShapeFun::ShapeFunctionConcatinateVector<3> std_shape_function_1(
-      std_shape_function_h1, zero_fun_vector);
+          std_shape_function_h1, zero_fun_vector);
+
+    Functions::ZeroFunction<3> zero_fun_scalar(1);
+    ShapeFun::BasisQ1Grad<3> std_shape_function_h1_grad(global_cell_it);
     ShapeFun::ShapeFunctionConcatinateVector<3> std_shape_function_2(
-          zero_fun_scalar, std_shape_function_h1_grad);
+              zero_fun_scalar, std_shape_function_h1_grad);
 
     FEValuesExtractors::Scalar q1(0);
     ComponentMask              q1_mask = fe.component_mask(q1);
@@ -261,8 +256,8 @@ namespace QNed
         DoFTools::make_hanging_node_constraints(dof_handler,
                                                 constraints_h1_v[n_basis]);
 
-        std_shape_function_h1.set_shape_fun_index(n_basis);
-        std_shape_function_h1_grad.set_shape_fun_index(n_basis);
+        std_shape_function_h1.set_index(n_basis);
+        std_shape_function_h1_grad.set_index(n_basis);
 
         VectorTools::interpolate_boundary_values(dof_handler,
 												 /*boundary id*/ 0,
