@@ -20,12 +20,7 @@ namespace ShapeFun
 {
   using namespace dealii;
 
-  /*!
-   * @class BasisQ1Grad
-   *
-   * Class implements gradients of scalar \f$Q_1\f$-basis functions for a given
-   * quadrilateral.
-   */
+
   template <int dim>
   class BasisQ1Grad : public Function<dim>
   {
@@ -53,23 +48,11 @@ namespace ShapeFun
     void
       set_index(unsigned int index);
 
-    /*!
-     * Evaluate a basis function gradient with a preset index at one given point
-     * in 2D or 3D.
-     *
-     * @param p
-     * @param component
-     */
+
     virtual void
       vector_value(const Point<dim> &p, Vector<double> &value) const override;
 
-    /*!
-     * Evaluate a basis function gradient with a preset index at given point
-     * list in 2D and 3D.
-     *
-     * @param p
-     * @param component
-     */
+
     virtual void
       vector_value_list(const std::vector<Point<dim>> &points,
                         std::vector<Vector<double>> &  values) const override;
