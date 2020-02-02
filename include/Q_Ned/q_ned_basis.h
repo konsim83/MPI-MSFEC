@@ -55,6 +55,7 @@
 #include <equation_data/eqn_rhs.h>
 #include <functions/basis_q1.h>
 #include <functions/basis_q1_grad.h>
+#include <functions/basis_nedelec.h>
 #include <functions/concatinate_functions.h>
 #include <functions/scalar_shape_function.h>
 #include <functions/scalar_shape_function_grad.h>

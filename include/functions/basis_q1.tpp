@@ -9,7 +9,7 @@ namespace ShapeFun
 
   template <int dim>
   BasisQ1<dim>::BasisQ1(const BasisQ1<dim> &basis)
-    : Function<dim>()
+    : Function<dim>(1)
     , index_basis(0)
     , coeff_matrix(basis.coeff_matrix)
   {}

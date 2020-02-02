@@ -171,7 +171,7 @@ namespace ShapeFun
       const std::vector<Point<2>> &    points_in,
       std::vector<FullMatrix<double>> &jacobian_out) const
   {
-    Assert(points_in.size() == points_out.size(),
+    Assert(points_in.size() == jacobian_out.size(),
            ExcDimensionMismatch(points_in.size(), jacobian_out.size()));
 
     for (unsigned int i = 0; i < points_in.size(); ++i)
@@ -207,7 +207,7 @@ namespace ShapeFun
       const std::vector<Point<2>> &    points_in,
       std::vector<FullMatrix<double>> &jacobian_out) const
   {
-    Assert(points_in.size() == points_out.size(),
+    Assert(points_in.size() == jacobian_out.size(),
            ExcDimensionMismatch(points_in.size(), jacobian_out.size()));
 
     for (unsigned int i = 0; i < points_in.size(); ++i)
@@ -255,7 +255,7 @@ namespace ShapeFun
         // this is rhs if we want mapping from ref cell to real cell
         rhs_matrix(0, alpha) = p_ref(0);
         rhs_matrix(1, alpha) = p_ref(1);
-        rhs_matrix(3, alpha) = p_ref(2);
+        rhs_matrix(2, alpha) = p_ref(2);
       }
 
     // Columns of coeff_matrix are the coefficients of the polynomial
@@ -287,7 +287,7 @@ namespace ShapeFun
         // this is rhs if we want mapping from ref cell to real cell
         rhs_matrix(0, alpha) = p(0);
         rhs_matrix(1, alpha) = p(1);
-        rhs_matrix(3, alpha) = p(2);
+        rhs_matrix(2, alpha) = p(2);
       }
 
     // Columns of coeff_matrix are the coefficients of the polynomial
@@ -415,7 +415,7 @@ namespace ShapeFun
       const std::vector<Point<3>> &    points_in,
       std::vector<FullMatrix<double>> &jacobian_out) const
   {
-    Assert(points_in.size() == points_out.size(),
+    Assert(points_in.size() == jacobian_out.size(),
            ExcDimensionMismatch(points_in.size(), jacobian_out.size()));
 
     for (unsigned int i = 0; i < points_in.size(); ++i)
@@ -471,7 +471,7 @@ namespace ShapeFun
       const std::vector<Point<3>> &    points_in,
       std::vector<FullMatrix<double>> &jacobian_out) const
   {
-    Assert(points_in.size() == points_out.size(),
+    Assert(points_in.size() == jacobian_out.size(),
            ExcDimensionMismatch(points_in.size(), jacobian_out.size()));
 
     for (unsigned int i = 0; i < points_in.size(); ++i)

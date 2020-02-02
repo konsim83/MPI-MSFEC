@@ -60,8 +60,6 @@ namespace Q
     Assert(computed_quantities.size() == n_quadrature_points,
            ExcInternalError());
 
-    Assert(inputs.solution_values[0].size() == 1, ExcInternalError());
-
     std::vector<Tensor<2, 3>> a_values(n_quadrature_points);
 
     // Evaluate A and B at quadrature points

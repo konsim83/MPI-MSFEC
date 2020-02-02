@@ -12,10 +12,19 @@ namespace ShapeFun
     const typename Triangulation<dim>::active_cell_iterator &cell,
     unsigned int                                             degree)
     : Function<dim>(dim)
-    , MyMappingQ1<dim>(cell)
+    , mapping(cell)
     , fe(degree)
     , index_basis(0)
   {}
+
+
+  template <int dim>
+    BasisNedelec<dim>::BasisNedelec(BasisNedelec<dim> &basis)
+      : Function<dim>(dim)
+      , mapping(basis.mapping)
+      , fe(basis.fe)
+      , index_basis(basis.index_basis)
+    {}
 
 
   template <int dim>
@@ -31,10 +40,10 @@ namespace ShapeFun
     BasisNedelec<dim>::vector_value(const Point<dim> &p,
                                     Vector<double> &  value) const
   {
-    Point<dim> p_ref = map_real_to_unit_cell(p);
+    Point<dim> p_ref = mapping.map_real_to_unit_cell(p);
 
     // This is the inverse of the jacobian \hat K -> K
-    FullMatrix<double> inv_jacobian = jacobian_map_real_to_unit_cell(p);
+    FullMatrix<double> inv_jacobian = mapping.jacobian_map_real_to_unit_cell(p);
 
     Vector<double> tmp(dim);
     for (unsigned int d = 0; d < dim; ++d)
@@ -56,11 +65,11 @@ namespace ShapeFun
            ExcDimensionMismatch(points.size(), values.size()));
 
     std::vector<Point<dim>> points_ref(points.size());
-    map_real_to_unit_cell(points, points_ref);
+    mapping.map_real_to_unit_cell(points, points_ref);
 
     std::vector<FullMatrix<double>> inv_jacobians(points.size(),
                                                   FullMatrix<double>(dim, dim));
-    jacobian_map_real_to_unit_cell(points, inv_jacobians);
+    mapping.jacobian_map_real_to_unit_cell(points, inv_jacobians);
 
     Vector<double> tmp(dim);
 

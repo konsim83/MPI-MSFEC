@@ -302,11 +302,8 @@ namespace QNed
         timer.restart();
       }
 
-    ShapeFun::ShapeFunctionVector<3> std_shape_function_ned(fe.base_element(1),
-                                                            global_cell_it,
-                                                            /*verbose =*/false);
     Functions::ZeroFunction<3> zero_fun(1); // need this to keep pointer valid
-
+    ShapeFun::BasisNedelec<3> std_shape_function_ned(global_cell_it, /*degree*/ 0);
     ShapeFun::ShapeFunctionConcatinateVector<3> std_shape_function(
       zero_fun, std_shape_function_ned);
 
@@ -322,7 +319,7 @@ namespace QNed
         DoFTools::make_hanging_node_constraints(dof_handler,
                                                 constraints_curl_v[n_basis]);
 
-        std_shape_function_ned.set_shape_fun_index(n_basis);
+        std_shape_function_ned.set_index(n_basis);
 
         FEValuesExtractors::Scalar q1(0);
         ComponentMask              q1_mask = fe.component_mask(q1);

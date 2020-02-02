@@ -29,7 +29,7 @@ namespace ShapeFun
    * quadrilateral.
    */
   template <int dim>
-  class BasisNedelec : public Function<dim>, public MyMappingQ1<dim>
+  class BasisNedelec : public Function<dim>
   {
   public:
     BasisNedelec() = delete;
@@ -40,6 +40,11 @@ namespace ShapeFun
      */
     BasisNedelec(const typename Triangulation<dim>::active_cell_iterator &cell,
                  unsigned int degree = 0);
+
+    /*!
+     * Copy constructor.
+     */
+    BasisNedelec(BasisNedelec<dim> &basis);
 
     /*!
      * Set the index of the basis function to be evaluated.
@@ -57,6 +62,8 @@ namespace ShapeFun
                         std::vector<Vector<double>> &  values) const override;
 
   private:
+    MyMappingQ1<dim> mapping;
+
     FE_Nedelec<dim> fe;
 
     unsigned int index_basis;
