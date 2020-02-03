@@ -80,9 +80,9 @@ subsection Equation parameters
 	end
 	
 	subsection Diffusion A
-		set frequency x = 12
-		set frequency y = 12
-		set frequency z = 12
+		set frequency x = 17
+		set frequency y = 16
+		set frequency z = 15
 		
 		# scaling parameter
 		set scale x = 1.0

@@ -105,9 +105,9 @@ subsection Equation parameters
 	end
 	
 	subsection Diffusion A
-		set frequency x = 2
-		set frequency y = 1
-		set frequency z = 1
+		set frequency x = 17
+		set frequency y = 16
+		set frequency z = 15
 		
 		# scaling parameter
 		set scale x = 1.0
@@ -120,11 +120,11 @@ subsection Equation parameters
 		set alpha z = 0.9
 		
 		# Rotate with fixed Euler angles
-		set rotate = false
+		set rotate = true
 	end
 	
 	subsection Diffusion B
-		set frequency = 2
+		set frequency = 14
 		set scale = 1
 		set alpha = 0.9
 		

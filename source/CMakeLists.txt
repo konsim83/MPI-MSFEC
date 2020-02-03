@@ -31,6 +31,8 @@ set(MsFEC_SHAPE_FUNCTIONS_LIBRARY_SRC
 	functions/basis_q1.inst.cc
 	functions/basis_q1_grad.inst.cc
 	functions/basis_nedelec.inst.cc
+	functions/basis_nedelec_curl.inst.cc
+	functions/basis_raviart_thomas.inst.cc
 	functions/my_mapping_q1.inst.cc)
 	
 set(MsFEC_VECTOR_TOOLS_LIBRARY_SRC
@@ -155,7 +157,8 @@ TARGET_LINK_LIBRARIES(MsFEC_Ned_RT
 	MsFEC_NED_RT_LIBRARY
 	MsFEC_EQN_DATA_LIBRARY
 	MsFEC_VECTOR_TOOLS_LIBRARY
-	MsFEC_OTHER_TOOLS_LIBRARY)
+	MsFEC_OTHER_TOOLS_LIBRARY
+	MsFEC_SHAPE_FUNCTIONS_LIBRARY)
 
 add_executable(MsFEC_RT_DQ "main_rt_dq.cxx")
 DEAL_II_SETUP_TARGET(MsFEC_RT_DQ)

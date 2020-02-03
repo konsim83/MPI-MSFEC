@@ -234,17 +234,12 @@ namespace NedRT
         timer.restart();
       }
 
-    ShapeFun::ShapeFunctionVector<3> std_shape_function_Ned(fe.base_element(0),
-                                                            global_cell_it,
-                                                            /*verbose =*/false);
-    ShapeFun::ShapeFunctionVectorCurl<3> std_shape_function_Ned_curl(
-      fe.base_element(0),
-      global_cell_it,
-      /*verbose =*/false);
+    ShapeFun::BasisNedelec<3> std_shape_function_Ned(global_cell_it, /* degree */0);
+    Functions::ZeroFunction<3>                  zero_fun_vector(3);
+        ShapeFun::ShapeFunctionConcatinateVector<3> std_shape_function(
+          std_shape_function_Ned, zero_fun_vector);
 
-    Functions::ZeroFunction<3>                  zero_fun(3);
-    ShapeFun::ShapeFunctionConcatinateVector<3> std_shape_function(
-      std_shape_function_Ned, zero_fun);
+	ShapeFun::BasisNedelecCurl<3> std_shape_function_Ned_curl(global_cell_it, /* degree */0);
 
     std::vector<types::global_dof_index> dofs_per_block(2);
     DoFTools::count_dofs_per_block(dof_handler, dofs_per_block);
@@ -252,8 +247,8 @@ namespace NedRT
     // set constraints (first hanging nodes, then boundary conditions)
     for (unsigned int n_basis = 0; n_basis < basis_curl_v.size(); ++n_basis)
       {
-        std_shape_function_Ned.set_shape_fun_index(n_basis);
-        std_shape_function_Ned_curl.set_shape_fun_index(n_basis);
+    	std_shape_function_Ned.set_index(n_basis);
+		std_shape_function_Ned_curl.set_index(n_basis);
 
         constraints_curl_v[n_basis].clear();
 
@@ -305,16 +300,18 @@ namespace NedRT
         timer.restart();
       }
 
-    ShapeFun::ShapeFunctionVector<3> std_shape_function_RT(fe.base_element(1),
-                                                           global_cell_it,
-                                                           /*verbose =*/false);
+//    ShapeFun::ShapeFunctionVector<3> std_shape_function_RT(fe.base_element(1),
+//                                                           global_cell_it,
+//                                                           /*verbose =*/false);
+    ShapeFun::BasisRaviartThomas<3> std_shape_function_RT(global_cell_it, /* degree */0);
 
     std::vector<types::global_dof_index> dofs_per_block(2);
     DoFTools::count_dofs_per_block(dof_handler, dofs_per_block);
 
     for (unsigned int n_basis = 0; n_basis < basis_div_v.size(); ++n_basis)
       {
-        std_shape_function_RT.set_shape_fun_index(n_basis);
+//        std_shape_function_RT.set_shape_fun_index(n_basis);
+    	std_shape_function_RT.set_index(n_basis);
 
         // set constraints (first hanging nodes, then flux)
         constraints_div_v[n_basis].clear();

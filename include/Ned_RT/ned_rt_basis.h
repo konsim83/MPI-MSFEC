@@ -56,6 +56,10 @@
 #include <functions/vector_shape_function.h>
 #include <functions/vector_shape_function_curl.h>
 #include <functions/vector_shape_function_div.h>
+#include <functions/basis_nedelec.h>
+#include <functions/basis_nedelec_curl.h>
+#include <functions/basis_raviart_thomas.h>
+#include <functions/vector_shape_function_div.h>
 #include <linear_algebra/approximate_inverse.h>
 #include <linear_algebra/approximate_schur_complement.tpp>
 #include <linear_algebra/inverse_matrix.h>
