@@ -234,12 +234,14 @@ namespace NedRT
         timer.restart();
       }
 
-    ShapeFun::BasisNedelec<3> std_shape_function_Ned(global_cell_it, /* degree */0);
-    Functions::ZeroFunction<3>                  zero_fun_vector(3);
-        ShapeFun::ShapeFunctionConcatinateVector<3> std_shape_function(
-          std_shape_function_Ned, zero_fun_vector);
+    ShapeFun::BasisNedelec<3>  std_shape_function_Ned(global_cell_it,
+                                                     /* degree */ 0);
+    Functions::ZeroFunction<3> zero_fun_vector(3);
+    ShapeFun::ShapeFunctionConcatinateVector<3> std_shape_function(
+      std_shape_function_Ned, zero_fun_vector);
 
-	ShapeFun::BasisNedelecCurl<3> std_shape_function_Ned_curl(global_cell_it, /* degree */0);
+    ShapeFun::BasisNedelecCurl<3> std_shape_function_Ned_curl(global_cell_it,
+                                                              /* degree */ 0);
 
     std::vector<types::global_dof_index> dofs_per_block(2);
     DoFTools::count_dofs_per_block(dof_handler, dofs_per_block);
@@ -247,8 +249,8 @@ namespace NedRT
     // set constraints (first hanging nodes, then boundary conditions)
     for (unsigned int n_basis = 0; n_basis < basis_curl_v.size(); ++n_basis)
       {
-    	std_shape_function_Ned.set_index(n_basis);
-		std_shape_function_Ned_curl.set_index(n_basis);
+        std_shape_function_Ned.set_index(n_basis);
+        std_shape_function_Ned_curl.set_index(n_basis);
 
         constraints_curl_v[n_basis].clear();
 
@@ -300,18 +302,21 @@ namespace NedRT
         timer.restart();
       }
 
-//    ShapeFun::ShapeFunctionVector<3> std_shape_function_RT(fe.base_element(1),
-//                                                           global_cell_it,
-//                                                           /*verbose =*/false);
-    ShapeFun::BasisRaviartThomas<3> std_shape_function_RT(global_cell_it, /* degree */0);
+    //    ShapeFun::ShapeFunctionVector<3>
+    //    std_shape_function_RT(fe.base_element(1),
+    //                                                           global_cell_it,
+    //                                                           /*verbose
+    //                                                           =*/false);
+    ShapeFun::BasisRaviartThomas<3> std_shape_function_RT(global_cell_it,
+                                                          /* degree */ 0);
 
     std::vector<types::global_dof_index> dofs_per_block(2);
     DoFTools::count_dofs_per_block(dof_handler, dofs_per_block);
 
     for (unsigned int n_basis = 0; n_basis < basis_div_v.size(); ++n_basis)
       {
-//        std_shape_function_RT.set_shape_fun_index(n_basis);
-    	std_shape_function_RT.set_index(n_basis);
+        //        std_shape_function_RT.set_shape_fun_index(n_basis);
+        std_shape_function_RT.set_index(n_basis);
 
         // set constraints (first hanging nodes, then flux)
         constraints_div_v[n_basis].clear();
@@ -406,10 +411,8 @@ namespace NedRT
     std::vector<double>       reaction_rate_values(n_q_points);
 
     ////////////////////////////////////////
-    ShapeFun::ShapeFunctionVectorCurl<3> std_shape_function_Ned_curl(
-      fe.base_element(0),
-      global_cell_it,
-      /*verbose =*/false);
+    ShapeFun::BasisNedelecCurl<3> std_shape_function_Ned_curl(global_cell_it,
+                                                              /* degree */ 0);
     std::vector<std::vector<Tensor<1, 3>>> local_rhs_values(
       GeometryInfo<3>::lines_per_cell, std::vector<Tensor<1, 3>>(n_q_points));
     ////////////////////////////////////////
@@ -436,7 +439,7 @@ namespace NedRT
             if ((n_basis < GeometryInfo<3>::lines_per_cell) &&
                 (parameters.full_rhs))
               {
-                std_shape_function_Ned_curl.set_shape_fun_index(n_basis);
+                std_shape_function_Ned_curl.set_index(n_basis);
 
                 std_shape_function_Ned_curl.tensor_value_list(
                   fe_values.get_quadrature_points(), local_rhs_values[n_basis]);
@@ -1179,10 +1182,8 @@ namespace NedRT
     QGauss<3> quad_rule(3);
 
     // Set up vector shape function from finite element on current cell
-    ShapeFun::ShapeFunctionVector<3> std_shape_function_curl(
-      fe.base_element(0),
-      global_cell_it,
-      /*verbose =*/false);
+    ShapeFun::BasisNedelec<3> std_shape_function_curl(global_cell_it,
+                                                      /* degree */ 0);
 
     DoFHandler<3> dof_handler_fake(triangulation);
     dof_handler_fake.distribute_dofs(fe.base_element(0));
@@ -1197,7 +1198,7 @@ namespace NedRT
         basis_curl_v[i].block(0).reinit(dof_handler_fake.n_dofs());
         basis_curl_v[i].block(1) = 0;
 
-        std_shape_function_curl.set_shape_fun_index(i);
+        std_shape_function_curl.set_index(i);
 
         VectorTools::project(dof_handler_fake,
                              constraints,
@@ -1216,9 +1217,8 @@ namespace NedRT
     QGauss<3> quad_rule(3);
 
     // Set up vector shape function from finite element on current cell
-    ShapeFun::ShapeFunctionVector<3> std_shape_function_div(fe.base_element(1),
-                                                            global_cell_it,
-                                                            /*verbose =*/false);
+    ShapeFun::BasisRaviartThomas<3> std_shape_function_div(global_cell_it,
+                                                           /*degree*/ 0);
 
     DoFHandler<3> dof_handler_fake(triangulation);
     dof_handler_fake.distribute_dofs(fe.base_element(1));
@@ -1233,7 +1233,7 @@ namespace NedRT
         basis_div_v[i].block(0) = 0;
         basis_div_v[i].block(1).reinit(dof_handler_fake.n_dofs());
 
-        std_shape_function_div.set_shape_fun_index(i);
+        std_shape_function_div.set_index(i);
 
         VectorTools::project(dof_handler_fake,
                              constraints,

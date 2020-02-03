@@ -51,13 +51,13 @@
 #include <equation_data/eqn_coeff_R.h>
 #include <equation_data/eqn_exact_solution_lin.h>
 #include <equation_data/eqn_rhs.h>
+#include <functions/basis_raviart_thomas.h>
 #include <functions/concatinate_functions.h>
-#include <functions/vector_shape_function.h>
 #include <linear_algebra/approximate_inverse.h>
-#include <linear_algebra/approximate_schur_complement.tpp>
+#include <linear_algebra/approximate_schur_complement.h>
 #include <linear_algebra/inverse_matrix.h>
 #include <linear_algebra/preconditioner.h>
-#include <linear_algebra/schur_complement.tpp>
+#include <linear_algebra/schur_complement.h>
 #include <my_other_tools.h>
 #include <vector_tools/my_vector_tools.h>
 
@@ -65,15 +65,25 @@ namespace RTDQ
 {
   using namespace dealii;
 
+  /*!
+   * @class RTDQBasis
+   *
+   * @brief Class to hold local mutiscale basis in \f$H(\mathrm{div})\f$-\f$L^2\f$.
+   *
+   * This class is the heart of the multiscale computation. It precomputes the
+   * basis on a given cell and assembles the data for the global solver. Once a
+   * global solution is computed it takes care of defining the local fine scale
+   * solution and writes data.
+   */
   class RTDQBasis
   {
   public:
-    /*
-     * Constructor.
+    /*!
+     * Constructor deleted.
      */
     RTDQBasis() = delete;
 
-    /**
+    /*!
      * Constructor.
      *
      * @param parameters_ms
@@ -90,50 +100,47 @@ namespace RTDQ
               unsigned int                                     local_subdomain,
               MPI_Comm mpi_communicator);
 
-    /**
-     * Copy constructor.
+    /*!
+     * Copy constructor. The basis must be copyable. This is only the case if
+     * large objects are not initialized yet.
      *
      * @param other
      */
     RTDQBasis(const RTDQBasis &other);
+
     ~RTDQBasis();
 
-    /**
+    /*!
      * Compute the basis.
      */
     void
       run();
 
-    /**
+    /*!
      * Write vtu file for solution in cell.
      */
     void
       output_global_solution_in_cell();
 
-    /**
+    /*!
      * Get reference to global multiscale element matrix.
-     *
-     * @return
      */
     const FullMatrix<double> &
       get_global_element_matrix() const;
 
-    /**
-     * * Get reference to global multiscale element rhs.
-     *
-     * @return
+    /*!
+     * Get reference to global multiscale element rhs.
      */
     const Vector<double> &
       get_global_element_rhs() const;
 
-    /**
+    /*!
      * Get global filename.
-     * @return
      */
     const std::string &
       get_filename_global() const;
 
-    /**
+    /*!
      * Set the global (coarse) weight after coarse solution is
      * computed.
      *
@@ -148,19 +155,19 @@ namespace RTDQ
     void
       setup_system_matrix();
 
-    /**
+    /*!
      * Setup the constraints for H(div)-basis.
      */
     void
       setup_basis_dofs_div();
 
-    /**
+    /*!
      * Assemble local system.
      */
     void
       assemble_system();
 
-    /**
+    /*!
      * Build the global multiscale element matrix.
      */
     void
@@ -178,8 +185,8 @@ namespace RTDQ
     void
       set_cell_data();
 
-    /**
-     * Can not be used yet since ther is no TrilinosWrapper for the direct
+    /*!
+     * Can not be used yet since there is no TrilinosWrapper for the direct
      * solver for block matrices. Does not scale well anyway for large
      * problems.
      *
@@ -188,7 +195,7 @@ namespace RTDQ
     void
       solve_direct(unsigned int n_basis);
 
-    /**
+    /*!
      * Schur complement solver with inner and outer preconditioner.
      *
      * @param n_basis
@@ -196,30 +203,50 @@ namespace RTDQ
     void
       solve_iterative(unsigned int n_basis);
 
-    /**
+    /*!
      * Project the exact solution onto the local fe space.
      */
     void
       write_exact_solution_in_cell();
 
-    /**
+    /*!
      * Write the multiscale basis as vtu.
      */
     void
       output_basis();
 
+    /*!
+     * Current MPI communicator.
+     */
     MPI_Comm mpi_communicator;
 
-    ParametersBasis    parameters;
+    /*!
+     * Parameter structure to hold parsed data.
+     */
+    ParametersBasis parameters;
+
+    /*!
+     * Name of parameter input file.
+     */
     const std::string &parameter_filename;
 
+    /*!
+     * Local triangulation.
+     */
     Triangulation<3> triangulation;
 
+    /*!
+     * Finite element system to hold Raviart-Thomas-discontinuous Lagrange
+     * element pairing. This is only used to define the degrees of freedom, not
+     * the actual shape functions.
+     */
     FESystem<3> fe;
 
     DoFHandler<3> dof_handler;
 
-    // Constraints for each basis
+    /*!
+     * Boundary constraints for \f$H(\mathrm{div})\f$-basis.
+     */
     std::vector<AffineConstraints<double>> constraints_div_v;
 
     // Sparsity patterns and system matrices for each basis
@@ -243,22 +270,22 @@ namespace RTDQ
     std::shared_ptr<typename LinearSolvers::LocalInnerPreconditioner<3>::type>
       inner_schur_preconditioner;
 
-    /**
-     * Global cell identifier.
+    /*!
+     * Global cell identifier of current cell.
      */
     CellId global_cell_id;
 
-    /**
+    /*!
      * Global cell identifier of first cell.
      */
     CellId first_cell;
 
-    /**
-     * Global cell iterator.
+    /*!
+     * Global cell iterator of current cell.
      */
     typename Triangulation<3>::active_cell_iterator global_cell_it;
 
-    /**
+    /*!
      * Global subdomain number.
      */
     const unsigned int local_subdomain;

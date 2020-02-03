@@ -16,45 +16,66 @@ namespace EquationData
 {
   using namespace dealii;
 
-  /**
-   * Class containing data for tensor valued diffusivity of a positive tensor.
+  /*!
+   * @class Diffusion_A_Data
+   *
+   * @brief Class containing data to construct a positive tensor.
+   *
+   * This class implements a data object that serves as a base class for
+   * concrete implementations. It contains information about anisotropy and
+   * inhomogeneity.
    */
   class Diffusion_A_Data
   {
   public:
+    /*!
+     * Constructor
+     *
+     * @param parameter_filename
+     */
     Diffusion_A_Data(const std::string &parameter_filename);
 
     static void
+      /*!
+       * Declare all paramters to be used.
+       *
+       * @param prm
+       */
       declare_parameters(ParameterHandler &prm);
     void
+      /*!
+       * Parse all paramters to be used.
+       *
+       * @param prm
+       */
       parse_parameters(ParameterHandler &prm);
 
-    /**
+    /*!
      * Frequency of oscillations in x, y and z.
      */
     unsigned int k_x, k_y, k_z;
 
-    /**
+    /*!
      * Scaling factor in x, y and z..
      */
     double scale_x, scale_y, scale_z;
 
-    /**
+    /*!
      * Scaling factor for oscillations in x, y and z.
      */
     double alpha_x, alpha_y, alpha_z;
 
-    /**
+    /*!
      * Three Euler angles.
      */
     const double alpha_, beta_, gamma_;
 
-    /**
+    /*!
      * True if tensor coefficient should be rotated in space.
      */
     bool rotate;
 
-    /**
+    /*!
      * Description of rotation with Euler angles. This rotates the
      * tensor coefficients in space and allows for the construction
      * of more general symmetric positive definite data. If 'rotate=false'
@@ -63,75 +84,93 @@ namespace EquationData
     Tensor<2, 3> rot;
   };
 
-  /**
-   * Diffusion tensor. Must be positive definite and
-   * uniformly bounded from below and above.
+  /*!
+   * @class Diffusion_A
+   *
+   * @brief Class containing a positive tensor.
+   *
+   * This class implements a uniformly positive tensor that can be interpreted
+   * differently depending on what object (k-form) they act on. If the object is
+   * a 0-form or a 3-form then it can be interpreted as a diffusivity. If the
+   * object it acts on is a vector proxy, i.e., a 1-form or a 2-form, it can
+   * represent permittivity and permeability tensors or magneto-electric
+   * tensors.
+   *
+   * The current implementation can be strongly anisotropic and inhomogeneous.
    */
   class Diffusion_A : public TensorFunction<2, 3>, public Diffusion_A_Data
   {
   public:
-    /**
+    /*!
      * Constructor.
+     *
+     * @param parameter_filename
      */
     Diffusion_A(const std::string &parameter_filename)
       : TensorFunction<2, 3>()
       , Diffusion_A_Data(parameter_filename)
     {}
 
-    /**
-     * Implementation of the diffusion tensor.
+    /*!
+     * Implementation of the tensor.
      * Must be positive definite and uniformly bounded.
      *
-     * @param points
-     * @param values
+     * @param[in] points
+     * @param[out] values
      */
     virtual Tensor<2, 3>
       value(const Point<3> &point) const override;
 
-    /**
-     * Implementation of the diffusion tensor.
+    /*!
+     * Implementation of the tensor.
      * Must be positive definite and uniformly bounded.
      *
-     * @param points
-     * @param values
+     * @param[in] points
+     * @param[out] values
      */
     virtual void
       value_list(const std::vector<Point<3>> &points,
                  std::vector<Tensor<2, 3>> &  values) const override;
   };
 
-  /**
-   * Inverse of diffusion tensor. Must be positive
-   * definite and uniformly bounded from below and above.
+  /*!
+   * @class DiffusionInverse_A
+   *
+   * @brief Class containing the inverse of a positive tensor.
+   *
+   * Same as Diffusion_A but represents the inverse tensor.
+   *
+   * The current implementation can be strongly anisotropic and inhomogeneous.
    */
   class DiffusionInverse_A : public TensorFunction<2, 3>,
                              public Diffusion_A_Data
   {
   public:
-    /**
+    /*!
      * Constructor.
+     *
+     * @param parameter_filename
      */
     DiffusionInverse_A(const std::string &parameter_filename)
       : TensorFunction<2, 3>()
       , Diffusion_A_Data(parameter_filename)
     {}
 
-    /**
-     * Implementation of inverse of the diffusion tensor.
+    /*!
+     * Implementation of inverse of the tensor.
      * Must be positive definite and uniformly bounded.
      *
-     * @param points
-     * @param values
+     * @param[in] points
      */
     virtual Tensor<2, 3>
       value(const Point<3> &point) const override;
 
-    /**
-     * Implementation of inverse of the diffusion tensor.
+    /*!
+     * Implementation of inverse of the tensor.
      * Must be positive definite and uniformly bounded.
      *
-     * @param points
-     * @param values
+     * @param[in] points
+     * @param[out] values
      */
     virtual void
       value_list(const std::vector<Point<3>> &points,

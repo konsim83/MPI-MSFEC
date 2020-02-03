@@ -19,12 +19,12 @@ namespace ShapeFun
 
 
   template <int dim>
-    BasisNedelec<dim>::BasisNedelec(BasisNedelec<dim> &basis)
-      : Function<dim>(dim)
-      , mapping(basis.mapping)
-      , fe(basis.fe)
-      , index_basis(basis.index_basis)
-    {}
+  BasisNedelec<dim>::BasisNedelec(BasisNedelec<dim> &basis)
+    : Function<dim>(dim)
+    , mapping(basis.mapping)
+    , fe(basis.fe)
+    , index_basis(basis.index_basis)
+  {}
 
 
   template <int dim>

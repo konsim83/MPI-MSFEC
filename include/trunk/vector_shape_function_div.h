@@ -27,16 +27,18 @@ namespace ShapeFun
 {
   using namespace dealii;
 
-  /**
-   * Class for evaluations of divergence of vector valued shape functions.
+  /*!
+   * @class ShapeFunctionVectorDiv
    *
-   * @author Konrad Simon, 2019
+   * @brief Class for evaluations of divergence of vector valued shape functions.
+   *
+   * @note This is slow. Only use for quick and dirty prototyping and sanity checks.
    */
   template <int dim>
   class ShapeFunctionVectorDiv : public Function<dim>
   {
   public:
-    /**
+    /*!
      * Constructor takes a vector finite element like <code>BDM<dim> <\code>
      * or <code> RaviartThomas<dim> <\code> and a cell iterator pointing to
      * a certain cell in a triangulation.
@@ -50,7 +52,7 @@ namespace ShapeFun
       typename Triangulation<dim>::active_cell_iterator &cell,
       bool                                               verbose = false);
 
-    /**
+    /*!
      * Evaluate shape function at point <code> p<\code>
      *
      * @param[in] p
@@ -60,7 +62,7 @@ namespace ShapeFun
       value(const Point<dim> & p,
             const unsigned int component = 0) const override;
 
-    /**
+    /*!
      * Evaluate shape function at point list <code> points <\code>
      *
      * @param[in] points
@@ -71,7 +73,7 @@ namespace ShapeFun
                  std::vector<double> &          values,
                  const unsigned int             component = 0) const override;
 
-    /**
+    /*!
      * Set pointer to current cell (actually and iterator).
      *
      * @param cell
@@ -80,7 +82,7 @@ namespace ShapeFun
       set_current_cell(
         const typename Triangulation<dim>::active_cell_iterator &cell);
 
-    /**
+    /*!
      * Set shape function index.
      *
      * @param index
@@ -104,6 +106,6 @@ namespace ShapeFun
 
 } // namespace ShapeFun
 
-#include <functions/vector_shape_function_div.tpp>
+#include <trunk/vector_shape_function_div.tpp>
 
 #endif /* SHAPE_FUN_VECTOR_DIV_TPP_ */

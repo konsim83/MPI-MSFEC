@@ -52,19 +52,15 @@
 #include <equation_data/eqn_coeff_R.h>
 #include <equation_data/eqn_exact_solution_lin.h>
 #include <equation_data/eqn_rhs.h>
-#include <functions/concatinate_functions.h>
-#include <functions/vector_shape_function.h>
-#include <functions/vector_shape_function_curl.h>
-#include <functions/vector_shape_function_div.h>
 #include <functions/basis_nedelec.h>
 #include <functions/basis_nedelec_curl.h>
 #include <functions/basis_raviart_thomas.h>
-#include <functions/vector_shape_function_div.h>
+#include <functions/concatinate_functions.h>
 #include <linear_algebra/approximate_inverse.h>
-#include <linear_algebra/approximate_schur_complement.tpp>
+#include <linear_algebra/approximate_schur_complement.h>
 #include <linear_algebra/inverse_matrix.h>
 #include <linear_algebra/preconditioner.h>
-#include <linear_algebra/schur_complement.tpp>
+#include <linear_algebra/schur_complement.h>
 #include <my_other_tools.h>
 #include <vector_tools/my_vector_tools.h>
 
@@ -72,6 +68,16 @@ namespace NedRT
 {
   using namespace dealii;
 
+  /*!
+   * @class NedRTBasis
+   *
+   * @brief Class to hold local mutiscale basis in \f$H(\mathrm{curl})\f$-\f$H(\mathrm{div})\f$.
+   *
+   * This class is the heart of the multiscale computation. It precomputes the
+   * basis on a given cell and assembles the data for the global solver. Once a
+   * global solution is computed it takes care of defining the local fine scale
+   * solution and writes data.
+   */
   class NedRTBasis
   {
   public:
@@ -80,7 +86,7 @@ namespace NedRT
      */
     NedRTBasis() = delete;
 
-    /**
+    /*!
      * Constructor.
      *
      * @param parameters_ms
@@ -97,50 +103,47 @@ namespace NedRT
                unsigned int                                     local_subdomain,
                MPI_Comm mpi_communicator);
 
-    /**
-     * Copy constructor.
+    /*!
+     * Copy constructor. The basis must be copyable. This is only the case if
+     * large objects are not initialized yet.
      *
      * @param other
      */
     NedRTBasis(const NedRTBasis &other);
+
     ~NedRTBasis();
 
-    /**
+    /*!
      * Compute the basis.
      */
     void
       run();
 
-    /**
+    /*!
      * Write vtu file for solution in cell.
      */
     void
       output_global_solution_in_cell();
 
-    /**
+    /*!
      * Get reference to global multiscale element matrix.
-     *
-     * @return
      */
     const FullMatrix<double> &
       get_global_element_matrix() const;
 
-    /**
-     * * Get reference to global multiscale element rhs.
-     *
-     * @return
+    /*!
+     * Get reference to global multiscale element rhs.
      */
     const Vector<double> &
       get_global_element_rhs() const;
 
-    /**
+    /*!
      * Get global filename.
-     * @return
      */
     const std::string &
       get_filename_global() const;
 
-    /**
+    /*!
      * Set the global (coarse) weight after coarse solution is
      * computed.
      *
@@ -150,30 +153,37 @@ namespace NedRT
       set_global_weights(const std::vector<double> &global_weights);
 
   private:
+    /*!
+     * Set up grid.
+     */
     void
       setup_grid();
+
+    /*!
+     * Set up system matrix.
+     */
     void
       setup_system_matrix();
 
-    /**
-     * Setup the constraints for H(curl)-basis.
+    /*!
+     * Setup the constraints for \f$H(\mathrm{curl})\f$-basis.
      */
     void
       setup_basis_dofs_curl();
 
-    /**
-     * Setup the constraints for H(div)-basis.
+    /*!
+     * Setup the constraints for \f$H(\mathrm{div})\f$-basis.
      */
     void
       setup_basis_dofs_div();
 
-    /**
+    /*!
      * Assemble local system.
      */
     void
       assemble_system();
 
-    /**
+    /*!
      * Build the global multiscale element matrix.
      */
     void
@@ -191,17 +201,17 @@ namespace NedRT
     void
       set_cell_data();
 
-    /**
-     * Can not be used yet since ther is no TrilinosWrapper for the direct
-     * solver for block matrices. Does not scale well anyway for large
-     * problems.
+    /*!
+     * Use direct solver for basis.
+     *
+     * @note This is slow and should only be used for sanity checking.
      *
      * @param n_basis
      */
     void
       solve_direct(unsigned int n_basis);
 
-    /**
+    /*!
      * Schur complement solver with inner and outer preconditioner.
      *
      * @param n_basis
@@ -209,31 +219,55 @@ namespace NedRT
     void
       solve_iterative(unsigned int n_basis);
 
-    /**
+    /*!
      * Project the exact solution onto the local fe space.
      */
     void
       write_exact_solution_in_cell();
 
-    /**
+    /*!
      * Write the multiscale basis as vtu.
      */
     void
       output_basis();
 
+    /*!
+     * Current MPI communicator.
+     */
     MPI_Comm mpi_communicator;
 
-    ParametersBasis    parameters;
+    /*!
+     * Parameter structure to hold parsed data.
+     */
+    ParametersBasis parameters;
+
+    /*!
+     * Name of parameter input file.
+     */
     const std::string &parameter_filename;
 
+    /*!
+     * Local triangulation.
+     */
     Triangulation<3> triangulation;
 
+    /*!
+     * Finite element system to hold Nedelec-Raviart-Thomas element pairing.
+     * This is only used to define the degrees of freedom, not the actual shape
+     * functions.
+     */
     FESystem<3> fe;
 
     DoFHandler<3> dof_handler;
 
-    // Constraints for each basis
+    /*!
+     * Boundary constraints for \f$H(\mathrm{curl})\f$-basis.
+     */
     std::vector<AffineConstraints<double>> constraints_curl_v;
+
+    /*!
+     * Boundary constraints for \f$H(\mathrm{div})\f$-basis.
+     */
     std::vector<AffineConstraints<double>> constraints_div_v;
 
     // Sparsity patterns and system matrices for each basis
@@ -249,33 +283,51 @@ namespace NedRT
     std::vector<BlockVector<double>> system_rhs_div_v;
     BlockVector<double>              global_rhs;
 
-    FullMatrix<double>  global_element_matrix;
-    Vector<double>      global_element_rhs;
+    /*!
+     * Modified global element matrix from multiscale basis.
+     */
+    FullMatrix<double> global_element_matrix;
+
+    /*!
+     * Modified global rhs from multiscale basis.
+     */
+    Vector<double> global_element_rhs;
+
+    /*!
+     * Weights of global coarse solution.
+     */
     std::vector<double> global_weights;
 
+    /*!
+     * Global fine scale solution
+     */
     BlockVector<double> global_solution;
+
+    /*!
+     * Exact solution in current cell.
+     */
     BlockVector<double> exact_solution_in_cell;
 
     // Shared pointer to preconditioner type for each system matrix
     std::shared_ptr<typename LinearSolvers::LocalInnerPreconditioner<3>::type>
       inner_schur_preconditioner;
 
-    /**
-     * Global cell identifier.
+    /*!
+     * Global cell identifier of current cell.
      */
     CellId global_cell_id;
 
-    /**
+    /*!
      * Global cell identifier of first cell.
      */
     CellId first_cell;
 
-    /**
-     * Global cell iterator.
+    /*!
+     * Global cell iterator of current cell.
      */
     typename Triangulation<3>::active_cell_iterator global_cell_it;
 
-    /**
+    /*!
      * Global subdomain number.
      */
     const unsigned int local_subdomain;

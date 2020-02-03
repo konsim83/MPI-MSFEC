@@ -53,18 +53,15 @@
 #include <equation_data/eqn_coeff_R.h>
 #include <equation_data/eqn_exact_solution_lin.h>
 #include <equation_data/eqn_rhs.h>
+#include <functions/basis_nedelec.h>
 #include <functions/basis_q1.h>
 #include <functions/basis_q1_grad.h>
-#include <functions/basis_nedelec.h>
 #include <functions/concatinate_functions.h>
-#include <functions/scalar_shape_function.h>
-#include <functions/scalar_shape_function_grad.h>
-#include <functions/vector_shape_function.h>
 #include <linear_algebra/approximate_inverse.h>
-#include <linear_algebra/approximate_schur_complement.tpp>
+#include <linear_algebra/approximate_schur_complement.h>
 #include <linear_algebra/inverse_matrix.h>
 #include <linear_algebra/preconditioner.h>
-#include <linear_algebra/schur_complement.tpp>
+#include <linear_algebra/schur_complement.h>
 #include <my_other_tools.h>
 #include <vector_tools/my_vector_tools.h>
 
@@ -72,50 +69,121 @@ namespace QNed
 {
   using namespace dealii;
 
+  /*!
+   * @class QNedBasis
+   *
+   * @brief Class to hold local mutiscale basis in \f$H(\mathrm{grad})\f$-\f$H(\mathrm{curl})\f$.
+   *
+   * This class is the heart of the multiscale computation. It precomputes the
+   * basis on a given cell and assembles the data for the global solver. Once a
+   * global solution is computed it takes care of defining the local fine scale
+   * solution and writes data.
+   */
   class QNedBasis
   {
   public:
     QNedBasis() = delete;
+
+    /*!
+     * Constructor.
+     *
+     * @param parameters_ms
+     * @param parameter_filename
+     * @param global_cell
+     * @param first_cell
+     * @param local_subdomain
+     * @param mpi_communicator
+     */
     QNedBasis(const ParametersMs &parameters_ms,
               const std::string & parameter_filename,
               typename Triangulation<3>::active_cell_iterator &global_cell,
               CellId                                           first_cell,
               unsigned int                                     local_subdomain,
               MPI_Comm mpi_communicator);
+
+    /*!
+     * Copy constructor. The basis must be copyable. This is only the case if
+     * large objects are not initialized yet.
+     *
+     * @param other
+     */
     QNedBasis(const QNedBasis &other);
+
     ~QNedBasis();
 
+    /*!
+     * Compute the basis.
+     */
     void
       run();
+
+    /*!
+     * Write vtu file for solution in cell.
+     */
     void
       output_global_solution_in_cell() const;
 
-    // Getter
-
+    /*!
+     * Get reference to global multiscale element matrix.
+     */
     const FullMatrix<double> &
       get_global_element_matrix() const;
+
+    /*!
+     * Get reference to global multiscale element rhs.
+     */
     const Vector<double> &
       get_global_element_rhs() const;
+
+    /*!
+     * Get global filename.
+     */
     const std::string &
       get_filename_global() const;
 
-    // Setter
+    /*!
+     * Set the global (coarse) weight after coarse solution is
+     * computed.
+     *
+     * @param global_weights
+     */
     void
       set_global_weights(const std::vector<double> &global_weights);
 
   private:
+    /*!
+     * Set up grid.
+     */
     void
       setup_grid();
+
+    /*!
+     * Set up system matrix.
+     */
     void
       setup_system_matrix();
 
+    /*!
+     * Setup the constraints for \f$H(\mathrm{curl})\f$-basis.
+     */
     void
       setup_basis_dofs_curl();
+
+    /*!
+     * Setup the constraints for \f$H(\mathrm{grad})\f$-basis.
+     */
     void
       setup_basis_dofs_h1();
 
+    /*!
+     * Assemble local system.
+     */
     void
       assemble_system();
+
+    /*!
+     * Build the global multiscale element matrix.
+     */
     void
       assemble_global_element_matrix();
 
@@ -131,11 +199,17 @@ namespace QNed
     void
       set_cell_data();
 
-    // Solver routines
+    /*!
+     * Use direct solver for basis.
+     *
+     * @note This is slow and should only be used for sanity checking.
+     *
+     * @param n_basis
+     */
     void
       solve_direct(unsigned int n_basis);
 
-    /**
+    /*!
      * Schur complement solver with inner and outer preconditioner.
      *
      * @param n_basis
@@ -152,25 +226,48 @@ namespace QNed
     void
       output_basis();
 
+    /*!
+     * Current MPI communicator.
+     */
     MPI_Comm mpi_communicator;
 
-    ParametersBasis    parameters;
+    /*!
+     * Parameter structure to hold parsed data.
+     */
+    ParametersBasis parameters;
+
+    /*!
+     * Name of parameter input file.
+     */
     const std::string &parameter_filename;
 
+    /*!
+     * Local triangulation.
+     */
     Triangulation<3> triangulation;
 
+    /*!
+     * Finite element system to hold Lagrange-Nedelec element pairing.
+     * This is only used to define the degrees of freedom, not the actual shape
+     * functions.
+     */
     FESystem<3> fe;
 
     DoFHandler<3> dof_handler;
 
     // Constraints for each basis
+    /*!
+     * Boundary constraints for \f$H(\mathrm{curl})\f$-basis.
+     */
     std::vector<AffineConstraints<double>> constraints_curl_v;
+
+    /*!
+     * Boundary constraints for \f$H(\mathrm{grad})\f$-basis.
+     */
     std::vector<AffineConstraints<double>> constraints_h1_v;
 
     // Sparsity patterns and system matrices for each basis
     BlockSparsityPattern sparsity_pattern;
-    //		BlockSparsityPattern     sparsity_pattern_curl;
-    //		BlockSparsityPattern     sparsity_pattern_div;
 
     BlockSparseMatrix<double> assembled_matrix;
     BlockSparseMatrix<double> system_matrix;
@@ -196,7 +293,7 @@ namespace QNed
       inner_schur_preconditioner;
 
     /*!
-     * Global cell number.
+     * Global cell number of current cell.
      */
     CellId global_cell_id;
 
@@ -206,7 +303,7 @@ namespace QNed
     CellId first_cell;
 
     /*!
-     * Global cell iterator.
+     * Global cell iterator of current cell.
      */
     typename Triangulation<3>::active_cell_iterator global_cell_it;
 

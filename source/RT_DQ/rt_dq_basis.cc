@@ -271,9 +271,8 @@ namespace RTDQ
         timer.restart();
       }
 
-    ShapeFun::ShapeFunctionVector<3> std_shape_function_RT(fe.base_element(0),
-                                                           global_cell_it,
-                                                           /*verbose =*/false);
+    ShapeFun::BasisRaviartThomas<3> std_shape_function_RT(global_cell_it,
+                                                          /* degree */ 0);
 
     /*
      * Only used for Laplace problems since we then have
@@ -367,7 +366,7 @@ namespace RTDQ
           }
         else
           {
-            std_shape_function_RT.set_shape_fun_index(n_basis);
+            std_shape_function_RT.set_index(n_basis);
 
             VectorTools::project_boundary_values_div_conforming(
               dof_handler,
@@ -1047,10 +1046,8 @@ namespace RTDQ
     QGauss<3> quad_rule(3);
 
     // Set up vector shape function from finite element on current cell
-    // Set up vector shape function from finite element on current cell
-    ShapeFun::ShapeFunctionVector<3> std_shape_function_div(fe.base_element(0),
-                                                            global_cell_it,
-                                                            /*verbose =*/false);
+    ShapeFun::BasisRaviartThomas<3> std_shape_function_div(global_cell_it,
+                                                           /* degree */ 0);
 
     DoFHandler<3> dof_handler_fake(triangulation);
     dof_handler_fake.distribute_dofs(fe.base_element(0));
@@ -1070,7 +1067,7 @@ namespace RTDQ
       {
         basis_div_v.at(i).block(0).reinit(dof_handler_fake.n_dofs());
 
-        std_shape_function_div.set_shape_fun_index(i);
+        std_shape_function_div.set_index(i);
 
         VectorTools::project(dof_handler_fake,
                              constraints,

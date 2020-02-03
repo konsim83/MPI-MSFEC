@@ -1,5 +1,10 @@
 /*!
-	@mainpage Short Mathematical Problem Description
+	@mainpage A Multiscale Differential Complex - Short Mathematical Problem Description
+	
+	\tableofcontents
+
+		
+	@section sec1 The de Rham Complex with Rough Weighting
 	
 	The purpose of this work is to introduce a unifiying framework
 	for the construction of stable pairings of conforming multiscale
@@ -21,7 +26,7 @@
 	  	
   	\f}
   	
-  	whose domain complex is the \f$L^2\f$-de Rham complex.
+  	whose domain complex is a modified \f$L^2\f$-de Rham complex.
   	
   	\f{eqnarray}{
 	
@@ -47,17 +52,18 @@
 	rough positive coefficient functions. The latter seeks an (orthogonal) Helmholtz-Hodge
 	decomposition (generalized Helmholtz decomposition) into threee types of functions: 
 	curl-free fields, divergence-free fields and so called hamonic forms with different
-	boundary conditions dpendent on the auxiliary variable chosen.   
+	boundary conditions dependent on the auxiliary variable chosen.   
 	 
+
 	
-	### The Hodge-Laplace Problem with Rough Coeffients	
+	@section sec2 The Hodge-Laplace Problem with Rough Coeffients
 	
 	We consider a modified Hodge-Laplace equation on the unit square
 	\f$\Omega = [0,1]^3 \f$:
 		
 	\f{eqnarray}{
 	
-	\mathrm{d}(A_{\varepsilon ,k+1}^{-1} \mathrm{d}^\ast)u_k + \mathrm{d}^\ast(A_{\varepsilon, k+1} \mathrm{d})u_k = f_k - P_\mathfrak{h^k}
+	\mathrm{d}(A_{\varepsilon ,k+1}^{-1} \mathrm{d}^\ast)u_k + \mathrm{d}^\ast(A_{\varepsilon, k+1} \mathrm{d})u_k = f_k - P_{\mathfrak{h}^k}
 	
 	\f}		
 	
@@ -79,9 +85,22 @@
 	
 	\f}
 	 
-	apart from possibly switching the roles of the coeffcients.
-
-	The code is implemented in 3D using the deal.ii library 
-	with the same interface, see the [main file](@ref MainFile).
+	apart from possibly switching the roles of the coeffcients. 
 	
+	@note We solve the equation on prototypically on the unit cube. Although more complicated domains are easily
+	possible we do not take into account harmonic forms for the vector Laplacian. That means that the 3D domains 
+	should not have voids or handles. This will be changed in the future.
+
+
+	
+	@section sec3 Notes about the Code
+	
+	The code is
+	<ul>
+		<li> implemented in 3D using the deal.ii library
+		<li> MPI parallel and can be used on clusters (grids and solvers are parallelized)
+		<li> documented using doxygen
+		<li> mathematically documented in an upcoming paper
+		<li> available under a LPGL license (see license, note that other parts have different licenses)
+ 	</ul>	
 */

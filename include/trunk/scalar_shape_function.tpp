@@ -1,12 +1,12 @@
-#ifndef INCLUDE_FUNCTIONS_VECTOR_SHAPE_FUNCTION_DIV_TPP_
-#define INCLUDE_FUNCTIONS_VECTOR_SHAPE_FUNCTION_DIV_TPP_
+#ifndef INCLUDE_TRUNK_SCALAR_SHAPE_FUNCTION_TPP_
+#define INCLUDE_TRUNK_SCALAR_SHAPE_FUNCTION_TPP_
 
 namespace ShapeFun
 {
   using namespace dealii;
 
   template <int dim>
-  ShapeFunctionVectorDiv<dim>::ShapeFunctionVectorDiv(
+  ShapeFunctionScalar<dim>::ShapeFunctionScalar(
     const FiniteElement<dim> &                         fe,
     typename Triangulation<dim>::active_cell_iterator &cell,
     bool                                               verbose)
@@ -16,18 +16,14 @@ namespace ShapeFun
     , shape_fun_index(0)
     , mapping(1)
     , current_cell_ptr(&cell)
-    , flux(0)
     , verbose(verbose)
   {
-    // If element is primitive it is invalid.
-    // Also there must not be more than one block.
-    // This excludes FE_Systems.
-    Assert((!fe_ptr->is_primitive()), FETools::ExcInvalidFE());
-    Assert(fe_ptr->n_blocks() == 1,
-           ExcDimensionMismatch(1, fe_ptr->n_blocks()));
+    // Make sure the element is scalar.
+    Assert(fe_ptr->n_components() == 1,
+           ExcDimensionMismatch(1, fe_ptr->n_components()));
     if (verbose)
       {
-        std::cout << "\n		Constructed vector shape function for   "
+        std::cout << "		Constructed scalar shape function for   "
                   << fe_ptr->get_name() << "   on cell   [";
         for (unsigned int i = 0; i < (std::pow(2, dim) - 1); ++i)
           {
@@ -39,7 +35,7 @@ namespace ShapeFun
 
   template <int dim>
   void
-    ShapeFunctionVectorDiv<dim>::set_current_cell(
+    ShapeFunctionScalar<dim>::set_current_cell(
       const typename Triangulation<dim>::active_cell_iterator &cell)
   {
     current_cell_ptr = &cell;
@@ -47,16 +43,15 @@ namespace ShapeFun
 
   template <int dim>
   void
-    ShapeFunctionVectorDiv<dim>::set_shape_fun_index(unsigned int index)
+    ShapeFunctionScalar<dim>::set_shape_fun_index(unsigned int index)
   {
     shape_fun_index = index;
   }
 
   template <int dim>
   double
-    ShapeFunctionVectorDiv<dim>::value(
-      const Point<dim> &p,
-      const unsigned int /* component = 0 */) const
+    ShapeFunctionScalar<dim>::value(const Point<dim> &p,
+                                    const unsigned int /*component*/) const
   {
     // Map physical points to reference cell
     Point<dim> point_on_ref_cell(
@@ -66,22 +61,21 @@ namespace ShapeFun
     Quadrature<dim> fake_quadrature(point_on_ref_cell);
 
     // Update he fe_values object
-    FEValues<dim> fe_values(*fe_ptr,
+    FEValues<dim> fe_values(mapping,
+                            *fe_ptr,
                             fake_quadrature,
-                            update_values | update_gradients |
-                              update_quadrature_points);
+                            update_values | update_quadrature_points);
 
     fe_values.reinit(*current_cell_ptr);
 
-    return fe_values[flux].divergence(shape_fun_index, /* q_index */ 0);
+    return fe_values.shape_value(shape_fun_index, /* q_index */ 0);
   }
 
   template <int dim>
   void
-    ShapeFunctionVectorDiv<dim>::value_list(
-      const std::vector<Point<dim>> &points,
-      std::vector<double> &          values,
-      const unsigned int /* component = 0 */) const
+    ShapeFunctionScalar<dim>::value_list(const std::vector<Point<dim>> &points,
+                                         std::vector<double> &          values,
+                                         const unsigned int /*component*/) const
   {
     Assert(points.size() == values.size(),
            ExcDimensionMismatch(points.size(), values.size()));
@@ -100,20 +94,19 @@ namespace ShapeFun
     Quadrature<dim> fake_quadrature(points_on_ref_cell);
 
     // Update he fe_values object
-    FEValues<dim> fe_values(*fe_ptr,
+    FEValues<dim> fe_values(mapping,
+                            *fe_ptr,
                             fake_quadrature,
-                            update_values | update_gradients |
-                              update_quadrature_points);
+                            update_values | update_quadrature_points);
 
     fe_values.reinit(*current_cell_ptr);
 
     for (unsigned int i = 0; i < n_q_points; ++i)
       {
-        values.at(i) = fe_values[flux].divergence(shape_fun_index,
-                                                  /* q_index */ i);
+        values.at(i) = fe_values.shape_value(shape_fun_index, /* q_index */ i);
       }
   }
 
 } // namespace ShapeFun
 
-#endif /* INCLUDE_FUNCTIONS_VECTOR_SHAPE_FUNCTION_DIV_TPP_ */
+#endif /* INCLUDE_TRUNK_SCALAR_SHAPE_FUNCTION_TPP_ */

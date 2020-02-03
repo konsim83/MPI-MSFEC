@@ -62,21 +62,18 @@
 #include <equation_data/eqn_boundary_vals.h>
 #include <my_other_tools.h>
 
-/*!
- * @namespace Q
- * @brief Contains implementation of the main object
- * and all functions to solve a
- * Dirichlet-Neumann problem on a unit square.
- */
 namespace Q
 {
   using namespace dealii;
 
   /*!
    * @class QMultiscale
-   * @brief Main class to solve
-   * Dirichlet-Neumann problem on a unit square with
-   * multiscale FEM.
+   *
+   * @brief \f$H(\mathrm{grad})\f$ multiscale solver with Lagrange elements.
+   *
+   * This class contains a multiscale solver for the weighted 0-form Laplacian
+   * with rough coefficients in \f$H(\mathrm{grad})\f$ with Lagrange elements.
+   * The solver is MPI parallel and can be used on clusters.
    */
   class QMultiscale
   {
@@ -102,17 +99,13 @@ namespace Q
 
   private:
     /*!
-     * @brief Set up the grid with a certain number of refinements.
-     *
-     * Generate a triangulation of \f$[0,1]^{\rm{dim}}\f$ with edges/faces
-     * numbered form \f$1,\dots,2\rm{dim}\f$.
+     * Set up grid.
      */
     void
       make_grid();
 
     /*!
-     * Set all relevant data to local basis object and initialize the basis
-     * fully. Then compute.
+     * Initialize and precompute the basis on each locally owned cell.
      */
     void
       initialize_and_compute_basis();
@@ -128,11 +121,7 @@ namespace Q
       setup_system();
 
     /*!
-     * @brief Assemble the system matrix and the static right hand side.
-     *
-     * Assembly routine to build the time-independent (static) part.
-     * Neumann boundary conditions will be put on edges/faces
-     * with odd number. Constraints are not applied here yet.
+     * Assemble the system matrix.
      */
     void
       assemble_system();

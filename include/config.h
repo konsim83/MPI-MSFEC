@@ -11,6 +11,11 @@
 
 #define FORCE_USE_OF_TRILINOS
 
+/*!
+ * @namespace LA
+ *
+ * @brief Namespace for either Petsc or Trilinoswrappers. We usually prefer the use of Trilinos.
+ */
 namespace LA
 {
 #if defined(DEAL_II_WITH_PETSC) && !defined(DEAL_II_PETSC_WITH_COMPLEX) && \

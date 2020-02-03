@@ -27,16 +27,18 @@ namespace ShapeFun
 {
   using namespace dealii;
 
-  /**
-   * Class for evaluations of scalar valued shape functions.
+  /*!
+   * @class ShapeFunctionScalar
    *
-   * @author Konrad Simon, 2019
+   * @brief Class for evaluations of scalar valued shape functions.
+   *
+   * @note This is slow. Only use for quick and dirty prototyping and sanity checks.
    */
   template <int dim>
   class ShapeFunctionScalar : public Function<dim>
   {
   public:
-    /**
+    /*!
      * Constructor takes a scalar finite element like <code>FE_Q<dim>
      * <\code> and a cell iterator pointing to a certain cell in a
      * triangulation.
@@ -49,7 +51,7 @@ namespace ShapeFun
                         typename Triangulation<dim>::active_cell_iterator &cell,
                         bool verbose = false);
 
-    /**
+    /*!
      * Evaluate shape function at point <code> p<\code>
      *
      * @param[in] p
@@ -59,7 +61,7 @@ namespace ShapeFun
       value(const Point<dim> & p,
             const unsigned int component = 0) const override;
 
-    /**
+    /*!
      * Evaluate shape function at point list <code> points <\code>
      *
      * @param[in] points
@@ -70,7 +72,7 @@ namespace ShapeFun
                  std::vector<double> &          values,
                  const unsigned int             component = 0) const override;
 
-    /**
+    /*!
      * Set pointer to current cell (actually and iterator).
      *
      * @param cell
@@ -79,7 +81,7 @@ namespace ShapeFun
       set_current_cell(
         const typename Triangulation<dim>::active_cell_iterator &cell);
 
-    /**
+    /*!
      * Set shape function index.
      *
      * @param index
@@ -101,6 +103,6 @@ namespace ShapeFun
 
 } // namespace ShapeFun
 
-#include <functions/scalar_shape_function.tpp>
+#include <trunk/scalar_shape_function.tpp>
 
 #endif /* SHAPE_FUN_SCALAR_TPP_ */

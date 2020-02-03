@@ -28,6 +28,10 @@ namespace ShapeFun
   using namespace dealii;
 
   /*!
+   * @class ShapeFunctionConcatinateVector
+   *
+   * @brief Concatination of Function<dim> objects
+   *
    * This class represents a vector function that is made of two
    * concatinated <code> Function<dim> </code> objects.
    *
@@ -46,18 +50,44 @@ namespace ShapeFun
     ShapeFunctionConcatinateVector(const Function<dim> &function1,
                                    const Function<dim> &function2);
 
+    /*!
+     * Value of concatinated function of a given component.
+     *
+     * @param p
+     * @param component
+     * @return
+     */
     virtual double
       value(const Point<dim> &p, const unsigned int component) const override;
 
+    /*!
+     * Vector value of concatinated function.
+     *
+     * @param p
+     * @param value
+     */
     virtual void
       vector_value(const Point<dim> &p, Vector<double> &value) const override;
 
+    /*!
+     * Vector value list of concatinated function.
+     *
+     * @param points
+     * @param values
+     */
     virtual void
       vector_value_list(const std::vector<Point<dim>> &points,
                         std::vector<Vector<double>> &  values) const override;
 
   private:
+    /*!
+     * Smart pointer to first componenet of input.
+     */
     SmartPointer<const Function<dim>> function_ptr1;
+
+    /*!
+     * Smart pointer to second componenet of input.
+     */
     SmartPointer<const Function<dim>> function_ptr2;
   };
 

@@ -69,26 +69,49 @@
 #include <equation_data/eqn_rhs.h>
 #include <functions/concatinate_functions.h>
 #include <linear_algebra/approximate_inverse.h>
-#include <linear_algebra/approximate_schur_complement.tpp>
+#include <linear_algebra/approximate_schur_complement.h>
 #include <linear_algebra/inverse_matrix.h>
 #include <linear_algebra/preconditioner.h>
-#include <linear_algebra/schur_complement.tpp>
+#include <linear_algebra/schur_complement.h>
 #include <my_other_tools.h>
 #include <vector_tools/my_vector_tools.h>
 
+/*!
+ * @namespace NedRT
+ *
+ * @brief Namespace for \f$H(\mathrm{curl})\f$-\f$H(\mathrm{div})\f$ problems with conformal multiscale elements.
+ */
 namespace NedRT
 {
   using namespace dealii;
 
+  /*!
+   * @class NedRTStd
+   *
+   * @brief \f$H(\mathrm{curl})\f$-\f$H(\mathrm{div})\f$ problem solver with Nedelec-Raviart-Thomas pairings.
+   *
+   * This class contains a standard solver for the weighted 2-form Laplacian
+   * with rough coefficients in \f$H(\mathrm{curl})\f$-\f$H(\mathrm{div})\f$
+   * with Nedelec-Raviart-Thomas pairings. The solver is MPI parallel and can be
+   * used on clusters.
+   */
   class NedRTStd
   {
   public:
     NedRTStd() = delete;
+
+    /*!
+     * Constructor.
+     *
+     * @param parameters_
+     * @param parameter_filename_
+     */
     NedRTStd(ParametersStd &    parameters_,
              const std::string &parameter_filename_);
+
     ~NedRTStd();
 
-    /**
+    /*!
      * Solve standard mixed problem with Nedelec-Raviart-Thomas element
      * pairing.
      */
@@ -96,31 +119,81 @@ namespace NedRT
       run();
 
   private:
+    /*!
+     * Set up grid.
+     */
     void
       setup_grid();
+
+    /*!
+     * Set up system matrix.
+     */
     void
       setup_system_matrix();
+
+    /*!
+     * Setup constraints.
+     */
     void
       setup_constraints();
+
+    /*!
+     * Assemble the system matrix.
+     */
     void
       assemble_system();
+
+    /*!
+     * Sparse direct MUMPS for block systems.
+     *
+     * * @note This will throw an exception since this is not implemented in deal.ii v9.1.1 for BlockSparseMatrix.
+     */
     void
       solve_direct();
+
+    /*!
+     * Schur complement solver uses a preconditioned approximate Schur
+     * complement solver.
+     */
     void
       solve_iterative();
+
+    /*!
+     * If the user decides to use an exact solution as a ground truth then the
+     * solution must be projected onto the Nedelec-Raviart-Thomas space.
+     */
     void
       write_exact_solution();
+
+    /*!
+     * Write *.vtu output and a pvtu-record that collects the vtu-files.
+     */
     void
       output_results() const;
 
+    /*!
+     * Current MPI communicator.
+     */
     MPI_Comm mpi_communicator;
 
-    ParametersStd &    parameters;
+    /*!
+     * Parameter structure to hold parsed data.
+     */
+    ParametersStd &parameters;
+
+    /*!
+     * Name of parameter input file.
+     */
     const std::string &parameter_filename;
 
+    /*!
+     * Distributed triangulation.
+     */
     parallel::distributed::Triangulation<3> triangulation;
 
-    // Modified finite element
+    /*!
+     * Finite element system to hold Nedelec-Raviart-Thomas element pairing.
+     */
     FESystem<3> fe;
 
     // Modified DoFHandler
@@ -133,22 +206,22 @@ namespace NedRT
     // Constraint matrix holds boundary conditions
     AffineConstraints<double> constraints;
 
-    /**
+    /*!
      * Distributed system matrix.
      */
     LA::MPI::BlockSparseMatrix system_matrix;
 
-    /**
+    /*!
      * Solution vector containing weights at the dofs.
      */
     LA::MPI::BlockVector locally_relevant_solution;
 
-    /**
+    /*!
      * Exact solution vector containing weights at the dofs.
      */
     LA::MPI::BlockVector locally_relevant_exact_solution;
 
-    /**
+    /*!
      * Contains all parts of the right-hand side needed to
      * solve the linear system.
      */

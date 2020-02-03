@@ -51,9 +51,13 @@ namespace Q
 
   /*!
    * @class QBasis
-   * @brief Main class to solve for time-independent
-   * multiscale basis functions (Dirichlet problem) on a
-   * given coarse quadrilateral cell without oversampling.
+   *
+   * @brief Class to hold local mutiscale basis in \f$H(\mathrm{grad})\f$.
+   *
+   * This class is the heart of the multiscale computation. It precomputes the
+   * basis on a given cell and assembles the data for the global solver. Once a
+   * global solution is computed it takes care of defining the local fine scale
+   * solution and writes data.
    */
   class QBasis
   {
@@ -82,9 +86,6 @@ namespace Q
      */
     QBasis(const QBasis &X);
 
-    /*!
-     * Destructor.
-     */
     ~QBasis();
 
     /*!
@@ -96,7 +97,7 @@ namespace Q
       run();
 
     /*!
-     * Write out global solution in cell.
+     * Write out global solution in cell as vtu.
      */
     void
       output_global_solution_in_cell() const;
@@ -160,17 +161,13 @@ namespace Q
       setup_system();
 
     /*!
-     * @brief Assemble the system matrix and the static right hand side.
-     *
-     * Assembly routine to build the time-independent (static) part.
-     * Neumann boundary conditions will be put on edges/faces
-     * with odd number. Constraints are not applied here yet.
+     * Assemble the system matrix and the right-hand side.
      */
     void
       assemble_system();
 
     /*!
-     * @brief Assemble the gloabl element matrix and the gobla right hand side.
+     * @brief Assemble the gloabl element matrix and the gobal right-hand side.
      */
     void
       assemble_global_element_matrix();
@@ -205,14 +202,35 @@ namespace Q
     void
       set_filename_global();
 
+    /*!
+     * Current MPI communicator.
+     */
     MPI_Comm mpi_communicator;
 
-    ParametersBasis    parameters;
+
+    /*!
+     * Parameter structure to hold parsed data.
+     */
+    ParametersBasis parameters;
+
+    /*!
+     * Name of parameter input file.
+     */
     const std::string &parameter_filename;
 
+    /*!
+     * Local triangulation.
+     */
     Triangulation<3> triangulation;
-    FE_Q<3>          fe;
-    DoFHandler<3>    dof_handler;
+
+    /*!
+     * Finite element system to hold Lagrange elements.
+     * This is only used to define the degrees of freedom, not the actual shape
+     * functions.
+     */
+    FE_Q<3> fe;
+
+    DoFHandler<3> dof_handler;
 
     std::vector<AffineConstraints<double>> constraints_vector;
     std::vector<Point<3>>                  corner_points;

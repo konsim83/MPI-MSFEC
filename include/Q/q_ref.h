@@ -73,8 +73,12 @@ namespace Q
 
   /*!
    * @class QStd
-   * @brief Main class to solve
-   * Dirichlet-Neumann problem on a unit square.
+   *
+   * @brief \f$H(\mathrm{grad})\f$ multiscale solver with Lagrange elements.
+   *
+   * This class contains a multiscale solver for the weighted 0-form Laplacian
+   * with rough coefficients in \f$H(\mathrm{grad})\f$ with Lagrange elements.
+   * The solver is MPI parallel and can be used on clusters.
    */
   class QStd
   {
@@ -83,43 +87,38 @@ namespace Q
      * Delete default constructor.
      */
     QStd() = delete;
+
+    /*!
+     * Constructor.
+     *
+     * @param parameters_
+     * @param parameter_filename_
+     */
     QStd(ParametersStd &parameters_, const std::string &parameter_filename_);
+
     ~QStd();
 
     /*!
-     * @brief Run function of the object.
-     *
-     * Run the computation after object is built. Implements theping loop.
+     * Solve standard mixed problem with modified Lagrange elements.
      */
     void
       run();
 
   private:
     /*!
-     * @brief Set up the grid with a certain number of refinements.
-     *
-     * Generate a triangulation of \f$[0,1]^{\rm{dim}}\f$ with edges/faces
-     * numbered form \f$1,\dots,2\rm{dim}\f$.
+     * Set up grid.
      */
     void
       make_grid();
 
     /*!
-     * @brief Setup sparsity pattern and system matrix.
-     *
-     * Compute sparsity pattern and reserve memory for the sparse system matrix
-     * and a number of right-hand side vectors. Also build a constraint object
-     * to take care of Dirichlet boundary conditions.
+     * Setup sparsity pattern and system matrix.
      */
     void
       setup_system();
 
     /*!
-     * @brief Assemble the system matrix and the static right hand side.
-     *
-     * Assembly routine to build the time-independent (static) part.
-     * Neumann boundary conditions will be put on edges/faces
-     * with odd number. Constraints are not applied here yet.
+     * Assemble the system matrix.
      */
     void
       assemble_system();
@@ -141,17 +140,37 @@ namespace Q
     void
       solve_iterative();
 
+    /*!
+     * Write *.vtu output and a pvtu-record that collects the vtu-files.
+     */
     void
       output_results() const;
 
+    /*!
+     * Current MPI communicator.
+     */
     MPI_Comm mpi_communicator;
 
-    ParametersStd &    parameters;
+    /*!
+     * Parameter structure to hold parsed data.
+     */
+    ParametersStd &parameters;
+
+    /*!
+     * Name of parameter input file.
+     */
     const std::string &parameter_filename;
 
+    /*!
+     * Distributed triangulation.
+     */
     parallel::distributed::Triangulation<3> triangulation;
 
-    FE_Q<3>       fe;
+    /*!
+     * Standard Lagrange elements.
+     */
+    FE_Q<3> fe;
+
     DoFHandler<3> dof_handler;
 
     IndexSet locally_owned_dofs;
@@ -159,9 +178,21 @@ namespace Q
 
     AffineConstraints<double> constraints;
 
+    /*!
+     * Distributed system matrix.
+     */
     LA::MPI::SparseMatrix system_matrix;
-    LA::MPI::Vector       locally_relevant_solution;
-    LA::MPI::Vector       system_rhs;
+
+    /*!
+     * Exact solution vector containing weights at the dofs.
+     */
+    LA::MPI::Vector locally_relevant_solution;
+
+    /*!
+     * Contains all parts of the right-hand side needed to
+     * solve the linear system.
+     */
+    LA::MPI::Vector system_rhs;
 
     ConditionalOStream pcout;
     TimerOutput        computing_timer;

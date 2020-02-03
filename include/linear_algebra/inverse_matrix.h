@@ -17,24 +17,59 @@
 // my headers
 #include <config.h>
 
+/*!
+ * @namespace LinearSolvers
+ *
+ * @brief Contains serial and parallelized implementations of solvers and preconditioners.
+ */
 namespace LinearSolvers
 {
   using namespace dealii;
 
+  /*!
+   * @class InverseMatrix
+   *
+   * @brief Implements an iterative inverse
+   *
+   * Implement the inverse matrix of a given matrix through
+   * its action by a preconditioned CG solver. This class also
+   * works with MPI.
+   *
+   * @note The inverse is not constructed explicitly.
+   */
   template <typename MatrixType, typename PreconditionerType>
   class InverseMatrix : public Subscriptor
   {
   public:
+    /*!
+     * Constructor.
+     *
+     * @param m
+     * @param preconditioner
+     */
     InverseMatrix(const MatrixType &        m,
                   const PreconditionerType &preconditioner);
 
+    /*!
+     * Matrix-vector multiplication.
+     *
+     * @param[out] dst
+     * @param[in] src
+     */
     template <typename VectorType>
     void
       vmult(VectorType &dst, const VectorType &src) const;
 
   private:
+    /*!
+     * Samrt pointer to system matrix.
+     */
     const SmartPointer<const MatrixType> matrix;
-    const PreconditionerType &           preconditioner;
+
+    /*!
+     * Preconditioner.
+     */
+    const PreconditionerType &preconditioner;
   };
 
 } // end namespace LinearSolvers

@@ -61,8 +61,10 @@
  * Not good style but works so far.
  */
 
-/**
- * Extension of Vector tools namespace contains functions
+/*!
+ * @namespace MyVectorTools
+ *
+ * @brief Extension of Vector tools namespace contains functions
  * not implemented in deal.ii yet.
  */
 namespace MyVectorTools
@@ -71,7 +73,7 @@ namespace MyVectorTools
 
   namespace internal
   {
-    /**
+    /*!
      * Parallel assembly function for non-matrix-free projections onto fe
      * space.
      *
@@ -93,7 +95,7 @@ namespace MyVectorTools
                           TrilinosWrappers::MPI::Vector &  system_rhs,
                           const MPI_Comm & /* mpi_communicator */);
 
-    /**
+    /*!
      * Serial assembly function for non-matrix-free projections onto fe
      * space.
      *
@@ -113,7 +115,7 @@ namespace MyVectorTools
                           SparseMatrix<double> &           system_matrix,
                           Vector<double> &                 system_rhs);
 
-    /**
+    /*!
      * Parallel solver for projection problems. These problems are not
      * too hard so the solvers are quite standard CG solvers without
      * preconditioning.
@@ -133,7 +135,7 @@ namespace MyVectorTools
             TrilinosWrappers::MPI::Vector &       vec,
             const MPI_Comm &                      mpi_communicator);
 
-    /**
+    /*!
      * Serial solver for projection problems. These problems are not
      * too hard so the solvers are quite standard CG solvers without
      * preconditioning.
@@ -149,7 +151,7 @@ namespace MyVectorTools
             const Vector<double> &           system_rhs,
             Vector<double> &                 vec);
 
-    /**
+    /*!
      * Fast dynamic cast. Be careful, this is not safe.
      *
      * @param src
@@ -171,7 +173,7 @@ namespace MyVectorTools
   //////////////////////////////////////////////////////
   //////////////////////////////////////////////////////
 
-  /**
+  /*!
    * Parallel projection method on finite element space. This works
    * also for some elements that do not work in deal.ii for distributed
    * vectors.
@@ -191,7 +193,7 @@ namespace MyVectorTools
                         const FunctionType &             my_function,
                         TrilinosWrappers::MPI::Vector &  vec,
                         const MPI_Comm &                 mpi_communicator);
-  /**
+  /*!
    * Serial projection method on finite element space. There may be
    * some redundancy with deal.ii.
    *
@@ -211,20 +213,15 @@ namespace MyVectorTools
 
 } // namespace MyVectorTools
 
-///////////////////////////////////////////
-///////   External Instatiations     //////
-///////////////////////////////////////////
-
+/*
+ * External Instatiations
+ */
 namespace MyVectorTools
 {
   using namespace dealii;
 
   namespace internal
   {
-    ////////////////////////
-    // explicit instantiations
-    ////////////////////////
-
     extern template void
       assemble_projection<2, TensorFunction<1, 2>>(
         const DoFHandler<2> &            dof_handler,
@@ -307,10 +304,6 @@ namespace MyVectorTools
 
   //////////////////////////////////////////////////////
   //////////////////////////////////////////////////////
-
-  ////////////////////////
-  // explicit instantiations
-  ////////////////////////
 
   extern template void
     project_on_fe_space<2, TensorFunction<1, 2>>(

@@ -1,12 +1,12 @@
-#ifndef INCLUDE_FUNCTIONS_SCALAR_SHAPE_FUNCTION_GRAD_TPP_
-#define INCLUDE_FUNCTIONS_SCALAR_SHAPE_FUNCTION_GRAD_TPP_
+#ifndef INCLUDE_TRUNK_VECTOR_SHAPE_FUNCTION_CURL_TPP_
+#define INCLUDE_TRUNK_VECTOR_SHAPE_FUNCTION_CURL_TPP_
 
 namespace ShapeFun
 {
   using namespace dealii;
 
   template <int dim>
-  ShapeFunctionScalarGrad<dim>::ShapeFunctionScalarGrad(
+  ShapeFunctionVectorCurl<dim>::ShapeFunctionVectorCurl(
     const FiniteElement<dim> &                  fe,
     typename Triangulation<dim>::cell_iterator &cell,
     bool                                        verbose)
@@ -16,16 +16,18 @@ namespace ShapeFun
     , shape_fun_index(0)
     , mapping(1)
     , current_cell_ptr(&cell)
-    , grad(0)
+    , curl(0)
     , verbose(verbose)
   {
-    // Make sure the element is scalar.
-    Assert(fe_ptr->n_components() == 1,
-           ExcDimensionMismatch(1, fe_ptr->n_components()));
+    // If element is primitive it is invalid.
+    // Also there must not be more than one block.
+    // This excludes FE_Systems.
+    Assert((!fe_ptr->is_primitive()), FETools::ExcInvalidFE());
+    Assert(fe_ptr->n_blocks() == 1,
+           ExcDimensionMismatch(1, fe_ptr->n_blocks()));
     if (verbose)
       {
-        std::cout << "		Constructed scalar shape function gradient for "
-                     "  "
+        std::cout << "\n		Constructed vector shape function for   "
                   << fe_ptr->get_name() << "   on cell   [";
         for (unsigned int i = 0; i < (std::pow(2, dim) - 1); ++i)
           {
@@ -37,7 +39,7 @@ namespace ShapeFun
 
   template <int dim>
   void
-    ShapeFunctionScalarGrad<dim>::set_current_cell(
+    ShapeFunctionVectorCurl<dim>::set_current_cell(
       const typename Triangulation<dim>::cell_iterator &cell)
   {
     current_cell_ptr = &cell;
@@ -45,14 +47,14 @@ namespace ShapeFun
 
   template <int dim>
   void
-    ShapeFunctionScalarGrad<dim>::set_shape_fun_index(unsigned int index)
+    ShapeFunctionVectorCurl<dim>::set_shape_fun_index(unsigned int index)
   {
     shape_fun_index = index;
   }
 
   template <int dim>
   void
-    ShapeFunctionScalarGrad<dim>::vector_value(const Point<dim> &p,
+    ShapeFunctionVectorCurl<dim>::vector_value(const Point<dim> &p,
                                                Vector<double> &  value) const
   {
     // Map physical points to reference cell
@@ -70,12 +72,12 @@ namespace ShapeFun
 
     fe_values.reinit(*current_cell_ptr);
 
-    (fe_values[grad].gradient(shape_fun_index, /* q_index */ 0)).unroll(value);
+    (fe_values[curl].curl(shape_fun_index, /* q_index */ 0)).unroll(value);
   }
 
   template <int dim>
   void
-    ShapeFunctionScalarGrad<dim>::vector_value_list(
+    ShapeFunctionVectorCurl<dim>::vector_value_list(
       const std::vector<Point<dim>> &points,
       std::vector<Vector<double>> &  values) const
   {
@@ -105,16 +107,15 @@ namespace ShapeFun
 
     for (unsigned int i = 0; i < n_q_points; ++i)
       {
-        (fe_values[grad].gradient(shape_fun_index,
-                                  /* q_index */ i))
+        (fe_values[curl].curl(shape_fun_index,
+                              /* q_index */ i))
           .unroll(values.at(i));
       }
   }
 
-
   template <int dim>
   void
-    ShapeFunctionScalarGrad<dim>::tensor_value_list(
+    ShapeFunctionVectorCurl<dim>::tensor_value_list(
       const std::vector<Point<dim>> &points,
       std::vector<Tensor<1, dim>> &  values) const
   {
@@ -144,11 +145,11 @@ namespace ShapeFun
 
     for (unsigned int i = 0; i < n_q_points; ++i)
       {
-        values.at(i) = fe_values[grad].gradient(shape_fun_index,
-                                                /* q_index */ i);
+        values.at(i) = fe_values[curl].curl(shape_fun_index,
+                                            /* q_index */ i);
       }
   }
 
 } // namespace ShapeFun
 
-#endif /* INCLUDE_FUNCTIONS_SCALAR_SHAPE_FUNCTION_GRAD_TPP_ */
+#endif /* INCLUDE_TRUNK_VECTOR_SHAPE_FUNCTION_CURL_TPP_ */

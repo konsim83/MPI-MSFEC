@@ -1,40 +1,16 @@
 #ifndef INCLUDE_LINEAR_ALGEBRA_SCHUR_COMPLEMENT_TPP_
 #define INCLUDE_LINEAR_ALGEBRA_SCHUR_COMPLEMENT_TPP_
 
-#include "config.h"
-#include <deal.II/base/subscriptor.h>
-#include <linear_algebra/inverse_matrix.h>
+//#include <linear_algebra/schur_complement.h>
 
-#include <memory>
-#include <vector>
 
 namespace LinearSolvers
 {
   using namespace dealii;
 
-  template <typename BlockMatrixType,
-            typename VectorType,
-            typename PreconditionerType>
-  class SchurComplement : public Subscriptor
-  {
-  private:
-    using BlockType = typename BlockMatrixType::BlockType;
-
-  public:
-    SchurComplement(const BlockMatrixType &system_matrix,
-                    const InverseMatrix<BlockType, PreconditionerType>
-                      &relevant_inverse_matrix);
-
-    void
-      vmult(VectorType &dst, const VectorType &src) const;
-
-  private:
-    const SmartPointer<const BlockMatrixType> system_matrix;
-    const SmartPointer<const InverseMatrix<BlockType, PreconditionerType>>
-      relevant_inverse_matrix;
-
-    mutable VectorType tmp1, tmp2, tmp3;
-  };
+  /*
+   * The serial version
+   */
 
   template <typename BlockMatrixType,
             typename VectorType,
@@ -65,39 +41,9 @@ namespace LinearSolvers
     dst -= tmp3;
   }
 
-  ////////////////////////
-  // Now the MPI version
-  ////////////////////////
-
-  template <typename BlockMatrixType,
-            typename VectorType,
-            typename PreconditionerType>
-  class SchurComplementMPI : public Subscriptor
-  {
-  private:
-    using BlockType = typename BlockMatrixType::BlockType;
-
-  public:
-    SchurComplementMPI(const BlockMatrixType &system_matrix,
-                       const InverseMatrix<BlockType, PreconditionerType>
-                         &                          relevant_inverse_matrix,
-                       const std::vector<IndexSet> &owned_partitioning,
-                       MPI_Comm                     mpi_communicator);
-
-    void
-      vmult(VectorType &dst, const VectorType &src) const;
-
-  private:
-    const SmartPointer<const BlockMatrixType> system_matrix;
-    const SmartPointer<const InverseMatrix<BlockType, PreconditionerType>>
-      relevant_inverse_matrix;
-
-    const std::vector<IndexSet> &owned_partitioning;
-
-    MPI_Comm mpi_communicator;
-
-    mutable VectorType tmp1, tmp2, tmp3;
-  };
+  /*
+   * Now the MPI version
+   */
 
   template <typename BlockMatrixType,
             typename VectorType,
@@ -133,5 +79,6 @@ namespace LinearSolvers
   }
 
 } // end namespace LinearSolvers
+
 
 #endif /* INCLUDE_LINEAR_ALGEBRA_SCHUR_COMPLEMENT_TPP_ */

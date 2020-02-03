@@ -62,11 +62,11 @@
 #include <Ned_RT/ned_rt_post_processor.h>
 #include <config.h>
 #include <linear_algebra/approximate_inverse.h>
-#include <linear_algebra/approximate_schur_complement.tpp>
+#include <linear_algebra/approximate_schur_complement.h>
 #include <linear_algebra/inverse_matrix.h>
 #include <linear_algebra/inverse_matrix.tpp>
 #include <linear_algebra/preconditioner.h>
-#include <linear_algebra/schur_complement.tpp>
+#include <linear_algebra/schur_complement.h>
 #include <my_other_tools.h>
 #include <vector_tools/my_vector_tools.h>
 
@@ -74,10 +74,20 @@ namespace NedRT
 {
   using namespace dealii;
 
+  /*!
+   * @class NedRTMultiscale
+   *
+   * @brief \f$H(\mathrm{curl})\f$-\f$H(\mathrm{div})\f$ multiscale solver with Nedelec-Raviart-Thomas pairings.
+   *
+   * This class contains a multiscale solver for the weighted 2-form Laplacian
+   * with rough coefficients in \f$H(\mathrm{curl})\f$-\f$H(\mathrm{div})\f$
+   * with Nedelec-Raviart-Thomas pairings. The solver is MPI parallel and can be
+   * used on clusters.
+   */
   class NedRTMultiscale
   {
   public:
-    /**
+    /*!
      * Constructor.
      *
      * @param parameters_
@@ -87,42 +97,116 @@ namespace NedRT
                     const std::string &parameter_filename);
     ~NedRTMultiscale();
 
+    /*!
+     * Solve standard mixed problem with modified Nedelec-Raviart-Thomas element
+     * pairing.
+     */
     void
       run();
 
   private:
+    /*!
+     * Set up grid.
+     */
     void
       setup_grid();
+
+    /*!
+     * Initialize and precompute the basis on each locally owned cell.
+     */
     void
       initialize_and_compute_basis();
+
+    /*!
+     * Set up system matrix.
+     */
     void
       setup_system_matrix();
+
+    /*!
+     * Setup constraints.
+     */
     void
       setup_constraints();
+
+    /*!
+     * Assemble the system matrix.
+     */
     void
       assemble_system();
+
+    /*!
+     * Sparse direct MUMPS for block systems.
+     *
+     * @note This will throw an exception since this is not
+     * implemented in deal.ii v9.1.1 for BlockSparseMatrix.
+     */
     void
       solve_direct();
+
+    /*!
+     * Schur complement solver uses a preconditioned approximate Schur
+     * complement solver.
+     */
     void
       solve_iterative();
+
+    /*!
+     * After computing the global multiscale
+     * solution we need to send the global weights to each
+     * basis object. This then defines the global solution.
+     */
     void
       send_global_weights_to_cell();
 
+    /*!
+     * Collect all file names of
+     * basis objects on each processor.
+     *
+     * @return
+     */
     std::vector<std::string>
       collect_filenames_on_mpi_process();
+
+    /*!
+     * If the user decides to use an exact solution as a ground truth then the
+     * solution must be projected onto the Nedelec-Raviart-Thomas space.
+     */
     void
       write_exact_solution();
+
+    /*!
+     * Write *.vtu output and a pvtu-record that collects the vtu-files. Writes
+     * both the coarse and fine scale solutions.
+     */
     void
       output_results();
 
+    /*!
+     * Current MPI communicator.
+     */
     MPI_Comm mpi_communicator;
 
-    ParametersMs &     parameters;
+    /*!
+     * Parameter structure to hold parsed data.
+     */
+    ParametersMs &parameters;
+
+    /*!
+     * Name of parameter input file.
+     */
     const std::string &parameter_filename;
 
+    /*!
+     * Distributed triangulation.
+     */
     parallel::distributed::Triangulation<3> triangulation;
 
-    // Modified finite element
+    /*!
+     * Finite element system to hold Nedelec-Raviart-Thomas element pairing.
+     * This is only used to define the degrees of freedom, not the actual shape
+     * functions.
+     */
     FESystem<3> fe;
 
     // Modified DoFHandler
@@ -135,22 +219,22 @@ namespace NedRT
     // Constraint matrix holds boundary conditions
     AffineConstraints<double> constraints;
 
-    /**
+    /*!
      * Distributed system matrix.
      */
     LA::MPI::BlockSparseMatrix system_matrix;
 
-    /**
+    /*!
      * Solution vector containing weights at the dofs.
      */
     LA::MPI::BlockVector locally_relevant_solution;
 
-    /**
+    /*!
      * Exact solution vector containing weights at the dofs.
      */
     LA::MPI::BlockVector locally_relevant_exact_solution;
 
-    /**
+    /*!
      * Contains all parts of the right-hand side needed to
      * solve the linear system.
      */
@@ -162,13 +246,13 @@ namespace NedRT
     std::shared_ptr<typename LinearSolvers::InnerPreconditioner<3>::type>
       inner_schur_preconditioner;
 
-    /**
-     * Convenience typedef for STL vector holding basis functions for each
+    /*!
+     * Convenience typedef for STL map holding basis functions for each
      * coarse cell.
      */
     using BasisMap = std::map<CellId, NedRTBasis>;
 
-    /**
+    /*!
      * Basis vector maps cell_id to local basis.
      */
     BasisMap cell_basis_map;

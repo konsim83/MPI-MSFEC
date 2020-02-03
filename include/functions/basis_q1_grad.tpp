@@ -134,6 +134,47 @@ namespace ShapeFun
       } // end ++p
   }
 
+
+  template <>
+  void
+    BasisQ1Grad<2>::tensor_value_list(const std::vector<Point<2>> &points,
+                                      std::vector<Tensor<1, 2>> &  values) const
+  {
+    Assert(points.size() == values.size(),
+           ExcDimensionMismatch(points.size(), values.size()));
+
+    Vector<double> value_tmp(2);
+    for (unsigned int p = 0; p < points.size(); ++p)
+      {
+        value_tmp = 0;
+        vector_value(points[p], value_tmp);
+
+        values[p][0] = value_tmp(0);
+        values[p][1] = value_tmp(1);
+      } // end ++p
+  }
+
+
+  template <>
+  void
+    BasisQ1Grad<3>::tensor_value_list(const std::vector<Point<3>> &points,
+                                      std::vector<Tensor<1, 3>> &  values) const
+  {
+    Assert(points.size() == values.size(),
+           ExcDimensionMismatch(points.size(), values.size()));
+
+    Vector<double> value_tmp(3);
+    for (unsigned int p = 0; p < points.size(); ++p)
+      {
+        value_tmp = 0;
+        vector_value(points[p], value_tmp);
+
+        values[p][0] = value_tmp(0);
+        values[p][1] = value_tmp(1);
+        values[p][2] = value_tmp(2);
+      } // end ++p
+  }
+
 } // namespace ShapeFun
 
 #endif /* INCLUDE_BASIS_Q1_GRAD_TPP_ */

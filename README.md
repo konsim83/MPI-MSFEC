@@ -7,6 +7,14 @@ complex when rough data is involved, i.e., we solve a scalar or vector valued mo
 Laplace problem (hence we seek a Hodge decomposition). 
 For further information build the documentation of the project.
 
+---
+**HINT**
+
+MsFEC is **MPI parallel** and can be used on clusters to compute fairly
+large problems - depending on your machine(s) up to **a few 100 milltion
+unknowns** in 3D. 
+---
+
 Note that there is still room to optimize the implementation (e.g., faster linear solvers).
 
 | **Documentation** |
@@ -20,13 +28,15 @@ Note that there is still room to optimize the implementation (e.g., faster linea
 
 * A Linux distribution (we used Debian and Ubuntu for the development)
 * **cmake** v2.8.12 or higher	
-* **clang-format-6.0** (recommented to indent the code, available in most linux distributions)
-* A working **debugger** (we use gdb)
 * **doxygen**, **mathjax** and **GraphViz** (for the documentation)
 * A working installation of **[deal.ii](www.dealii.org)** v9.1.1 or higher 
 with **MPI**, **p4est** and all **Trilinos** dependencies must be installed. This
 can easily be done through the **[spack](https://spack.readthedocs.io/en/latest/)** 
 package manager
+* **[Paraview](www.paraview.org)** or **[Visit](https://wci.llnl.gov/simulation/computer-codes/visit/)** 
+for the visualization
+* If you wish to modify the code **clang-format-6.0** (recommented to indent the code, 
+available in most linux distributions) and a working **debugger** (we use gdb) is usually a good idea
 
 ---
 
@@ -81,7 +91,9 @@ ctest -V -R
 
 ### Building the Documentation
 
-You will need `doxygen`, `mathjax` and some other packages such as `GraphViz` installed.
+If you want to build the documentation locally 
+you will need `doxygen`, `mathjax` and some other
+packages such as `GraphViz` installed.
 
 To build the documentation with `doxygen` enter the code folder
 

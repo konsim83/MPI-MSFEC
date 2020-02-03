@@ -19,12 +19,12 @@ namespace ShapeFun
 
 
   template <int dim>
-    BasisRaviartThomas<dim>::BasisRaviartThomas(BasisRaviartThomas<dim> &basis)
-      : Function<dim>(dim)
-      , mapping(basis.mapping)
-      , fe(basis.fe)
-      , index_basis(basis.index_basis)
-    {}
+  BasisRaviartThomas<dim>::BasisRaviartThomas(BasisRaviartThomas<dim> &basis)
+    : Function<dim>(dim)
+    , mapping(basis.mapping)
+    , fe(basis.fe)
+    , index_basis(basis.index_basis)
+  {}
 
 
   template <int dim>
@@ -38,12 +38,13 @@ namespace ShapeFun
   template <int dim>
   void
     BasisRaviartThomas<dim>::vector_value(const Point<dim> &p,
-                                    Vector<double> &  value) const
+                                          Vector<double> &  value) const
   {
     Point<dim> p_ref = mapping.map_real_to_unit_cell(p);
 
     // This is the inverse of the jacobian \hat K -> K
-    FullMatrix<double> jacobians = mapping.jacobian_map_unit_cell_to_real(p_ref);
+    FullMatrix<double> jacobians =
+      mapping.jacobian_map_unit_cell_to_real(p_ref);
 
     Vector<double> tmp(dim);
     for (unsigned int d = 0; d < dim; ++d)
@@ -52,7 +53,7 @@ namespace ShapeFun
       }
 
     jacobians.vmult(value, tmp);
-    value /= jacobians.determinant ();
+    value /= jacobians.determinant();
   }
 
 
@@ -69,7 +70,7 @@ namespace ShapeFun
     mapping.map_real_to_unit_cell(points, points_ref);
 
     std::vector<FullMatrix<double>> jacobians(points.size(),
-                                                  FullMatrix<double>(dim, dim));
+                                              FullMatrix<double>(dim, dim));
     mapping.jacobian_map_unit_cell_to_real(points_ref, jacobians);
 
     Vector<double> tmp(dim);
@@ -82,7 +83,7 @@ namespace ShapeFun
             tmp(d) = fe.shape_value_component(index_basis, points_ref[p], d);
           }
         jacobians[p].vmult(values[p], tmp);
-        values[p] /= jacobians[p].determinant ();
+        values[p] /= jacobians[p].determinant();
       } // end ++p
   }
 

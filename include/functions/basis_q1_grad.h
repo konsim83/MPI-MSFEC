@@ -20,7 +20,18 @@ namespace ShapeFun
 {
   using namespace dealii;
 
-
+  /*!
+   * @class BasisQ1Grad
+   *
+   * @brief Gradient of \f$Q_1\f$ basis on given cell
+   *
+   * Class implements curls of vectorial Nedelec basis for a given
+   * quadrilateral.
+   *
+   * @note The gradients of \f$H(\mathrm{grad})\f$ conforming functions are in \f$H(\mathrm{curl})\f$.
+   * So we need covariant transforms to guarantee \f$H(\mathrm{curl})\f$
+   * conformity.
+   */
   template <int dim>
   class BasisQ1Grad : public Function<dim>
   {
@@ -29,6 +40,7 @@ namespace ShapeFun
 
     /*!
      * Constructor.
+     *
      * @param cell
      */
     BasisQ1Grad(const typename Triangulation<dim>::active_cell_iterator &cell);
@@ -48,14 +60,35 @@ namespace ShapeFun
     void
       set_index(unsigned int index);
 
-
+    /*!
+     * Compute the gradient of a Q1 function.
+     *
+     * @param p
+     * @param value
+     */
     virtual void
       vector_value(const Point<dim> &p, Vector<double> &value) const override;
 
-
+    /*!
+     * Compute the gradient of a Q1 function for a list of points.
+     *
+     * @param[in] points
+     * @param[out] values
+     */
     virtual void
       vector_value_list(const std::vector<Point<dim>> &points,
                         std::vector<Vector<double>> &  values) const override;
+
+    /*!
+     * Compute the gradient of a Q1 function for a list of points. Return
+     * tensors.
+     *
+     * @param[in] points
+     * @param[out] values
+     */
+    void
+      tensor_value_list(const std::vector<Point<dim>> &points,
+                        std::vector<Tensor<1, dim>> &  values) const;
 
   private:
     /*!
@@ -99,6 +132,17 @@ namespace ShapeFun
     BasisQ1Grad<3>::vector_value_list(
       const std::vector<Point<3>> &points,
       std::vector<Vector<double>> &values) const;
+
+
+  template <>
+  void
+    BasisQ1Grad<2>::tensor_value_list(const std::vector<Point<2>> &points,
+                                      std::vector<Tensor<1, 2>> &values) const;
+
+  template <>
+  void
+    BasisQ1Grad<3>::tensor_value_list(const std::vector<Point<3>> &points,
+                                      std::vector<Tensor<1, 3>> &values) const;
 
   // exernal template instantiations
   extern template class BasisQ1Grad<2>;

@@ -166,6 +166,7 @@ TARGET_LINK_LIBRARIES(MsFEC_RT_DQ
 	MsFEC_RT_DQ_LIBRARY
 	MsFEC_EQN_DATA_LIBRARY
 	MsFEC_VECTOR_TOOLS_LIBRARY
-	MsFEC_OTHER_TOOLS_LIBRARY)
+	MsFEC_OTHER_TOOLS_LIBRARY
+	MsFEC_SHAPE_FUNCTIONS_LIBRARY)
 ###############################################################################
 ###############################################################################

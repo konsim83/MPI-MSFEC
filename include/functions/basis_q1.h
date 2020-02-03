@@ -14,12 +14,20 @@
 
 // My Headers
 
+/*!
+ * @namespace ShapeFun
+ *
+ * @brief contains tools to evaluate standard finite element shape functions on arbitrary cells in
+ * various spaces that are approximated conformally.
+ */
 namespace ShapeFun
 {
   using namespace dealii;
 
   /*!
    * @class BasisQ1
+   *
+   * @brief \f$Q_1\f$ basis on given cell
    *
    * Class implements scalar \f$Q_1\f$-basis functions for a given
    * quadrilateral.
@@ -73,7 +81,8 @@ namespace ShapeFun
      * Evaluate a basis function with a preset index at given point list in 2D
      * and 3D.
      *
-     * @param p
+     * @param[in] points
+     * @param[out] values
      * @param component
      */
     virtual void
@@ -93,28 +102,33 @@ namespace ShapeFun
     FullMatrix<double> coeff_matrix;
   };
 
-  // declare specializations
+  /*
+   * Declare specializations in 2D
+   */
   template <>
   BasisQ1<2>::BasisQ1(
     const typename Triangulation<2>::active_cell_iterator &cell);
-
-  template <>
-  BasisQ1<3>::BasisQ1(
-    const typename Triangulation<3>::active_cell_iterator &cell);
 
   template <>
   double
     BasisQ1<2>::value(const Point<2> &, const unsigned int) const;
 
   template <>
-  double
-    BasisQ1<3>::value(const Point<3> &, const unsigned int) const;
-
-  template <>
   void
     BasisQ1<2>::value_list(const std::vector<Point<2>> &,
                            std::vector<double> &,
                            const unsigned int) const;
+
+  /*
+   * Declare specializations in 3D
+   */
+  template <>
+  double
+    BasisQ1<3>::value(const Point<3> &, const unsigned int) const;
+
+  template <>
+  BasisQ1<3>::BasisQ1(
+    const typename Triangulation<3>::active_cell_iterator &cell);
 
   template <>
   void

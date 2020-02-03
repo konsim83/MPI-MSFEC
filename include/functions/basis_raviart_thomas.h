@@ -25,8 +25,11 @@ namespace ShapeFun
   /*!
    * @class BasisRaviartThomas
    *
-   * Class implements gradients of scalar \f$Q_1\f$-basis functions for a given
-   * quadrilateral.
+   * @brief Raviart-Thomas basis on given cell
+   *
+   * Class implements Raviart-Thomas basis functions for a given quadrilateral.
+   *
+   * @note The We need Piola transforms to guarantee \f$H(\mathrm{div})\f$ conformity.
    */
   template <int dim>
   class BasisRaviartThomas : public Function<dim>
@@ -36,13 +39,18 @@ namespace ShapeFun
 
     /*!
      * Constructor.
+     *
      * @param cell
+     * @param degree
      */
-    BasisRaviartThomas(const typename Triangulation<dim>::active_cell_iterator &cell,
-                 unsigned int degree = 0);
+    BasisRaviartThomas(
+      const typename Triangulation<dim>::active_cell_iterator &cell,
+      unsigned int                                             degree = 0);
 
     /*!
      * Copy constructor.
+     *
+     * @param basis
      */
     BasisRaviartThomas(BasisRaviartThomas<dim> &basis);
 
@@ -54,18 +62,40 @@ namespace ShapeFun
     void
       set_index(unsigned int index);
 
+    /*!
+     * Compute the value of a Raviart-Thomas function.
+     *
+     * @param p
+     * @param value
+     */
     virtual void
       vector_value(const Point<dim> &p, Vector<double> &value) const override;
 
+    /*!
+     * Compute the value of a Raviart-Thomas function for a list of points.
+     *
+     * @param[in] points
+     * @param[out] values
+     */
     virtual void
       vector_value_list(const std::vector<Point<dim>> &points,
                         std::vector<Vector<double>> &  values) const override;
 
   private:
+    /*!
+     * The mapping used there is a Piola transform to guarantee conformity in
+     * \f$H(\mathrm{div})\f$.
+     */
     MyMappingQ1<dim> mapping;
 
+    /*!
+     * Raviart-Thomas element of a given order.
+     */
     FE_RaviartThomas<dim> fe;
 
+    /*!
+     * Index of current basis function.
+     */
     unsigned int index_basis;
   };
 

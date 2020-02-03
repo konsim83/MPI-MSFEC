@@ -1,5 +1,5 @@
-#ifndef INCLUDE_FUNCTIONS_SCALAR_SHAPE_FUNCTION_GRAD_H_
-#define INCLUDE_FUNCTIONS_SCALAR_SHAPE_FUNCTION_GRAD_H_
+#ifndef SHAPE_FUN_VECTOR_TPP_
+#define SHAPE_FUN_VECTOR_TPP_
 
 #include <deal.II/base/exceptions.h>
 #include <deal.II/base/function.h>
@@ -27,16 +27,18 @@ namespace ShapeFun
 {
   using namespace dealii;
 
-  /**
-   * Class for evaluations of vector valued shape functions.
+  /*!
+   * @class ShapeFunctionVector
    *
-   * @author Konrad Simon, 2019
+   * @brief Class for evaluations of vector valued shape functions.
+   *
+   * @note This is slow. Only use for quick and dirty prototyping and sanity checks.
    */
   template <int dim>
-  class ShapeFunctionScalarGrad : public Function<dim>
+  class ShapeFunctionVector : public Function<dim>
   {
   public:
-    /**
+    /*!
      * Constructor takes a vector finite element like <code>BDM<dim> <\code>
      * or <code> RaviartThomas<dim> <\code> and a cell iterator pointing to
      * a certain cell in a triangulation.
@@ -45,11 +47,11 @@ namespace ShapeFun
      * @param cell
      * @param verbose = false
      */
-    ShapeFunctionScalarGrad(const FiniteElement<dim> &                  fe,
-                            typename Triangulation<dim>::cell_iterator &cell,
-                            bool verbose = false);
+    ShapeFunctionVector(const FiniteElement<dim> &                  fe,
+                        typename Triangulation<dim>::cell_iterator &cell,
+                        bool verbose = false);
 
-    /**
+    /*!
      * Evaluate shape function at point <code> p<\code>
      *
      * @param[in] p
@@ -58,7 +60,7 @@ namespace ShapeFun
     virtual void
       vector_value(const Point<dim> &p, Vector<double> &value) const override;
 
-    /**
+    /*!
      * Evaluate shape function at point list <code> points <\code>
      *
      * @param[in] points
@@ -68,7 +70,7 @@ namespace ShapeFun
       vector_value_list(const std::vector<Point<dim>> &points,
                         std::vector<Vector<double>> &  values) const override;
 
-    /**
+    /*!
      * Evaluate shape function at point list <code> points <\code>
      *
      * @param[in] points
@@ -78,7 +80,7 @@ namespace ShapeFun
       tensor_value_list(const std::vector<Point<dim>> &points,
                         std::vector<Tensor<1, dim>> &  values) const;
 
-    /**
+    /*!
      * Set pointer to current cell (actually and iterator).
      *
      * @param cell
@@ -86,7 +88,7 @@ namespace ShapeFun
     void
       set_current_cell(const typename Triangulation<dim>::cell_iterator &cell);
 
-    /**
+    /*!
      * Set shape function index.
      *
      * @param index
@@ -103,13 +105,11 @@ namespace ShapeFun
 
     typename Triangulation<dim>::cell_iterator *current_cell_ptr;
 
-    const FEValuesExtractors::Scalar grad;
-
     const bool verbose;
   };
 
 } // namespace ShapeFun
 
-#include <functions/scalar_shape_function_grad.tpp>
+#include <trunk/vector_shape_function.tpp>
 
-#endif /* INCLUDE_FUNCTIONS_SCALAR_SHAPE_FUNCTION_GRAD_H_ */
+#endif /* SHAPE_FUN_VECTOR_TPP_ */

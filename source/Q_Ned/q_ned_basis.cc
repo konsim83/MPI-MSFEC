@@ -303,7 +303,8 @@ namespace QNed
       }
 
     Functions::ZeroFunction<3> zero_fun(1); // need this to keep pointer valid
-    ShapeFun::BasisNedelec<3> std_shape_function_ned(global_cell_it, /*degree*/ 0);
+    ShapeFun::BasisNedelec<3>  std_shape_function_ned(global_cell_it,
+                                                     /*degree*/ 0);
     ShapeFun::ShapeFunctionConcatinateVector<3> std_shape_function(
       zero_fun, std_shape_function_ned);
 
@@ -409,10 +410,7 @@ namespace QNed
     std::vector<double>       reaction_rate_values(n_q_points);
 
     ////////////////////////////////////////
-    ShapeFun::ShapeFunctionScalarGrad<3> std_shape_function_h1_grad(
-      fe.base_element(0),
-      global_cell_it,
-      /*verbose =*/false);
+    ShapeFun::BasisQ1Grad<3> std_shape_function_h1_grad(global_cell_it);
     std::vector<std::vector<Tensor<1, 3>>> local_rhs_values(
       GeometryInfo<3>::lines_per_cell, std::vector<Tensor<1, 3>>(n_q_points));
     ////////////////////////////////////////
@@ -439,7 +437,7 @@ namespace QNed
             if ((n_basis < GeometryInfo<3>::vertices_per_cell) &&
                 (parameters.full_rhs))
               {
-                std_shape_function_h1_grad.set_shape_fun_index(n_basis);
+                std_shape_function_h1_grad.set_index(n_basis);
 
                 std_shape_function_h1_grad.tensor_value_list(
                   fe_values.get_quadrature_points(), local_rhs_values[n_basis]);
@@ -511,10 +509,7 @@ namespace QNed
         //				face_number<GeometryInfo<3>::faces_per_cell;
         //				++face_number)
         //		{
-        //			if (cell->face(face_number)->at_boundary()
-        ////				&&
-        ////				(cell->face(face_number)->boundary_id() ==
-        /// 0)
+        //			if (cell->face(face_number)->at_boundary())
         //				)
         //			{
         //				fe_face_values.reinit (cell,
@@ -1193,9 +1188,7 @@ namespace QNed
     QGauss<3> quad_rule(3);
 
     // Set up vector shape function from finite element on current cell
-    ShapeFun::ShapeFunctionScalar<3> std_shape_function_h1(fe.base_element(0),
-                                                           global_cell_it,
-                                                           /*verbose =*/false);
+    ShapeFun::BasisQ1<3> std_shape_function_h1(global_cell_it);
 
     DoFHandler<3> dof_handler_fake(triangulation);
     dof_handler_fake.distribute_dofs(fe.base_element(0));
@@ -1210,7 +1203,7 @@ namespace QNed
         basis_h1_v[i].block(0).reinit(dof_handler_fake.n_dofs());
         basis_h1_v[i].block(1) = 0;
 
-        std_shape_function_h1.set_shape_fun_index(i);
+        std_shape_function_h1.set_index(i);
 
         VectorTools::project(dof_handler_fake,
                              constraints,
@@ -1229,10 +1222,8 @@ namespace QNed
     QGauss<3> quad_rule(3);
 
     // Set up vector shape function from finite element on current cell
-    ShapeFun::ShapeFunctionVector<3> std_shape_function_curl(
-      fe.base_element(1),
-      global_cell_it,
-      /*verbose =*/false);
+    ShapeFun::BasisNedelec<3> std_shape_function_curl(global_cell_it,
+                                                      /* degree */ 0);
 
     DoFHandler<3> dof_handler_fake(triangulation);
     dof_handler_fake.distribute_dofs(fe.base_element(1));
@@ -1247,7 +1238,7 @@ namespace QNed
         basis_curl_v[i].block(0) = 0;
         basis_curl_v[i].block(1).reinit(dof_handler_fake.n_dofs());
 
-        std_shape_function_curl.set_shape_fun_index(i);
+        std_shape_function_curl.set_index(i);
 
         VectorTools::project(dof_handler_fake,
                              constraints,

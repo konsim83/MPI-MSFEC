@@ -17,14 +17,18 @@ namespace EquationData
 {
   using namespace dealii;
 
-  /**
-   * Class containing data for tensor valued
-   * diffusivity.
+  /*!
+   * @class Diffusion_B_Data
+   *
+   * @brief Class containing data to construct a positive scalar.
+   *
+   * Class containing data for a scalar valued coefficient that only occurs when
+   * 1-forms or 2-forms are considered.
    */
   class Diffusion_B_Data
   {
   public:
-    /**
+    /*!
      * Constructor
      */
     Diffusion_B_Data(const std::string &parameter_filename);
@@ -34,62 +38,102 @@ namespace EquationData
     void
       parse_parameters(ParameterHandler &prm);
 
-    /**
+    /*!
      * Frequency of oscillations
      */
     unsigned int k;
 
-    /**
+    /*!
      * Scaling factor
      */
     double scale;
 
-    /**
+    /*!
      * Scaling factor for oscillations
      */
     double alpha;
 
-    /**
+    /*!
      * Function expression in muParser format.
      */
     std::string expression;
   };
 
-  /**
+  /*!
+   * @class Diffusion_B
+   *
+   * @brief Class containing a positive scalar.
+   *
    * Second (scalar) coefficient function. Must be positive definite and
    * uniformly bounded from below and above.
+   *
+   * @note The expression of the coefficient is only used if the sanity check using analytic solutions is set to false.
    */
   class Diffusion_B : public FunctionParser<3>, public Diffusion_B_Data
   {
   public:
-    /**
-     * Constructor
+    /*!
+     * Constructor.
+     *
+     * @param parameter_filename
+     * @param use_exact_solution
      */
     Diffusion_B(const std::string &parameter_filename,
                 bool               use_exact_solution = false);
 
   private:
-    const std::string             variables = "x,y,z";
-    std::string                   fnc_expression;
+    /*!
+     * Declaration of parsed variables.
+     */
+    const std::string variables = "x,y,z";
+
+    /*!
+     * Contains the parsed function expression.
+     */
+    std::string fnc_expression;
+
+    /*!
+     * Constais a list of parsed user-defined constants.
+     */
     std::map<std::string, double> constants;
   };
 
-  /**
-   * Inverse of second diffusion tensor. Must be positive definite and
+  /*!
+   * @class DiffusionInverse_B
+   *
+   * @brief Class containing the inverse of a positive scalar.
+   *
+   * Inverse of second scalar valued coefficient. Must be positive definite and
    * uniformly bounded from below and above.
+   *
+   * @note The expression of the coefficient is only used if the sanity check using analytic solutions is set to false.
    */
   class DiffusionInverse_B : public FunctionParser<3>, public Diffusion_B_Data
   {
   public:
-    /**
-     * Constructor
+    /*!
+     * Constructor.
+     *
+     * @param parameter_filename
+     * @param use_exact_solution
      */
     DiffusionInverse_B(const std::string &parameter_filename,
                        bool               use_exact_solution = false);
 
   private:
-    const std::string             variables = "x,y,z";
-    std::string                   inverse_fnc_expression;
+    /*!
+     * Declaration of parsed variables.
+     */
+    const std::string variables = "x,y,z";
+
+    /*!
+     * Contains the parsed function expression.
+     */
+    std::string inverse_fnc_expression;
+
+    /*!
+     * Constais a list of parsed user-defined constants.
+     */
     std::map<std::string, double> constants;
   };
 

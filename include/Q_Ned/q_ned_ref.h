@@ -71,53 +71,131 @@
 #include <equation_data/eqn_rhs.h>
 #include <functions/concatinate_functions.h>
 #include <linear_algebra/approximate_inverse.h>
-#include <linear_algebra/approximate_schur_complement.tpp>
+#include <linear_algebra/approximate_schur_complement.h>
 #include <linear_algebra/inverse_matrix.h>
 #include <linear_algebra/preconditioner.h>
-#include <linear_algebra/schur_complement.tpp>
+#include <linear_algebra/schur_complement.h>
 #include <my_other_tools.h>
 #include <vector_tools/my_vector_tools.h>
 
+/*!
+ * @namespace QNed
+ *
+ * @brief Namespace for \f$H(\mathrm{grad})\f$-\f$H(\mathrm{curl})\f$ problems with conformal multiscale elements.
+ */
 namespace QNed
 {
   using namespace dealii;
 
+  /*!
+   * @class QNedStd
+   *
+   * @brief \f$H(\mathrm{grad})\f$-\f$H(\mathrm{curl})\f$ problem solver with Lagrange-Nedelec pairings.
+   *
+   * This class contains a standard solver for the weighted 1-form Laplacian
+   * with rough coefficients in \f$H(\mathrm{grad})\f$-\f$H(\mathrm{curl})\f$
+   * with Lagrange-Nedelec pairings. The solver is MPI parallel and can be
+   * used on clusters.
+   */
   class QNedStd
   {
   public:
     QNedStd() = delete;
+
+    /*!
+     * Constructor.
+     *
+     * @param parameters_
+     * @param parameter_filename_
+     */
     QNedStd(ParametersStd &parameters_, const std::string &parameter_filename_);
+
     ~QNedStd();
 
+    /*!
+     * Solve standard mixed problem with Lagrange-Nedelec element
+     * pairing.
+     */
     void
       run();
 
   private:
+    /*!
+     * Set up grid.
+     */
     void
       setup_grid();
+
+    /*!
+     * Set up system matrix.
+     */
     void
       setup_system_matrix();
+
+    /*!
+     * Setup constraints.
+     */
     void
       setup_constraints();
+
+    /*!
+     * Assemble the system matrix.
+     */
     void
       assemble_system();
+
+    /*!
+     * Sparse direct MUMPS for block systems.
+     *
+     * * @note This will throw an exception since this is not implemented in deal.ii v9.1.1 for BlockSparseMatrix.
+     */
     void
       solve_direct();
+
+    /*!
+     * Schur complement solver uses a preconditioned approximate Schur
+     * complement solver.
+     */
     void
       solve_iterative();
+
+    /*!
+     * If the user decides to use an exact solution as a ground truth then the
+     * solution must be projected onto the Nedelec-Raviart-Thomas space.
+     */
     void
       write_exact_solution();
+
+    /*!
+     * Write *.vtu output and a pvtu-record that collects the vtu-files.
+     */
     void
       output_results() const;
 
+    /*!
+     * Current MPI communicator.
+     */
     MPI_Comm mpi_communicator;
 
-    ParametersStd &    parameters;
+
+    /*!
+     * Parameter structure to hold parsed data.
+     */
+    ParametersStd &parameters;
+
+    /*!
+     * Name of parameter input file.
+     */
     const std::string &parameter_filename;
 
+    /*!
+     * Distributed triangulation.
+     */
     parallel::distributed::Triangulation<3> triangulation;
 
-    // Modified finite element
+    /*!
+     * Finite element system to hold Lagrange-Nedelec element pairing.
+     */
     FESystem<3> fe;
 
     // Modified DoFHandler

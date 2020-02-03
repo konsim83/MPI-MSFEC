@@ -25,8 +25,12 @@ namespace ShapeFun
   /*!
    * @class BasisNedelec
    *
-   * Class implements gradients of scalar \f$Q_1\f$-basis functions for a given
+   * @brief Nedelec basis on a given cell
+   *
+   * Class implements values of Nedelec basis functions for a given
    * quadrilateral.
+   *
+   * @note The We need covariant transforms to guarantee \f$H(\mathrm{curl})\f$ conformity.
    */
   template <int dim>
   class BasisNedelec : public Function<dim>
@@ -36,13 +40,17 @@ namespace ShapeFun
 
     /*!
      * Constructor.
+     *
      * @param cell
+     * @param degree
      */
     BasisNedelec(const typename Triangulation<dim>::active_cell_iterator &cell,
                  unsigned int degree = 0);
 
     /*!
      * Copy constructor.
+     *
+     * @param basis
      */
     BasisNedelec(BasisNedelec<dim> &basis);
 
@@ -54,18 +62,40 @@ namespace ShapeFun
     void
       set_index(unsigned int index);
 
+    /*!
+     * Compute the value of a Nedelec function.
+     *
+     * @param p
+     * @param value
+     */
     virtual void
       vector_value(const Point<dim> &p, Vector<double> &value) const override;
 
+    /*!
+     * Compute the value of a Nedelec function for a list of points.
+     *
+     * @param[in] points
+     * @param[out] values
+     */
     virtual void
       vector_value_list(const std::vector<Point<dim>> &points,
                         std::vector<Vector<double>> &  values) const override;
 
   private:
+    /*!
+     * The mapping used there is a covariant transform to guarantee conformity
+     * in \f$H(\mathrm{curl})\f$.
+     */
     MyMappingQ1<dim> mapping;
 
+    /*!
+     * Nedelec element of a given order.
+     */
     FE_Nedelec<dim> fe;
 
+    /*!
+     * Index of current basis function.
+     */
     unsigned int index_basis;
   };
 
