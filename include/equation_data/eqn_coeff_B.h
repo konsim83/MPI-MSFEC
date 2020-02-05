@@ -62,12 +62,17 @@ namespace EquationData
   /*!
    * @class Diffusion_B
    *
-   * @brief Class containing a positive scalar.
+   * @brief Class containing a positive scalar coefficient.
    *
    * Second (scalar) coefficient function. Must be positive definite and
    * uniformly bounded from below and above.
    *
    * @note The expression of the coefficient is only used if the sanity check using analytic solutions is set to false.
+   * In case the user wishes to use an analytic (manufactured) solution the coeffcient is given as
+   * \f{eqnarray}{
+   *	B_\varepsilon(x,y,z) = \mathrm{scale}*(1-\mathrm{alpha}*\sin(2\pi * \mathrm{frequency}* x))
+   * \f}
+   * where \f$\mathrm{scale}, \mathrm{alpha}, \mathrm{frequency}\f$ are the constants provided by the user in the parameter file.
    */
   class Diffusion_B : public FunctionParser<3>, public Diffusion_B_Data
   {
@@ -101,12 +106,17 @@ namespace EquationData
   /*!
    * @class DiffusionInverse_B
    *
-   * @brief Class containing the inverse of a positive scalar.
+   * @brief Class containing the **inverse** of a positive scalar coefficient.
    *
    * Inverse of second scalar valued coefficient. Must be positive definite and
    * uniformly bounded from below and above.
    *
    * @note The expression of the coefficient is only used if the sanity check using analytic solutions is set to false.
+   * In case the user wishes to use an analytic (manufactured) solution the coeffcient is given as
+   * \f{eqnarray}{
+   *	B_\varepsilon(x) = \mathrm{scale}*(1-\mathrm{alpha}*\sin(2\pi * \mathrm{frequency}* x_1))
+   * \f}
+   * where \f$\mathrm{scale}, \mathrm{alpha}, \mathrm{frequency}\f$ are the constants provided by the user in the parameter file.
    */
   class DiffusionInverse_B : public FunctionParser<3>, public Diffusion_B_Data
   {

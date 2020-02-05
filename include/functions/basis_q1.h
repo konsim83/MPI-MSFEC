@@ -53,8 +53,6 @@ namespace ShapeFun
 
     /*!
      * Copy constructor.
-     *
-     * @param basis
      */
     BasisQ1(const BasisQ1<dim> &);
 

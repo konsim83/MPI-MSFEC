@@ -83,7 +83,7 @@ namespace MyVectorTools
      * @param my_function
      * @param system_matrix
      * @param system_rhs
-     * @param
+     * @param mpi_communicator
      */
     template <int dim, typename FunctionType>
     void
@@ -93,7 +93,7 @@ namespace MyVectorTools
                           const FunctionType &             my_function,
                           TrilinosWrappers::SparseMatrix & system_matrix,
                           TrilinosWrappers::MPI::Vector &  system_rhs,
-                          const MPI_Comm & /* mpi_communicator */);
+                          const MPI_Comm &  mpi_communicator);
 
     /*!
      * Serial assembly function for non-matrix-free projections onto fe

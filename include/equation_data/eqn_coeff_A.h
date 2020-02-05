@@ -96,7 +96,19 @@ namespace EquationData
    * represent permittivity and permeability tensors or magneto-electric
    * tensors.
    *
-   * The current implementation can be strongly anisotropic and inhomogeneous.
+   * The current implementation can be strongly anisotropic and inhomogeneous and is in our implementation given by
+   * \f{eqnarray}{
+   *	A_\varepsilon(x,y,z) =  R
+   *	\left(
+   *	\begin{array}{ccc}
+   *		\mathrm{scale}_x*(1-\mathrm{alpha}_x*\sin(2\pi * \mathrm{frequency}_x* x)) & 0 & 0 \\
+   *		0 & \mathrm{scale}_y*(1-\mathrm{alpha}_y*\sin(2\pi * \mathrm{frequency}_y* y)) & 0 \\
+   *		0 & 0 & \mathrm{scale}_z*(1-\mathrm{alpha}_z*\sin(2\pi * \mathrm{frequency}_z* z)) \\
+   *	\end{array}
+   *	\right) R^T
+   * \f}
+   * where \f$\mathrm{scale}_x, \mathrm{scale}_y, \mathrm{scale}_z, \mathrm{alpha}_x, \mathrm{alpha}_y, \mathrm{alpha}_z, \mathrm{frequency}_x, \mathrm{frequency}_y, \mathrm{frequency}_z\f$
+   * are the constants provided by the user in the parameter file.
    */
   class Diffusion_A : public TensorFunction<2, 3>, public Diffusion_A_Data
   {
@@ -114,9 +126,6 @@ namespace EquationData
     /*!
      * Implementation of the tensor.
      * Must be positive definite and uniformly bounded.
-     *
-     * @param[in] points
-     * @param[out] values
      */
     virtual Tensor<2, 3>
       value(const Point<3> &point) const override;
@@ -140,7 +149,19 @@ namespace EquationData
    *
    * Same as Diffusion_A but represents the inverse tensor.
    *
-   * The current implementation can be strongly anisotropic and inhomogeneous.
+   * The current implementation can be strongly anisotropic and inhomogeneous and is in our implementation given by
+   * \f{eqnarray}{
+   *	A_\varepsilon(x,y,z) =  R
+   *	\left(
+   *	\begin{array}{ccc}
+   *		\mathrm{scale}_x*(1-\mathrm{alpha}_x*\sin(2\pi * \mathrm{frequency}_x* x)) & 0 & 0 \\
+   *		0 & \mathrm{scale}_y*(1-\mathrm{alpha}_y*\sin(2\pi * \mathrm{frequency}_y* y)) & 0 \\
+   *		0 & 0 & \mathrm{scale}_z*(1-\mathrm{alpha}_z*\sin(2\pi * \mathrm{frequency}_z* z)) \\
+   *	\end{array}
+   *	\right) R^T
+   * \f}
+   * where \f$\mathrm{scale}_x, \mathrm{scale}_y, \mathrm{scale}_z, \mathrm{alpha}_x, \mathrm{alpha}_y, \mathrm{alpha}_z, \mathrm{frequency}_x, \mathrm{frequency}_y, \mathrm{frequency}_z\f$
+   * are the constants provided by the user in the parameter file.
    */
   class DiffusionInverse_A : public TensorFunction<2, 3>,
                              public Diffusion_A_Data
@@ -159,8 +180,6 @@ namespace EquationData
     /*!
      * Implementation of inverse of the tensor.
      * Must be positive definite and uniformly bounded.
-     *
-     * @param[in] points
      */
     virtual Tensor<2, 3>
       value(const Point<3> &point) const override;
