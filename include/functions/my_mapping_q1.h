@@ -44,8 +44,6 @@ namespace ShapeFun
 
     /*!
      * Copy constructor.
-     *
-     * @param
      */
     MyMappingQ1(const MyMappingQ1<dim> &);
 

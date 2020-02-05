@@ -124,7 +124,6 @@ namespace Q
 
     /*!
      * @brief Set global weights.
-     * @param weights
      *
      * The coarse weights of the global solution determine
      * the local multiscale solution. They must be computed
@@ -135,7 +134,6 @@ namespace Q
 
     /*!
      * Set the output flag to write basis functions to disk as vtu.
-     * @param flag
      */
     void
       set_output_flag();

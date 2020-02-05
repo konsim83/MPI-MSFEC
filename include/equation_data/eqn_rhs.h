@@ -49,13 +49,10 @@ namespace EquationData
      * The function must implement a tensor_value_list function for now since in
      * the current version of deal.ii it is not yet possible to parse tensor
      * functions. This feature will be supported from deal.ii 9.2 onwards.
-     *
-     * @param
-     * @param
      */
     virtual void
-      tensor_value_list(const std::vector<Point<3>> & /*points*/,
-                        std::vector<Tensor<1, 3>> & /*values*/) const {};
+      tensor_value_list(const std::vector<Point<3>> & points,
+                        std::vector<Tensor<1, 3>> & values) const {};
   };
 
 

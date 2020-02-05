@@ -73,7 +73,7 @@ namespace EquationData
     virtual void
       value_list(const std::vector<Point<3>> &points,
                  std::vector<double> &        values,
-                 const unsigned int /* component = 0 */) const override;
+                 const unsigned int component = 0) const override;
   };
 
   /*!
