@@ -1,6 +1,7 @@
 subsection Standard method parameters
 	subsection Mesh
-  		set refinements = 5
+  		set refinements = 6
+  		set transfer to refinement level = 6
 	end
   
 	subsection Control flow

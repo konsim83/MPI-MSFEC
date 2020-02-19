@@ -26,6 +26,7 @@
 
 // Distributed triangulation
 #include <deal.II/base/timer.h>
+#include <deal.II/distributed/solution_transfer.h>
 #include <deal.II/distributed/tria.h>
 #include <deal.II/dofs/dof_accessor.h>
 #include <deal.II/dofs/dof_handler.h>
@@ -158,6 +159,15 @@ namespace QNed
      */
     void
       solve_iterative();
+
+    /*!
+     * @brief Transfer solution to a finer grid.
+     *
+     * In order to be able to compare solutions on different refinement levels
+     * we need to transfer coarse solutions to finer grids.
+     */
+    void
+      transfer_solution();
 
     /*!
      * If the user decides to use an exact solution as a ground truth then the

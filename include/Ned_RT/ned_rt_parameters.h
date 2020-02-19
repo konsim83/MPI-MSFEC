@@ -32,6 +32,7 @@ namespace NedRT
     bool renumber_dofs;     /* Reduce bandwidth in either system component */
 
     unsigned int n_refine;
+    int          transfer_to_level;
 
     std::string filename_output;
     std::string dirname_output;

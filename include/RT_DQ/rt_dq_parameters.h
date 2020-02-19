@@ -33,6 +33,7 @@ namespace RTDQ
     bool renumber_dofs;     /* Reduce bandwidth in either system component */
 
     unsigned int n_refine;
+    int          transfer_to_level;
 
     const bool is_laplace = true;
 

@@ -14,6 +14,7 @@ namespace Q
     , use_direct_solver(false)
     , renumber_dofs(true)
     , n_refine(3)
+    , transfer_to_level(3)
     , filename_output("Q_Std")
     , dirname_output("Q")
   {
@@ -52,6 +53,10 @@ namespace Q
                           "3",
                           Patterns::Integer(1, 10),
                           "Number of initial mesh refinements.");
+        prm.declare_entry("transfer to refinement level",
+                          "3",
+                          Patterns::Integer(1, 10),
+                          "Transfer solution to a different refinement level.");
       }
       prm.leave_subsection();
 
@@ -94,7 +99,8 @@ namespace Q
     {
       prm.enter_subsection("Mesh");
       {
-        n_refine = prm.get_integer("refinements");
+        n_refine          = prm.get_integer("refinements");
+        transfer_to_level = prm.get_integer("transfer to refinement level");
       }
       prm.leave_subsection();
 
