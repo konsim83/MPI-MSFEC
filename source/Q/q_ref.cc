@@ -355,6 +355,98 @@ namespace Q
   }
 
 
+  void
+    QStd::transfer_solution()
+  {
+    TimerOutput::Scope t(computing_timer, "solution transfer");
+
+    /*
+     * Refine everything.
+     */
+    {
+      for (typename Triangulation<3>::active_cell_iterator cell =
+             triangulation.begin_active();
+           cell != triangulation.end();
+           ++cell)
+        if (cell->is_locally_owned())
+          cell->set_refine_flag();
+    }
+
+    /*
+     * Prepare the triangulation for refinement.
+     */
+    triangulation.prepare_coarsening_and_refinement();
+
+    /*
+     * Prepare the refinement in the transfer object,
+     * locally_relevant_old_solution is the source.
+     */
+    parallel::distributed::SolutionTransfer<3, LA::MPI::Vector>
+      solution_transfer(dof_handler);
+    solution_transfer.prepare_for_coarsening_and_refinement(
+      locally_relevant_solution);
+
+    /*
+     * Now actually refine the mesh
+     */
+    triangulation.execute_coarsening_and_refinement();
+
+    { /*
+       * Setup new dofs and constraints.
+       */
+      dof_handler.distribute_dofs(fe);
+
+      locally_owned_dofs = dof_handler.locally_owned_dofs();
+      locally_relevant_dofs.clear();
+      DoFTools::extract_locally_relevant_dofs(dof_handler,
+                                              locally_relevant_dofs);
+
+      locally_relevant_solution.reinit(locally_owned_dofs,
+                                       locally_relevant_dofs,
+                                       mpi_communicator);
+
+      system_rhs.reinit(locally_owned_dofs, mpi_communicator);
+
+      constraints.clear();
+      constraints.reinit(locally_relevant_dofs);
+
+      DoFTools::make_hanging_node_constraints(dof_handler, constraints);
+
+      if (!parameters.is_pure_neumann)
+        {
+          // Set up Dirichlet boundary conditions.
+          const EquationData::BoundaryValues_u boundary_u;
+          for (unsigned int i = 0; i < GeometryInfo<3>::faces_per_cell; ++i)
+            {
+              VectorTools::interpolate_boundary_values(
+                dof_handler,
+                /*boundary id*/ i, // only even boundary id
+                boundary_u,
+                constraints);
+            }
+        }
+    }
+
+
+    /*
+     * New locally_owned_solution from new dofs.
+     */
+    TrilinosWrappers::MPI::Vector locally_owned_solution;
+    locally_owned_solution.reinit(locally_owned_dofs, mpi_communicator);
+
+    /*
+     * Now interpolate to new mesh.
+     */
+    solution_transfer.interpolate(locally_owned_solution);
+
+    /*
+     * Take care of constraints.
+     */
+    constraints.distribute(locally_owned_solution);
+
+    locally_relevant_solution = locally_owned_solution;
+  }
+
 
   void
     QStd::output_results() const
@@ -462,6 +554,26 @@ namespace Q
       {
         solve_iterative();
       }
+
+    const int n_transfer = parameters.transfer_to_level - parameters.n_refine;
+    if (n_transfer > 0)
+      {
+        pcout << std::endl
+              << "INFO: Transfer to finer grid by   " << n_transfer
+              << "   levels to global refinement level   "
+              << parameters.transfer_to_level << std::endl
+              << std::endl;
+
+        for (unsigned int i = 0; i < n_transfer; ++i)
+          transfer_solution();
+      }
+    else
+      {
+        pcout
+          << "INFO: Transfer to coarser or same grid requested. This is being ignored so that the solution is not being transferred at all."
+          << std::endl;
+      }
+
 
     {
       TimerOutput::Scope t(computing_timer, "vtu output");

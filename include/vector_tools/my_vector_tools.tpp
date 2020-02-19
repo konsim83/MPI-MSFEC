@@ -225,8 +225,6 @@ namespace MyVectorTools
                         TrilinosWrappers::MPI::Vector &  vec,
                         const MPI_Comm &                 mpi_communicator)
   {
-    const FiniteElement<dim> &fe = dof_handler.get_fe();
-
     // If element is primitive it is invalid.
     // Also there must not be more than one block.
     // This excludes FE_Systems.
@@ -279,8 +277,6 @@ namespace MyVectorTools
                         const FunctionType &             my_function,
                         Vector<double> &                 vec)
   {
-    const FiniteElement<dim> &fe = dof_handler.get_fe();
-
     // If element is primitive it is invalid.
     // Also there must not be more than one block.
     // This excludes FE_Systems.
