@@ -261,13 +261,15 @@ namespace NedRT
           dof_handler,
           /*first vector component */ 0,
           std_shape_function, // This is important!!!
-                              //					Functions::ZeroFunction<3>(3),
+                              //          Functions::ZeroFunction<3>(6),
           /*boundary id*/ 0,
           constraints_curl_v[n_basis]);
         VectorTools::project_boundary_values_div_conforming(
           dof_handler,
           /*first vector component */ 3,
-          std_shape_function_Ned_curl, // This is important!!!
+          //          std_shape_function_Ned_curl, // This is important only if
+          //          full rhs not used!!!
+          Functions::ZeroFunction<3>(3),
           /*boundary id*/ 0,
           constraints_curl_v[n_basis]);
 
@@ -413,7 +415,7 @@ namespace NedRT
     ////////////////////////////////////////
     ShapeFun::BasisNedelecCurl<3> std_shape_function_Ned_curl(global_cell_it,
                                                               /* degree */ 0);
-    std::vector<std::vector<Tensor<1, 3>>> local_rhs_values(
+    std::vector<std::vector<Tensor<1, 3>>> local_rhs_values_curl(
       GeometryInfo<3>::lines_per_cell, std::vector<Tensor<1, 3>>(n_q_points));
     ////////////////////////////////////////
 
@@ -442,7 +444,8 @@ namespace NedRT
                 std_shape_function_Ned_curl.set_index(n_basis);
 
                 std_shape_function_Ned_curl.tensor_value_list(
-                  fe_values.get_quadrature_points(), local_rhs_values[n_basis]);
+                  fe_values.get_quadrature_points(),
+                  local_rhs_values_curl[n_basis]);
               }
           }
 
@@ -502,7 +505,8 @@ namespace NedRT
                        ++n_basis)
                     {
                       local_rhs_v[n_basis](i) +=
-                        v_i * local_rhs_values[n_basis][q] * fe_values.JxW(q);
+                        v_i * local_rhs_values_curl[n_basis][q] *
+                        fe_values.JxW(q);
                     }
               } // end for ++i
           }     // end for ++q
