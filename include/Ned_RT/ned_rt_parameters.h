@@ -93,7 +93,7 @@ namespace NedRT
 
     bool use_exact_solution;
 
-    const bool full_rhs = false;
+    const bool full_rhs = true;
   };
 
 } // namespace NedRT

@@ -784,7 +784,7 @@ namespace QNed
               << parameters.transfer_to_level << std::endl
               << std::endl;
 
-        for (unsigned int i = 0; i < n_transfer; ++i)
+        for (int i = 0; i < n_transfer; ++i)
           transfer_solution();
       }
     else

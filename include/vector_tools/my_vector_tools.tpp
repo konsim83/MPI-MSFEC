@@ -228,7 +228,8 @@ namespace MyVectorTools
     // If element is primitive it is invalid.
     // Also there must not be more than one block.
     // This excludes FE_Systems.
-    Assert(fe.n_blocks() == 1, ExcDimensionMismatch(1, fe.n_blocks()));
+    Assert(dof_handler.get_fe().n_blocks() == 1,
+           ExcDimensionMismatch(1, dof_handler.get_fe().n_blocks()));
 
     // Need info about local indices
     IndexSet locally_owned_dofs = dof_handler.locally_owned_dofs(),
@@ -280,8 +281,9 @@ namespace MyVectorTools
     // If element is primitive it is invalid.
     // Also there must not be more than one block.
     // This excludes FE_Systems.
-    Assert((!fe.is_primitive()), FETools::ExcInvalidFE());
-    Assert(fe.n_blocks() == 1, ExcDimensionMismatch(1, fe.n_blocks()));
+    Assert((!dof_handler.get_fe().is_primitive()), FETools::ExcInvalidFE());
+    Assert(dof_handler.get_fe().n_blocks() == 1,
+           ExcDimensionMismatch(1, dof_handler.get_fe().n_blocks()));
 
     // Need info about dofs
     const types::global_dof_index n_dofs = dof_handler.n_dofs();
