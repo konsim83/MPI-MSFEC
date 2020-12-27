@@ -245,7 +245,8 @@ namespace MyVectorTools
       DoFTools::make_sparsity_pattern(dof_handler, dsp, constraints, false);
       SparsityTools::distribute_sparsity_pattern(
         dsp,
-        dof_handler.n_locally_owned_dofs_per_processor(),
+        Utilities::MPI::all_gather(mpi_communicator,
+                                   dof_handler.n_locally_owned_dofs()),
         mpi_communicator,
         locally_relevant_dofs);
       system_matrix.reinit(locally_owned_dofs,

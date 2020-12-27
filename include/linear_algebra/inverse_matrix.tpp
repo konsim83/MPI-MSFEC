@@ -25,7 +25,7 @@ namespace LinearSolvers
     SolverControl solver_control(std::max(static_cast<std::size_t>(src.size()),
                                           static_cast<std::size_t>(1000)),
                                  1e-6 * src.l2_norm());
-    SolverCG<VectorType> local_solver(solver_control);
+    SolverGMRES<VectorType> local_solver(solver_control);
 
     dst = 0;
 

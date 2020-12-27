@@ -87,13 +87,14 @@ namespace QNed
     , dof_handler(triangulation)
     , constraints_curl_v(other.constraints_curl_v)
     , constraints_h1_v(other.constraints_h1_v)
-    , sparsity_pattern(other.sparsity_pattern)
-    , // only possible if object is empty
-    assembled_matrix(other.assembled_matrix)
-    , // only possible if object is empty
-    system_matrix(other.system_matrix)
-    , // only possible if object is empty
-    basis_curl_v(other.basis_curl_v)
+    //    , sparsity_pattern(
+    //        other.sparsity_pattern) // only possible if object is empty
+    //    , assembled_matrix(
+    //        other.assembled_matrix)          // only possible if object is
+    //        empty
+    //    , system_matrix(other.system_matrix) // only possible if object is
+    //    empty
+    , basis_curl_v(other.basis_curl_v)
     , basis_h1_v(other.basis_h1_v)
     , system_rhs_curl_v(other.system_rhs_curl_v)
     , system_rhs_h1_v(other.system_rhs_h1_v)
@@ -186,8 +187,8 @@ namespace QNed
 
     DoFRenumbering::block_wise(dof_handler);
 
-    std::vector<types::global_dof_index> dofs_per_block(2);
-    DoFTools::count_dofs_per_block(dof_handler, dofs_per_block);
+    std::vector<types::global_dof_index> dofs_per_block =
+      DoFTools::count_dofs_per_fe_block(dof_handler);
     const unsigned int n_sigma = dofs_per_block[0], n_u = dofs_per_block[1];
 
     if (parameters.verbose)
@@ -245,8 +246,8 @@ namespace QNed
     FEValuesExtractors::Scalar q1(0);
     ComponentMask              q1_mask = fe.component_mask(q1);
 
-    std::vector<types::global_dof_index> dofs_per_block(2);
-    DoFTools::count_dofs_per_block(dof_handler, dofs_per_block);
+    std::vector<types::global_dof_index> dofs_per_block =
+      DoFTools::count_dofs_per_fe_block(dof_handler);
 
     for (unsigned int n_basis = 0; n_basis < basis_h1_v.size(); ++n_basis)
       {
@@ -264,7 +265,7 @@ namespace QNed
                                                  std_shape_function_1,
                                                  constraints_h1_v[n_basis],
                                                  q1_mask);
-        VectorTools::project_boundary_values_curl_conforming(
+        VectorTools::project_boundary_values_curl_conforming_l2(
           dof_handler,
           /*first vector component */ 1,
           std_shape_function_2,
@@ -308,8 +309,8 @@ namespace QNed
     ShapeFun::ShapeFunctionConcatinateVector<3> std_shape_function(
       zero_fun, std_shape_function_ned);
 
-    std::vector<types::global_dof_index> dofs_per_block(2);
-    DoFTools::count_dofs_per_block(dof_handler, dofs_per_block);
+    std::vector<types::global_dof_index> dofs_per_block =
+      DoFTools::count_dofs_per_fe_block(dof_handler);
 
     // set constraints (first hanging nodes, then boundary conditions)
     for (unsigned int n_basis = 0; n_basis < basis_curl_v.size(); ++n_basis)
@@ -331,7 +332,7 @@ namespace QNed
                                                  Functions::ZeroFunction<3>(4),
                                                  constraints_curl_v[n_basis],
                                                  q1_mask);
-        VectorTools::project_boundary_values_curl_conforming(
+        VectorTools::project_boundary_values_curl_conforming_l2(
           dof_handler,
           /*first vector component */ 1,
           std_shape_function,
@@ -843,8 +844,8 @@ namespace QNed
     global_element_matrix = 0;
 
     // Get lengths of tmp vectors for assembly
-    std::vector<types::global_dof_index> dofs_per_component(1 + 3);
-    DoFTools::count_dofs_per_component(dof_handler, dofs_per_component);
+    std::vector<types::global_dof_index> dofs_per_component =
+      DoFTools::count_dofs_per_fe_component(dof_handler);
     const unsigned int n_sigma = dofs_per_component[0],
                        n_u     = dofs_per_component[3];
 
@@ -1022,8 +1023,8 @@ namespace QNed
   void
     QNedBasis::write_exact_solution_in_cell()
   {
-    std::vector<types::global_dof_index> dofs_per_block(2);
-    DoFTools::count_dofs_per_block(dof_handler, dofs_per_block);
+    std::vector<types::global_dof_index> dofs_per_block =
+      DoFTools::count_dofs_per_fe_block(dof_handler);
     exact_solution_in_cell.reinit(dofs_per_block);
 
     { // write sigma

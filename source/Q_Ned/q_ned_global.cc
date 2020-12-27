@@ -111,8 +111,8 @@ namespace QNed
 
     DoFRenumbering::block_wise(dof_handler);
 
-    std::vector<types::global_dof_index> dofs_per_block(2);
-    DoFTools::count_dofs_per_block(dof_handler, dofs_per_block);
+    std::vector<types::global_dof_index> dofs_per_block =
+      DoFTools::count_dofs_per_fe_block(dof_handler);
     const unsigned int n_sigma = dofs_per_block[0], n_u = dofs_per_block[1];
 
     pcout << "Number of active cells: " << triangulation.n_global_active_cells()
@@ -143,7 +143,8 @@ namespace QNed
       DoFTools::make_sparsity_pattern(dof_handler, dsp, constraints, false);
       SparsityTools::distribute_sparsity_pattern(
         dsp,
-        dof_handler.locally_owned_dofs_per_processor(),
+        Utilities::MPI::all_gather(mpi_communicator,
+                                   dof_handler.locally_owned_dofs()),
         mpi_communicator,
         locally_relevant_dofs);
 
@@ -197,7 +198,7 @@ namespace QNed
                                                  *boundary_values,
                                                  constraints,
                                                  q1_mask);
-        VectorTools::project_boundary_values_curl_conforming(
+        VectorTools::project_boundary_values_curl_conforming_l2(
           dof_handler,
           /*first vector component */ 1,
           *boundary_values,

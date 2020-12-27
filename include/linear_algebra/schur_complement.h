@@ -3,6 +3,8 @@
 
 #include "config.h"
 #include <deal.II/base/subscriptor.h>
+#include <deal.II/dofs/dof_handler.h>
+#include <deal.II/numerics/vector_tools.h>
 #include <linear_algebra/inverse_matrix.h>
 
 #include <memory>
@@ -47,7 +49,8 @@ namespace LinearSolvers
    */
   template <typename BlockMatrixType,
             typename VectorType,
-            typename PreconditionerType>
+            typename PreconditionerType,
+            typename DoFHandlerType = DoFHandler<3>>
   class SchurComplement : public Subscriptor
   {
   private:
@@ -66,6 +69,22 @@ namespace LinearSolvers
     SchurComplement(const BlockMatrixType &system_matrix,
                     const InverseMatrix<BlockType, PreconditionerType>
                       &relevant_inverse_matrix);
+
+    /*!
+     * Constructor like the previous version but to be called when mean value
+     * should be corrected. Mostly for basis functions that are computed if
+     * certain Betti number is not zero.
+     *
+     * @param system_matrix
+     * 	Block Matrix
+     * @param relevant_inverse_matrix
+     * 	Inverse of upper left block of the system matrix.
+     * 	@param dof_handler uses second block to correct mean
+     */
+    SchurComplement(const BlockMatrixType &system_matrix,
+                    const InverseMatrix<BlockType, PreconditionerType>
+                      &                   relevant_inverse_matrix,
+                    const DoFHandlerType &_dof_handler);
 
     /*!
      * Matrix-vector product.
@@ -87,6 +106,16 @@ namespace LinearSolvers
      */
     const SmartPointer<const InverseMatrix<BlockType, PreconditionerType>>
       relevant_inverse_matrix;
+
+    /*!
+     * DofHandler object is necessary to compute the mean value
+     */
+    DoFHandlerType dof_handler;
+
+    /*!
+     * Flag indicating if mean value is corrected after each vmult.
+     */
+    const bool correct_mean_value;
 
     /*!
      * Muatable types for temporary vectors.

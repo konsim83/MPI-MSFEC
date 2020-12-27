@@ -66,9 +66,10 @@ namespace Q
     , dof_handler(triangulation)
     , constraints_vector(X.constraints_vector)
     , corner_points(X.corner_points)
-    , sparsity_pattern(X.sparsity_pattern)
-    , diffusion_matrix(X.diffusion_matrix)
-    , system_matrix(X.system_matrix)
+    //    , sparsity_pattern(X.sparsity_pattern) // only possible if object is
+    //    empty , diffusion_matrix(X.diffusion_matrix) // only possible if
+    //    object is empty , system_matrix(X.system_matrix)       // only
+    //    possible if object is empty
     , filename_global(X.filename_global)
     , solution_vector(X.solution_vector)
     , global_rhs(X.global_rhs)

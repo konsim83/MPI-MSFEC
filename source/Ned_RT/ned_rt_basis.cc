@@ -88,13 +88,14 @@ namespace NedRT
     , dof_handler(triangulation)
     , constraints_curl_v(other.constraints_curl_v)
     , constraints_div_v(other.constraints_div_v)
-    , sparsity_pattern(other.sparsity_pattern)
-    , // only possible if object is empty
-    assembled_matrix(other.assembled_matrix)
-    , // only possible if object is empty
-    system_matrix(other.system_matrix)
-    , // only possible if object is empty
-    basis_curl_v(other.basis_curl_v)
+    //    , sparsity_pattern(
+    //        other.sparsity_pattern) // only possible if object is empty
+    //    , assembled_matrix(
+    //        other.assembled_matrix)          // only possible if object is
+    //        empty
+    //    , system_matrix(other.system_matrix) // only possible if object is
+    //    empty
+    , basis_curl_v(other.basis_curl_v)
     , basis_div_v(other.basis_div_v)
     , system_rhs_curl_v(other.system_rhs_curl_v)
     , system_rhs_div_v(other.system_rhs_div_v)
@@ -188,8 +189,8 @@ namespace NedRT
 
     DoFRenumbering::block_wise(dof_handler);
 
-    std::vector<types::global_dof_index> dofs_per_block(2);
-    DoFTools::count_dofs_per_block(dof_handler, dofs_per_block);
+    std::vector<types::global_dof_index> dofs_per_block =
+      DoFTools::count_dofs_per_fe_block(dof_handler);
     const unsigned int n_sigma = dofs_per_block[0], n_u = dofs_per_block[1];
 
     if (parameters.verbose)
@@ -243,8 +244,8 @@ namespace NedRT
     ShapeFun::BasisNedelecCurl<3> std_shape_function_Ned_curl(global_cell_it,
                                                               /* degree */ 0);
 
-    std::vector<types::global_dof_index> dofs_per_block(2);
-    DoFTools::count_dofs_per_block(dof_handler, dofs_per_block);
+    std::vector<types::global_dof_index> dofs_per_block =
+      DoFTools::count_dofs_per_fe_block(dof_handler);
 
     // set constraints (first hanging nodes, then boundary conditions)
     for (unsigned int n_basis = 0; n_basis < basis_curl_v.size(); ++n_basis)
@@ -312,8 +313,8 @@ namespace NedRT
     ShapeFun::BasisRaviartThomas<3> std_shape_function_RT(global_cell_it,
                                                           /* degree */ 0);
 
-    std::vector<types::global_dof_index> dofs_per_block(2);
-    DoFTools::count_dofs_per_block(dof_handler, dofs_per_block);
+    std::vector<types::global_dof_index> dofs_per_block =
+      DoFTools::count_dofs_per_fe_block(dof_handler);
 
     for (unsigned int n_basis = 0; n_basis < basis_div_v.size(); ++n_basis)
       {
@@ -852,8 +853,8 @@ namespace NedRT
     global_element_matrix = 0;
 
     // Get lengths of tmp vectors for assembly
-    std::vector<types::global_dof_index> dofs_per_component(3 + 3);
-    DoFTools::count_dofs_per_component(dof_handler, dofs_per_component);
+    std::vector<types::global_dof_index> dofs_per_component =
+      DoFTools::count_dofs_per_fe_component(dof_handler);
     const unsigned int n_sigma = dofs_per_component[0],
                        n_u     = dofs_per_component[3];
 
@@ -1032,8 +1033,8 @@ namespace NedRT
   void
     NedRTBasis::write_exact_solution_in_cell()
   {
-    std::vector<types::global_dof_index> dofs_per_block(2);
-    DoFTools::count_dofs_per_block(dof_handler, dofs_per_block);
+    std::vector<types::global_dof_index> dofs_per_block =
+      DoFTools::count_dofs_per_fe_block(dof_handler);
     exact_solution_in_cell.reinit(dofs_per_block);
 
     { // write sigma

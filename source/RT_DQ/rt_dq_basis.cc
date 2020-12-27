@@ -77,11 +77,13 @@ namespace RTDQ
          1)
     , dof_handler(triangulation)
     , constraints_div_v(other.constraints_div_v)
-    , sparsity_pattern(
-        other.sparsity_pattern) // only possible if object is empty
-    , assembled_matrix(
-        other.assembled_matrix)          // only possible if object is empty
-    , system_matrix(other.system_matrix) // only possible if object is empty
+    //    , sparsity_pattern(
+    //        other.sparsity_pattern) // only possible if object is empty
+    //    , assembled_matrix(
+    //        other.assembled_matrix)          // only possible if object is
+    //        empty
+    //    , system_matrix(other.system_matrix) // only possible if object is
+    //    empty
     , basis_div_v(other.basis_div_v)
     , system_rhs_div_v(other.system_rhs_div_v)
     , global_rhs(other.global_rhs)
@@ -225,8 +227,8 @@ namespace RTDQ
 
     DoFRenumbering::block_wise(dof_handler);
 
-    std::vector<types::global_dof_index> dofs_per_block(2);
-    DoFTools::count_dofs_per_block(dof_handler, dofs_per_block);
+    std::vector<types::global_dof_index> dofs_per_block =
+      DoFTools::count_dofs_per_fe_block(dof_handler);
     const unsigned int n_sigma = dofs_per_block[0], n_u = dofs_per_block[1];
 
     if (parameters.verbose)
@@ -274,30 +276,8 @@ namespace RTDQ
     ShapeFun::BasisRaviartThomas<3> std_shape_function_RT(global_cell_it,
                                                           /* degree */ 0);
 
-    /*
-     * Only used for Laplace problems since we then have
-     * a pure Neumann problem and u is only determined up
-     * to a constant.
-     */
-    unsigned int first_dof_u = 0;
-    if (parameters.is_laplace)
-      {
-        FEValuesExtractors::Scalar concentration(3);
-        ComponentMask concentration_mask = fe.component_mask(concentration);
-
-        std::vector<bool> concentration_dofs(dof_handler.n_dofs(), false);
-        DoFTools::extract_dofs(dof_handler,
-                               concentration_mask,
-                               concentration_dofs);
-
-        first_dof_u = std::distance(concentration_dofs.begin(),
-                                    std::find(concentration_dofs.begin(),
-                                              concentration_dofs.end(),
-                                              true));
-      }
-
-    std::vector<types::global_dof_index> dofs_per_block(2);
-    DoFTools::count_dofs_per_block(dof_handler, dofs_per_block);
+    std::vector<types::global_dof_index> dofs_per_block =
+      DoFTools::count_dofs_per_fe_block(dof_handler);
 
     for (unsigned int n_basis = 0; n_basis < GeometryInfo<3>::faces_per_cell;
          ++n_basis)
@@ -374,23 +354,6 @@ namespace RTDQ
               std_shape_function_RT, // This is important
               /*boundary id*/ 0,
               constraints_div_v[n_basis]);
-          }
-
-        if (parameters.is_laplace)
-          {
-            /*
-             * Point value constraint. Careful with H1-functions.
-             */
-            constraints_div_v[n_basis].add_line(first_dof_u);
-
-            /*
-             * Mean value constraint (slower).
-             */
-            //			for (unsigned int i=first_dof_u+1;
-            // i<dof_handler.n_dofs();
-            //++i) 			  if (concentration_dofs[i] == true)
-            //				constraints_div_v[n_basis].add_entry
-            //(first_dof_u, i, -1);
           }
 
         constraints_div_v[n_basis].close();
@@ -695,7 +658,7 @@ namespace RTDQ
         BlockSparseMatrix<double>,
         Vector<double>,
         typename LinearSolvers::LocalInnerPreconditioner<3>::type>
-        schur_complement(system_matrix, block_inverse);
+        schur_complement(system_matrix, block_inverse, dof_handler);
 
       // Compute schur_rhs = -g + C*A^{-1}*f
       Vector<double> schur_rhs(system_rhs.block(1).size());
@@ -703,6 +666,35 @@ namespace RTDQ
       block_inverse.vmult(tmp, system_rhs.block(0));
       system_matrix.block(1, 0).vmult(schur_rhs, tmp);
       schur_rhs -= system_rhs.block(1);
+
+      if (parameters.is_laplace)
+        {
+          /*
+           * Only used for Laplace problems since we then have
+           * a pure Neumann problem and u is only determined up
+           * to a constant.
+           */
+          DoFHandler<3>              fake_dof_u(this->triangulation);
+          FEValuesExtractors::Scalar u_component(3);
+          ComponentMask              u_mask(fe.component_mask(u_component));
+          const auto &u_fe(dof_handler.get_fe().get_sub_fe(u_mask));
+          fake_dof_u.distribute_dofs(u_fe);
+          const double mean_value = VectorTools::compute_mean_value(
+            fake_dof_u, QGauss<3>(2), schur_rhs, 0);
+          schur_rhs.add(-mean_value);
+
+          if (parameters.verbose)
+            std::cout << std::endl
+                      << "      Schur RHS pre-correction: The mean value"
+                         "was adjusted by "
+                      << -mean_value << "    -> new mean:   "
+                      << VectorTools::compute_mean_value(fake_dof_u,
+                                                         QGauss<3>(2),
+                                                         schur_rhs,
+                                                         0)
+                      << std::endl;
+        }
+
 
       {
         if (parameters.verbose)
@@ -811,7 +803,7 @@ namespace RTDQ
         std::cout << "		- done in   " << timer.cpu_time() << "   seconds."
                   << std::endl;
       }
-  }
+  } // namespace RTDQ
 
   void
     RTDQBasis::assemble_global_element_matrix()
@@ -820,8 +812,8 @@ namespace RTDQ
     global_element_matrix = 0;
 
     // Get lengths of tmp vectors for assembly
-    std::vector<types::global_dof_index> dofs_per_component(3 + 1);
-    DoFTools::count_dofs_per_component(dof_handler, dofs_per_component);
+    std::vector<types::global_dof_index> dofs_per_component =
+      DoFTools::count_dofs_per_fe_component(dof_handler);
     const unsigned int n_sigma = dofs_per_component[0],
                        n_u     = dofs_per_component[3];
 
