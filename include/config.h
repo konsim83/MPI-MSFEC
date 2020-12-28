@@ -1,6 +1,7 @@
 #ifndef INCLUDE_CONFIG_H_
 #define INCLUDE_CONFIG_H_
 
+#include <deal.II/base/mpi.h>
 #include <deal.II/lac/generic_linear_algebra.h>
 
 #include <algorithm>

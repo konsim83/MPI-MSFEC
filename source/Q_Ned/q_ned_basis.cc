@@ -1284,8 +1284,15 @@ namespace QNed
 
     if (true)
       {
+        char processor_name[MPI_MAX_PROCESSOR_NAME];
+        int  name_len;
+        MPI_Get_processor_name(processor_name, &name_len);
+        std::string proc_name(processor_name, name_len);
+
         std::cout << "	Solving for basis in cell   "
-                  << global_cell_id.to_string() << "   .....";
+                  << global_cell_id.to_string() << "[Rank: "
+                  << Utilities::MPI::this_mpi_process(MPI_COMM_WORLD)
+                  << " | machine: " << proc_name << "]   .....";
         timer.restart();
       }
 
