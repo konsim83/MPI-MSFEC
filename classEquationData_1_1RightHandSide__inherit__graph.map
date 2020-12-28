@@ -1,0 +1,4 @@
+<map id="EquationData::RightHandSide" name="EquationData::RightHandSide">
+<area shape="rect" id="node3" href="$classEquationData_1_1RightHandSideExactLin.html" title="Right hand side used if user chooses to compare an analytic solutions. " alt="" coords="5,165,268,217"/>
+<area shape="rect" id="node4" href="$classEquationData_1_1RightHandSideParsed.html" title="Right&#45;hand side for user provide function expression. " alt="" coords="292,165,555,217"/>
+</map>

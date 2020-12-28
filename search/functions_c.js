@@ -1,0 +1,11 @@
+var searchData=
+[
+  ['q_5fpostprocessor',['Q_PostProcessor',['../classQ_1_1Q__PostProcessor.html#a9eb3eea5324cd6e1cb2ed3fc9e766a54',1,'Q::Q_PostProcessor']]],
+  ['qbasis',['QBasis',['../classQ_1_1QBasis.html#ac30d117e16c315ed91906d29d2adfe21',1,'Q::QBasis::QBasis()=delete'],['../classQ_1_1QBasis.html#abc335f319884e399c571e9345cd00d0f',1,'Q::QBasis::QBasis(const ParametersMs &amp;parameters_ms, const std::string &amp;parameter_filename, typename Triangulation&lt; 3 &gt;::active_cell_iterator &amp;global_cell, CellId first_cell, unsigned int local_subdomain, MPI_Comm mpi_communicator)'],['../classQ_1_1QBasis.html#af1b58a57a31424151e3409bfaae4eacb',1,'Q::QBasis::QBasis(const QBasis &amp;X)']]],
+  ['qmultiscale',['QMultiscale',['../classQ_1_1QMultiscale.html#a2b073453b50251c005054011ed285a02',1,'Q::QMultiscale']]],
+  ['qned_5fpostprocessor',['QNed_PostProcessor',['../classQNed_1_1QNed__PostProcessor.html#a436a88f64f8c61c343515ef445f718d6',1,'QNed::QNed_PostProcessor']]],
+  ['qnedbasis',['QNedBasis',['../classQNed_1_1QNedBasis.html#a03635c1195bf0cba04c09f5015040f85',1,'QNed::QNedBasis::QNedBasis()=delete'],['../classQNed_1_1QNedBasis.html#a6362dabc19b734dc248d2dcb3b782e1a',1,'QNed::QNedBasis::QNedBasis(const ParametersMs &amp;parameters_ms, const std::string &amp;parameter_filename, typename Triangulation&lt; 3 &gt;::active_cell_iterator &amp;global_cell, CellId first_cell, unsigned int local_subdomain, MPI_Comm mpi_communicator)'],['../classQNed_1_1QNedBasis.html#aaa82f2eff61664361f314dd89ba89717',1,'QNed::QNedBasis::QNedBasis(const QNedBasis &amp;other)']]],
+  ['qnedmultiscale',['QNedMultiscale',['../classQNed_1_1QNedMultiscale.html#a586b2374d154fbcbf91565bd02309c2e',1,'QNed::QNedMultiscale']]],
+  ['qnedstd',['QNedStd',['../classQNed_1_1QNedStd.html#ac0a8c99131ebd759e2f95d879f1b536b',1,'QNed::QNedStd::QNedStd()=delete'],['../classQNed_1_1QNedStd.html#aa3fc7c76c97e49e7c365efc6983a48ea',1,'QNed::QNedStd::QNedStd(ParametersStd &amp;parameters_, const std::string &amp;parameter_filename_)']]],
+  ['qstd',['QStd',['../classQ_1_1QStd.html#ac5d4e96d682ad7b7c5fd7d9ea883f0e4',1,'Q::QStd::QStd()=delete'],['../classQ_1_1QStd.html#a91910f5ba581c579a52df0727e01767f',1,'Q::QStd::QStd(ParametersStd &amp;parameters_, const std::string &amp;parameter_filename_)']]]
+];
