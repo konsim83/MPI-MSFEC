@@ -527,9 +527,10 @@ namespace Q
         std::string proc_name(processor_name, name_len);
 
         std::cout << "	Solving for basis in cell   "
-                  << global_cell_id.to_string() << "[Rank: "
+                  << global_cell_id.to_string() << "   [machine: " << proc_name
+                  << " | rank: "
                   << Utilities::MPI::this_mpi_process(MPI_COMM_WORLD)
-                  << " | machine: " << proc_name << "]   .....";
+                  << "]   .....";
         timer.restart();
       }
 
