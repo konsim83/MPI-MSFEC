@@ -53,13 +53,15 @@ namespace RTDQ
     for (unsigned int j_face = 0; j_face < GeometryInfo<3>::faces_per_cell;
          ++j_face)
       {
-        face_measure.at(j_face) = global_cell_it->face(j_face)->measure();
+        //        face_measure.at(j_face) =
+        //        global_cell_it->face(j_face)->measure();
       }
 
     for (unsigned int j_egde = 0; j_egde < GeometryInfo<3>::lines_per_cell;
          ++j_egde)
       {
-        edge_measure.at(j_egde) = global_cell_it->line(j_egde)->measure();
+        //        edge_measure.at(j_egde) =
+        //        global_cell_it->line(j_egde)->measure();
       }
 
     is_set_cell_data = true;
@@ -120,13 +122,15 @@ namespace RTDQ
     for (unsigned int j_face = 0; j_face < GeometryInfo<3>::faces_per_cell;
          ++j_face)
       {
-        face_measure.at(j_face) = global_cell_it->face(j_face)->measure();
+        //        face_measure.at(j_face) =
+        //        global_cell_it->face(j_face)->measure();
       }
 
     for (unsigned int j_egde = 0; j_egde < GeometryInfo<3>::lines_per_cell;
          ++j_egde)
       {
-        edge_measure.at(j_egde) = global_cell_it->line(j_egde)->measure();
+        //        edge_measure.at(j_egde) =
+        //        global_cell_it->line(j_egde)->measure();
       }
 
     is_set_cell_data = true;
@@ -290,59 +294,68 @@ namespace RTDQ
 
         if (parameters.fast_constraint_setup)
           {
-            // boundary values for normal flux
-            const unsigned int dofs_per_cell = fe.dofs_per_cell;
-            const unsigned int dofs_per_face = fe.dofs_per_face;
-            std::vector<types::global_dof_index> local_dof_indices(
-              dofs_per_cell);
-            std::vector<types::global_dof_index> local_dof_face_indices(
-              dofs_per_face);
-
-            typename DoFHandler<3>::active_cell_iterator
-              cell = dof_handler.begin_active(),
-              endc = dof_handler.end();
-            for (; cell != endc; ++cell)
-              {
-                if (cell->at_boundary())
-                  {
-                    cell->get_dof_indices(local_dof_indices);
-                    for (unsigned int face_n = 0;
-                         face_n < GeometryInfo<3>::faces_per_cell;
-                         ++face_n)
-                      {
-                        if (cell->at_boundary(face_n))
-                          {
-                            cell->face(face_n)->get_dof_indices(
-                              local_dof_face_indices);
-                            if (cell->face(face_n)->boundary_id() == n_basis)
-                              {
-                                for (unsigned int i = 0; i < dofs_per_face; ++i)
-                                  {
-                                    const double dof_scale =
-                                      cell->face(face_n)->measure() /
-                                      face_measure.at(n_basis);
-
-                                    constraints_div_v[n_basis].add_line(
-                                      local_dof_face_indices.at(i));
-                                    constraints_div_v[n_basis]
-                                      .set_inhomogeneity(
-                                        local_dof_face_indices.at(i),
-                                        dof_scale);
-                                  }
-                              }
-                            else
-                              {
-                                for (unsigned int i = 0; i < dofs_per_face; ++i)
-                                  {
-                                    constraints_div_v[n_basis].add_line(
-                                      local_dof_face_indices.at(i));
-                                  }
-                              }
-                          } // end
-                            // cell->at_boundary(face_n)
-                      }     // end ++face_n
-                  }         // end if cell->at_boundary (
-              }             // end ++cell
+            std::cerr
+              << "Fast constraint setup discarded. This does not work on curved domains."
+              << std::endl;
+            exit(1);
+            //            // boundary values for normal flux
+            //            const unsigned int dofs_per_cell = fe.dofs_per_cell;
+            //            const unsigned int dofs_per_face = fe.dofs_per_face;
+            //            std::vector<types::global_dof_index>
+            //            local_dof_indices(
+            //              dofs_per_cell);
+            //            std::vector<types::global_dof_index>
+            //            local_dof_face_indices(
+            //              dofs_per_face);
+            //
+            //            typename DoFHandler<3>::active_cell_iterator
+            //              cell = dof_handler.begin_active(),
+            //              endc = dof_handler.end();
+            //            for (; cell != endc; ++cell)
+            //              {
+            //                if (cell->at_boundary())
+            //                  {
+            //                    cell->get_dof_indices(local_dof_indices);
+            //                    for (unsigned int face_n = 0;
+            //                         face_n < GeometryInfo<3>::faces_per_cell;
+            //                         ++face_n)
+            //                      {
+            //                        if (cell->at_boundary(face_n))
+            //                          {
+            //                            cell->face(face_n)->get_dof_indices(
+            //                              local_dof_face_indices);
+            //                            if (cell->face(face_n)->boundary_id()
+            //                            == n_basis)
+            //                              {
+            //                                for (unsigned int i = 0; i <
+            //                                dofs_per_face; ++i)
+            //                                  {
+            //                                    const double dof_scale =
+            //                                      cell->face(face_n)->measure()
+            //                                      / face_measure.at(n_basis);
+            //
+            //                                    constraints_div_v[n_basis].add_line(
+            //                                      local_dof_face_indices.at(i));
+            //                                    constraints_div_v[n_basis]
+            //                                      .set_inhomogeneity(
+            //                                        local_dof_face_indices.at(i),
+            //                                        dof_scale);
+            //                                  }
+            //                              }
+            //                            else
+            //                              {
+            //                                for (unsigned int i = 0; i <
+            //                                dofs_per_face; ++i)
+            //                                  {
+            //                                    constraints_div_v[n_basis].add_line(
+            //                                      local_dof_face_indices.at(i));
+            //                                  }
+            //                              }
+            //                          } // end
+            //                            // cell->at_boundary(face_n)
+            //                      }     // end ++face_n
+            //                  }         // end if cell->at_boundary (
+            //              }             // end ++cell
           }
         else
           {

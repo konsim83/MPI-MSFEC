@@ -131,15 +131,16 @@ namespace ShapeFun
 
   private:
     /*!
-     * Matrix holds coefficients of Q1 mapping (unit cell to physical cell).
+     * Matrix holds coefficients of basis on physical cell.
      */
     FullMatrix<double> coeff_matrix;
 
     /*!
-     * Matrix holds coefficients of inverse Q1 mapping (physical cell to unit
-     * cell).
+     * Matrix holds coefficients of basis on unit cell.
      */
-    FullMatrix<double> coeff_matrix_inverse;
+    FullMatrix<double> coeff_matrix_unit_cell;
+
+    std::vector<Point<dim>> cell_vertex;
   };
 
 

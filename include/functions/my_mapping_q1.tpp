@@ -10,69 +10,66 @@ namespace ShapeFun
   template <int dim>
   MyMappingQ1<dim>::MyMappingQ1(const MyMappingQ1<dim> &mapping)
     : coeff_matrix(mapping.coeff_matrix)
-    , coeff_matrix_inverse(mapping.coeff_matrix_inverse)
+    , coeff_matrix_unit_cell(mapping.coeff_matrix_unit_cell)
+    , cell_vertex(mapping.cell_vertex)
   {}
 
 
   /*
-   * 2D implementations
+   * **************************
+   * *** 2D implementations ***
+   * **************************
    */
+
   template <>
   MyMappingQ1<2>::MyMappingQ1(
     const typename Triangulation<2>::active_cell_iterator &cell)
-    : coeff_matrix(2, 4)
-    , coeff_matrix_inverse(2, 4)
+    : coeff_matrix(4, 4)
+    , coeff_matrix_unit_cell(4, 4)
+    , cell_vertex(4)
   {
     FullMatrix<double> point_matrix(4, 4);
-    FullMatrix<double> point_matrix_inverse(4, 4);
-    FullMatrix<double> rhs_matrix(2, 4);
 
     for (unsigned int alpha = 0; alpha < 4; ++alpha)
       {
-        const Point<2> &p     = cell->vertex(alpha);
-        const Point<2> &p_ref = GeometryInfo<2>::unit_cell_vertex(alpha);
+        cell_vertex[alpha] = cell->vertex(alpha);
 
         // point matrix to be inverted
         point_matrix(0, alpha) = 1;
-        point_matrix(1, alpha) = p(0);
-        point_matrix(2, alpha) = p(1);
-        point_matrix(3, alpha) = p(0) * p(1);
-
-        // this is rhs if we want mapping from ref cell to real cell
-        rhs_matrix(0, alpha) = p_ref(0);
-        rhs_matrix(1, alpha) = p_ref(1);
+        point_matrix(1, alpha) = cell_vertex[alpha](0);
+        point_matrix(2, alpha) = cell_vertex[alpha](1);
+        point_matrix(3, alpha) = cell_vertex[alpha](0) * cell_vertex[alpha](1);
       }
 
-    // Columns of coeff_matrix are the coefficients of the polynomial
-    point_matrix_inverse.invert(point_matrix);
-    rhs_matrix.mmult(/* destination */ coeff_matrix_inverse,
-                     point_matrix_inverse);
+    /*
+     * Rows of coeff_matrix are the coefficients of the basis on the physical
+     * cell
+     */
+    coeff_matrix.invert(point_matrix);
 
-    // clear matrixces
-    point_matrix         = 0;
-    point_matrix_inverse = 0;
-    rhs_matrix           = 0;
 
-    // Now with roles swtiched for inverse mapping
-    for (unsigned int alpha = 0; alpha < 4; ++alpha)
-      {
-        const Point<2> &p     = cell->vertex(alpha);
-        const Point<2> &p_ref = GeometryInfo<2>::unit_cell_vertex(alpha);
+    /*
+     * Coefficient matrix for unit cell
+     */
+    coeff_matrix_unit_cell(0, 0) = 1;
+    coeff_matrix_unit_cell(0, 1) = -1;
+    coeff_matrix_unit_cell(0, 2) = -1;
+    coeff_matrix_unit_cell(0, 3) = 1;
 
-        // point matrix to be inverted
-        point_matrix(0, alpha) = 1;
-        point_matrix(1, alpha) = p_ref(0);
-        point_matrix(2, alpha) = p_ref(1);
-        point_matrix(3, alpha) = p_ref(0) * p_ref(1);
+    coeff_matrix_unit_cell(1, 0) = 0;
+    coeff_matrix_unit_cell(1, 1) = 1;
+    coeff_matrix_unit_cell(1, 2) = 0;
+    coeff_matrix_unit_cell(1, 3) = -1;
 
-        // this is rhs if we want mapping from ref cell to real cell
-        rhs_matrix(0, alpha) = p(0);
-        rhs_matrix(1, alpha) = p(1);
-      }
+    coeff_matrix_unit_cell(2, 0) = 0;
+    coeff_matrix_unit_cell(2, 1) = 0;
+    coeff_matrix_unit_cell(2, 2) = 1;
+    coeff_matrix_unit_cell(2, 3) = -1;
 
-    // Columns of coeff_matrix are the coefficients of the polynomial
-    point_matrix_inverse.invert(point_matrix);
-    rhs_matrix.mmult(/* destination */ coeff_matrix, point_matrix_inverse);
+    coeff_matrix_unit_cell(3, 0) = 0;
+    coeff_matrix_unit_cell(3, 1) = 0;
+    coeff_matrix_unit_cell(3, 2) = 0;
+    coeff_matrix_unit_cell(3, 3) = 1;
   }
 
 
@@ -82,11 +79,15 @@ namespace ShapeFun
   {
     Point<2> p_out;
 
-    for (unsigned d = 0; d < 2; ++d)
-      p_out(d) = coeff_matrix_inverse(d, 0) +
-                 coeff_matrix_inverse(d, 1) * p(0) +
-                 coeff_matrix_inverse(d, 2) * p(1) +
-                 coeff_matrix_inverse(d, 3) * p(0) * p(1);
+    for (unsigned int alpha = 0; alpha < 4; ++alpha)
+      {
+        const Point<2> &p_ref = GeometryInfo<2>::unit_cell_vertex(alpha);
+
+        p_out += (coeff_matrix(alpha, 0) + coeff_matrix(alpha, 1) * p(0) +
+                  coeff_matrix(alpha, 2) * p(1) +
+                  coeff_matrix(alpha, 3) * p(0) * p(1)) *
+                 p_ref;
+      }
 
     return p_out;
   }
@@ -98,11 +99,10 @@ namespace ShapeFun
   {
     Point<2> p_out;
 
-    for (unsigned d = 0; d < 2; ++d)
-      p_out(d) = coeff_matrix(d, 0) + coeff_matrix(d, 1) * p(0) +
-                 coeff_matrix(d, 2) * p(1) + coeff_matrix(d, 3) * p(0) * p(1);
-
-    return p_out;
+    return p_out = cell_vertex[0] * (1 - p(0)) * (1 - p(1)) +
+                   cell_vertex[1] * p(0) * (1 - p(1)) +
+                   cell_vertex[2] * (1 - p(0)) * p(1) +
+                   cell_vertex[3] * p(0) * p(1);
   }
 
 
@@ -117,12 +117,18 @@ namespace ShapeFun
 
     for (unsigned int i = 0; i < points_in.size(); ++i)
       {
-        for (unsigned d = 0; d < 2; ++d)
-          points_out[i](d) =
-            coeff_matrix_inverse(d, 0) +
-            coeff_matrix_inverse(d, 1) * points_in[i](0) +
-            coeff_matrix_inverse(d, 2) * points_in[i](1) +
-            coeff_matrix_inverse(d, 3) * points_in[i](0) * points_in[i](1);
+        points_out[i].clear();
+        for (unsigned int alpha = 0; alpha < 4; ++alpha)
+          {
+            const Point<2> &p_ref = GeometryInfo<2>::unit_cell_vertex(alpha);
+
+            points_out[i] +=
+              (coeff_matrix(alpha, 0) +
+               coeff_matrix(alpha, 1) * points_in[i](0) +
+               coeff_matrix(alpha, 2) * points_in[i](1) +
+               coeff_matrix(alpha, 3) * points_in[i](0) * points_in[i](1)) *
+              p_ref;
+          }
       }
   }
 
@@ -138,11 +144,11 @@ namespace ShapeFun
 
     for (unsigned int i = 0; i < points_in.size(); ++i)
       {
-        for (unsigned d = 0; d < 2; ++d)
-          points_out[i](d) =
-            coeff_matrix(d, 0) + coeff_matrix(d, 1) * points_in[i](0) +
-            coeff_matrix(d, 2) * points_in[i](1) +
-            coeff_matrix(d, 3) * points_in[i](0) * points_in[i](1);
+        points_out[i] =
+          cell_vertex[0] * (1 - points_in[i](0)) * (1 - points_in[i](1)) +
+          cell_vertex[1] * points_in[i](0) * (1 - points_in[i](1)) +
+          cell_vertex[2] * (1 - points_in[i](0)) * points_in[i](1) +
+          cell_vertex[3] * points_in[i](0) * points_in[i](1);
       }
   }
 
@@ -153,14 +159,19 @@ namespace ShapeFun
   {
     FullMatrix<double> jacobian(2, 2);
 
-    jacobian(0, 0) =
-      coeff_matrix_inverse(0, 1) + coeff_matrix_inverse(0, 3) * p(1);
-    jacobian(0, 1) =
-      coeff_matrix_inverse(0, 2) + coeff_matrix_inverse(0, 3) * p(0);
-    jacobian(1, 0) =
-      coeff_matrix_inverse(1, 1) + coeff_matrix_inverse(1, 3) * p(1);
-    jacobian(1, 1) =
-      coeff_matrix_inverse(1, 2) + coeff_matrix_inverse(1, 3) * p(0);
+    for (unsigned int alpha = 0; alpha < 4; ++alpha)
+      {
+        const Point<2> &p_ref = GeometryInfo<2>::unit_cell_vertex(alpha);
+
+        const Point<2> grad_phi_alpha(coeff_matrix(alpha, 1) +
+                                        coeff_matrix(alpha, 3) * p(1),
+                                      coeff_matrix(alpha, 2) +
+                                        coeff_matrix(alpha, 3) * p(0));
+
+        for (unsigned int k = 0; k < 2; ++k)
+          for (unsigned int l = 0; l < 2; ++l)
+            jacobian(k, l) += p_ref(k) * grad_phi_alpha(l);
+      }
 
     return jacobian;
   }
@@ -176,16 +187,24 @@ namespace ShapeFun
 
     for (unsigned int i = 0; i < points_in.size(); ++i)
       {
-        jacobian_out[i](0, 0) = coeff_matrix_inverse(0, 1) +
-                                coeff_matrix_inverse(0, 3) * points_in[i](1);
-        jacobian_out[i](0, 1) = coeff_matrix_inverse(0, 2) +
-                                coeff_matrix_inverse(0, 3) * points_in[i](0);
-        jacobian_out[i](1, 0) = coeff_matrix_inverse(1, 1) +
-                                coeff_matrix_inverse(1, 3) * points_in[i](1);
-        jacobian_out[i](1, 1) = coeff_matrix_inverse(1, 2) +
-                                coeff_matrix_inverse(1, 3) * points_in[i](0);
+        jacobian_out[i] = 0;
+        for (unsigned int alpha = 0; alpha < 4; ++alpha)
+          {
+            const Point<2> &p_ref = GeometryInfo<2>::unit_cell_vertex(alpha);
+
+            const Point<2> grad_phi_alpha(
+              coeff_matrix(alpha, 1) + coeff_matrix(alpha, 3) * points_in[i](1),
+              coeff_matrix(alpha, 2) +
+                coeff_matrix(alpha, 3) * points_in[i](0));
+
+            for (unsigned int k = 0; k < 2; ++k)
+              for (unsigned int l = 0; l < 2; ++l)
+                jacobian_out[i](k, l) += p_ref(k) * grad_phi_alpha(l);
+          }
       }
   }
+
+
 
   template <>
   FullMatrix<double>
@@ -193,10 +212,20 @@ namespace ShapeFun
   {
     FullMatrix<double> jacobian(2, 2);
 
-    jacobian(0, 0) = coeff_matrix(0, 1) + coeff_matrix(0, 3) * p(1);
-    jacobian(0, 1) = coeff_matrix(0, 2) + coeff_matrix(0, 3) * p(0);
-    jacobian(1, 0) = coeff_matrix(1, 1) + coeff_matrix(1, 3) * p(1);
-    jacobian(1, 1) = coeff_matrix(1, 2) + coeff_matrix(1, 3) * p(0);
+
+
+    for (unsigned int alpha = 0; alpha < 4; ++alpha)
+      {
+        const Point<2> grad_phi_alpha(coeff_matrix_unit_cell(alpha, 1) +
+                                        coeff_matrix_unit_cell(alpha, 3) * p(1),
+                                      coeff_matrix_unit_cell(alpha, 2) +
+                                        coeff_matrix_unit_cell(alpha, 3) *
+                                          p(0));
+
+        for (unsigned int k = 0; k < 2; ++k)
+          for (unsigned int l = 0; l < 2; ++l)
+            jacobian(k, l) += cell_vertex[alpha](k) * grad_phi_alpha(l);
+      }
 
     return jacobian;
   }
@@ -212,66 +241,70 @@ namespace ShapeFun
 
     for (unsigned int i = 0; i < points_in.size(); ++i)
       {
-        jacobian_out[i](0, 0) =
-          coeff_matrix(0, 1) + coeff_matrix(0, 3) * points_in[i](1);
-        jacobian_out[i](0, 1) =
-          coeff_matrix(0, 2) + coeff_matrix(0, 3) * points_in[i](0);
-        jacobian_out[i](1, 0) =
-          coeff_matrix(1, 1) + coeff_matrix(1, 3) * points_in[i](1);
-        jacobian_out[i](1, 1) =
-          coeff_matrix(1, 2) + coeff_matrix(1, 3) * points_in[i](0);
+        jacobian_out[i] = 0;
+        for (unsigned int alpha = 0; alpha < 4; ++alpha)
+          {
+            const Point<2> grad_phi_alpha(coeff_matrix_unit_cell(alpha, 1) +
+                                            coeff_matrix_unit_cell(alpha, 3) *
+                                              points_in[i](1),
+                                          coeff_matrix_unit_cell(alpha, 2) +
+                                            coeff_matrix_unit_cell(alpha, 3) *
+                                              points_in[i](0));
+
+            for (unsigned int k = 0; k < 2; ++k)
+              for (unsigned int l = 0; l < 2; ++l)
+                jacobian_out[i](k, l) +=
+                  cell_vertex[alpha](k) * grad_phi_alpha(l);
+          }
       }
   }
 
 
+
   /*
-   * 3D implementations
+   * **************************
+   * *** 3D implementations ***
+   * **************************
    */
+
+
   template <>
   MyMappingQ1<3>::MyMappingQ1(
     const typename Triangulation<3>::active_cell_iterator &cell)
-    : coeff_matrix(3, 8)
-    , coeff_matrix_inverse(3, 8)
+    : coeff_matrix(8, 8)
+    , coeff_matrix_unit_cell(8, 8)
+    , cell_vertex(8)
   {
     FullMatrix<double> point_matrix(8, 8);
-    FullMatrix<double> point_matrix_inverse(8, 8);
-    FullMatrix<double> rhs_matrix(3, 8);
 
     for (unsigned int alpha = 0; alpha < 8; ++alpha)
       {
-        const Point<3> &p     = cell->vertex(alpha);
-        const Point<3> &p_ref = GeometryInfo<3>::unit_cell_vertex(alpha);
+        cell_vertex[alpha] = cell->vertex(alpha);
 
         // point matrix to be inverted
         point_matrix(0, alpha) = 1;
-        point_matrix(1, alpha) = p(0);
-        point_matrix(2, alpha) = p(1);
-        point_matrix(3, alpha) = p(2);
-        point_matrix(4, alpha) = p(0) * p(1);
-        point_matrix(5, alpha) = p(1) * p(2);
-        point_matrix(6, alpha) = p(0) * p(2);
-        point_matrix(7, alpha) = p(0) * p(1) * p(2);
-
-        // this is rhs if we want mapping from ref cell to real cell
-        rhs_matrix(0, alpha) = p_ref(0);
-        rhs_matrix(1, alpha) = p_ref(1);
-        rhs_matrix(2, alpha) = p_ref(2);
+        point_matrix(1, alpha) = cell_vertex[alpha](0);
+        point_matrix(2, alpha) = cell_vertex[alpha](1);
+        point_matrix(3, alpha) = cell_vertex[alpha](2);
+        point_matrix(4, alpha) = cell_vertex[alpha](0) * cell_vertex[alpha](1);
+        point_matrix(5, alpha) = cell_vertex[alpha](1) * cell_vertex[alpha](2);
+        point_matrix(6, alpha) = cell_vertex[alpha](0) * cell_vertex[alpha](2);
+        point_matrix(7, alpha) =
+          cell_vertex[alpha](0) * cell_vertex[alpha](1) * cell_vertex[alpha](2);
       }
 
-    // Columns of coeff_matrix are the coefficients of the polynomial
-    point_matrix_inverse.invert(point_matrix);
-    rhs_matrix.mmult(/* destination */ coeff_matrix_inverse,
-                     point_matrix_inverse);
+    /*
+     * Rows of coeff_matrix are the coefficients of the basis on the physical
+     * cell
+     */
+    coeff_matrix.invert(point_matrix);
 
-    // clear matrixces
-    point_matrix         = 0;
-    point_matrix_inverse = 0;
-    rhs_matrix           = 0;
+    ///////////////////
 
-    // Now with roles swtiched for inverse mapping
+    point_matrix = 0;
+
     for (unsigned int alpha = 0; alpha < 8; ++alpha)
       {
-        const Point<3> &p     = cell->vertex(alpha);
         const Point<3> &p_ref = GeometryInfo<3>::unit_cell_vertex(alpha);
 
         // point matrix to be inverted
@@ -283,16 +316,13 @@ namespace ShapeFun
         point_matrix(5, alpha) = p_ref(1) * p_ref(2);
         point_matrix(6, alpha) = p_ref(0) * p_ref(2);
         point_matrix(7, alpha) = p_ref(0) * p_ref(1) * p_ref(2);
-
-        // this is rhs if we want mapping from ref cell to real cell
-        rhs_matrix(0, alpha) = p(0);
-        rhs_matrix(1, alpha) = p(1);
-        rhs_matrix(2, alpha) = p(2);
       }
 
-    // Columns of coeff_matrix are the coefficients of the polynomial
-    point_matrix_inverse.invert(point_matrix);
-    rhs_matrix.mmult(/* destination */ coeff_matrix, point_matrix_inverse);
+    /*
+     * Rows of coeff_matrix are the coefficients of the basis on the unit
+     * cell
+     */
+    coeff_matrix_unit_cell.invert(point_matrix);
   }
 
 
@@ -302,14 +332,19 @@ namespace ShapeFun
   {
     Point<3> p_out;
 
-    for (unsigned d = 0; d < 3; ++d)
-      p_out(d) =
-        coeff_matrix_inverse(d, 0) + coeff_matrix_inverse(d, 1) * p(0) +
-        coeff_matrix_inverse(d, 2) * p(1) + coeff_matrix_inverse(d, 3) * p(2) +
-        coeff_matrix_inverse(d, 4) * p(0) * p(1) +
-        coeff_matrix_inverse(d, 5) * p(1) * p(2) +
-        coeff_matrix_inverse(d, 6) * p(0) * p(2) +
-        coeff_matrix_inverse(d, 7) * p(0) * p(1) * p(2);
+    for (unsigned int alpha = 0; alpha < 8; ++alpha)
+      {
+        const Point<3> &p_ref = GeometryInfo<3>::unit_cell_vertex(alpha);
+
+        p_out +=
+          (coeff_matrix(alpha, 0) + coeff_matrix(alpha, 1) * p(0) +
+           coeff_matrix(alpha, 2) * p(1) + coeff_matrix(alpha, 3) * p(2) +
+           coeff_matrix(alpha, 4) * p(0) * p(1) +
+           coeff_matrix(alpha, 5) * p(1) * p(2) +
+           coeff_matrix(alpha, 6) * p(0) * p(2) +
+           coeff_matrix(alpha, 7) * p(0) * p(1) * p(2)) *
+          p_ref;
+      }
 
     return p_out;
   }
@@ -321,16 +356,22 @@ namespace ShapeFun
   {
     Point<3> p_out;
 
-    for (unsigned d = 0; d < 3; ++d)
-      p_out(d) = coeff_matrix(d, 0) + coeff_matrix(d, 1) * p(0) +
-                 coeff_matrix(d, 2) * p(1) + coeff_matrix(d, 3) * p(2) +
-                 coeff_matrix(d, 4) * p(0) * p(1) +
-                 coeff_matrix(d, 5) * p(1) * p(2) +
-                 coeff_matrix(d, 6) * p(0) * p(2) +
-                 coeff_matrix(d, 7) * p(0) * p(1) * p(2);
+    for (unsigned int alpha = 0; alpha < 8; ++alpha)
+      {
+        p_out += (coeff_matrix_unit_cell(alpha, 0) +
+                  coeff_matrix_unit_cell(alpha, 1) * p(0) +
+                  coeff_matrix_unit_cell(alpha, 2) * p(1) +
+                  coeff_matrix_unit_cell(alpha, 3) * p(2) +
+                  coeff_matrix_unit_cell(alpha, 4) * p(0) * p(1) +
+                  coeff_matrix_unit_cell(alpha, 5) * p(1) * p(2) +
+                  coeff_matrix_unit_cell(alpha, 6) * p(0) * p(2) +
+                  coeff_matrix_unit_cell(alpha, 7) * p(0) * p(1) * p(2)) *
+                 cell_vertex[alpha];
+      }
 
     return p_out;
   }
+
 
 
   template <>
@@ -344,17 +385,23 @@ namespace ShapeFun
 
     for (unsigned int i = 0; i < points_in.size(); ++i)
       {
-        for (unsigned d = 0; d < 3; ++d)
-          points_out[i](d) =
-            coeff_matrix_inverse(d, 0) +
-            coeff_matrix_inverse(d, 1) * points_in[i](0) +
-            coeff_matrix_inverse(d, 2) * points_in[i](1) +
-            coeff_matrix_inverse(d, 3) * points_in[i](2) +
-            coeff_matrix_inverse(d, 4) * points_in[i](0) * points_in[i](1) +
-            coeff_matrix_inverse(d, 5) * points_in[i](1) * points_in[i](2) +
-            coeff_matrix_inverse(d, 6) * points_in[i](0) * points_in[i](2) +
-            coeff_matrix_inverse(d, 7) * points_in[i](0) * points_in[i](1) *
-              points_in[i](2);
+        points_out[i].clear();
+        for (unsigned int alpha = 0; alpha < 8; ++alpha)
+          {
+            const Point<3> &p_ref = GeometryInfo<3>::unit_cell_vertex(alpha);
+
+            points_out[i] +=
+              (coeff_matrix(alpha, 0) +
+               coeff_matrix(alpha, 1) * points_in[i](0) +
+               coeff_matrix(alpha, 2) * points_in[i](1) +
+               coeff_matrix(alpha, 3) * points_in[i](2) +
+               coeff_matrix(alpha, 4) * points_in[i](0) * points_in[i](1) +
+               coeff_matrix(alpha, 5) * points_in[i](1) * points_in[i](2) +
+               coeff_matrix(alpha, 6) * points_in[i](0) * points_in[i](2) +
+               coeff_matrix(alpha, 7) * points_in[i](0) * points_in[i](1) *
+                 points_in[i](2)) *
+              p_ref;
+          }
       }
   }
 
@@ -370,16 +417,24 @@ namespace ShapeFun
 
     for (unsigned int i = 0; i < points_in.size(); ++i)
       {
-        for (unsigned d = 0; d < 3; ++d)
-          points_out[i](d) =
-            coeff_matrix(d, 0) + coeff_matrix(d, 1) * points_in[i](0) +
-            coeff_matrix(d, 2) * points_in[i](1) +
-            coeff_matrix(d, 3) * points_in[i](2) +
-            coeff_matrix(d, 4) * points_in[i](0) * points_in[i](1) +
-            coeff_matrix(d, 5) * points_in[i](1) * points_in[i](2) +
-            coeff_matrix(d, 6) * points_in[i](0) * points_in[i](2) +
-            coeff_matrix(d, 7) * points_in[i](0) * points_in[i](1) *
-              points_in[i](2);
+        points_out[i].clear();
+        for (unsigned int alpha = 0; alpha < 8; ++alpha)
+          {
+            points_out[i] +=
+              (coeff_matrix_unit_cell(alpha, 0) +
+               coeff_matrix_unit_cell(alpha, 1) * points_in[i](0) +
+               coeff_matrix_unit_cell(alpha, 2) * points_in[i](1) +
+               coeff_matrix_unit_cell(alpha, 3) * points_in[i](2) +
+               coeff_matrix_unit_cell(alpha, 4) * points_in[i](0) *
+                 points_in[i](1) +
+               coeff_matrix_unit_cell(alpha, 5) * points_in[i](1) *
+                 points_in[i](2) +
+               coeff_matrix_unit_cell(alpha, 6) * points_in[i](0) *
+                 points_in[i](2) +
+               coeff_matrix_unit_cell(alpha, 7) * points_in[i](0) *
+                 points_in[i](1) * points_in[i](2)) *
+              cell_vertex[alpha];
+          }
       }
   }
 
@@ -390,20 +445,24 @@ namespace ShapeFun
   {
     FullMatrix<double> jacobian(3, 3);
 
-    for (unsigned int d = 0; d < 3; ++d)
+    for (unsigned int alpha = 0; alpha < 8; ++alpha)
       {
-        jacobian(d, 0) = coeff_matrix_inverse(d, 1) +
-                         coeff_matrix_inverse(d, 4) * p(1) +
-                         coeff_matrix_inverse(d, 6) * p(2) +
-                         coeff_matrix_inverse(d, 7) * p(1) * p(2);
-        jacobian(d, 1) = coeff_matrix_inverse(d, 2) +
-                         coeff_matrix_inverse(d, 4) * p(0) +
-                         coeff_matrix_inverse(d, 5) * p(2) +
-                         coeff_matrix_inverse(d, 7) * p(0) * p(2);
-        jacobian(d, 2) = coeff_matrix_inverse(d, 3) +
-                         coeff_matrix_inverse(d, 5) * p(2) +
-                         coeff_matrix_inverse(d, 6) * p(1) +
-                         coeff_matrix_inverse(d, 7) * p(1) * p(2);
+        const Point<3> &p_ref = GeometryInfo<3>::unit_cell_vertex(alpha);
+
+        const Point<3> grad_phi_alpha(
+          coeff_matrix(alpha, 1) + coeff_matrix(alpha, 4) * p(1) +
+            coeff_matrix(alpha, 6) * p(2) +
+            coeff_matrix(alpha, 7) * p(1) * p(2),
+          coeff_matrix(alpha, 2) + coeff_matrix(alpha, 4) * p(0) +
+            coeff_matrix(alpha, 5) * p(2) +
+            coeff_matrix(alpha, 7) * p(0) * p(2),
+          coeff_matrix(alpha, 3) + coeff_matrix(alpha, 5) * p(1) +
+            coeff_matrix(alpha, 6) * p(0) +
+            coeff_matrix(alpha, 7) * p(0) * p(1));
+
+        for (unsigned int k = 0; k < 3; ++k)
+          for (unsigned int l = 0; l < 3; ++l)
+            jacobian(k, l) += p_ref(k) * grad_phi_alpha(l);
       }
 
     return jacobian;
@@ -420,23 +479,28 @@ namespace ShapeFun
 
     for (unsigned int i = 0; i < points_in.size(); ++i)
       {
-        for (unsigned int d = 0; d < 3; ++d)
+        jacobian_out[i] = 0;
+        for (unsigned int alpha = 0; alpha < 8; ++alpha)
           {
-            jacobian_out[i](d, 0) =
-              coeff_matrix_inverse(d, 1) +
-              coeff_matrix_inverse(d, 4) * points_in[i](1) +
-              coeff_matrix_inverse(d, 6) * points_in[i](2) +
-              coeff_matrix_inverse(d, 7) * points_in[i](1) * points_in[i](2);
-            jacobian_out[i](d, 1) =
-              coeff_matrix_inverse(d, 2) +
-              coeff_matrix_inverse(d, 4) * points_in[i](0) +
-              coeff_matrix_inverse(d, 5) * points_in[i](2) +
-              coeff_matrix_inverse(d, 7) * points_in[i](0) * points_in[i](2);
-            jacobian_out[i](d, 2) =
-              coeff_matrix_inverse(d, 3) +
-              coeff_matrix_inverse(d, 5) * points_in[i](2) +
-              coeff_matrix_inverse(d, 6) * points_in[i](1) +
-              coeff_matrix_inverse(d, 7) * points_in[i](1) * points_in[i](2);
+            const Point<3> &p_ref = GeometryInfo<3>::unit_cell_vertex(alpha);
+
+            const Point<3> grad_phi_alpha(
+              coeff_matrix(alpha, 1) +
+                coeff_matrix(alpha, 4) * points_in[i](1) +
+                coeff_matrix(alpha, 6) * points_in[i](2) +
+                coeff_matrix(alpha, 7) * points_in[i](1) * points_in[i](2),
+              coeff_matrix(alpha, 2) +
+                coeff_matrix(alpha, 4) * points_in[i](0) +
+                coeff_matrix(alpha, 5) * points_in[i](2) +
+                coeff_matrix(alpha, 7) * points_in[i](0) * points_in[i](2),
+              coeff_matrix(alpha, 3) +
+                coeff_matrix(alpha, 5) * points_in[i](1) +
+                coeff_matrix(alpha, 6) * points_in[i](0) +
+                coeff_matrix(alpha, 7) * points_in[i](0) * points_in[i](1));
+
+            for (unsigned int k = 0; k < 3; ++k)
+              for (unsigned int l = 0; l < 3; ++l)
+                jacobian_out[i](k, l) += p_ref(k) * grad_phi_alpha(l);
           }
       }
   }
@@ -447,20 +511,26 @@ namespace ShapeFun
   {
     FullMatrix<double> jacobian(3, 3);
 
-    for (unsigned int d = 0; d < 3; ++d)
+    for (unsigned int alpha = 0; alpha < 8; ++alpha)
       {
-        jacobian(d, 0) = coeff_matrix(d, 1) + coeff_matrix(d, 4) * p(1) +
-                         coeff_matrix(d, 6) * p(2) +
-                         coeff_matrix(d, 7) * p(1) * p(2);
-        jacobian(d, 1) = coeff_matrix(d, 2) + coeff_matrix(d, 4) * p(0) +
-                         coeff_matrix(d, 5) * p(2) +
-                         coeff_matrix(d, 7) * p(0) * p(2);
-        jacobian(d, 2) = coeff_matrix(d, 3) + coeff_matrix(d, 5) * p(2) +
-                         coeff_matrix(d, 6) * p(1) +
-                         coeff_matrix(d, 7) * p(1) * p(2);
-      }
+        const Point<3> grad_phi_alpha(
+          coeff_matrix_unit_cell(alpha, 1) +
+            coeff_matrix_unit_cell(alpha, 4) * p(1) +
+            coeff_matrix_unit_cell(alpha, 6) * p(2) +
+            coeff_matrix_unit_cell(alpha, 7) * p(1) * p(2),
+          coeff_matrix_unit_cell(alpha, 2) +
+            coeff_matrix_unit_cell(alpha, 4) * p(0) +
+            coeff_matrix_unit_cell(alpha, 5) * p(2) +
+            coeff_matrix_unit_cell(alpha, 7) * p(0) * p(2),
+          coeff_matrix_unit_cell(alpha, 3) +
+            coeff_matrix_unit_cell(alpha, 5) * p(1) +
+            coeff_matrix_unit_cell(alpha, 6) * p(0) +
+            coeff_matrix_unit_cell(alpha, 7) * p(0) * p(1));
 
-    return jacobian;
+        for (unsigned int k = 0; k < 3; ++k)
+          for (unsigned int l = 0; l < 3; ++l)
+            jacobian(k, l) += cell_vertex[alpha](k) * grad_phi_alpha(l);
+      }
 
     return jacobian;
   }
@@ -476,20 +546,31 @@ namespace ShapeFun
 
     for (unsigned int i = 0; i < points_in.size(); ++i)
       {
-        for (unsigned int d = 0; d < 3; ++d)
+        jacobian_out[i] = 0;
+
+        for (unsigned int alpha = 0; alpha < 8; ++alpha)
           {
-            jacobian_out[i](d, 0) =
-              coeff_matrix(d, 1) + coeff_matrix(d, 4) * points_in[i](1) +
-              coeff_matrix(d, 6) * points_in[i](2) +
-              coeff_matrix(d, 7) * points_in[i](1) * points_in[i](2);
-            jacobian_out[i](d, 1) =
-              coeff_matrix(d, 2) + coeff_matrix(d, 4) * points_in[i](0) +
-              coeff_matrix(d, 5) * points_in[i](2) +
-              coeff_matrix(d, 7) * points_in[i](0) * points_in[i](2);
-            jacobian_out[i](d, 2) =
-              coeff_matrix(d, 3) + coeff_matrix(d, 5) * points_in[i](2) +
-              coeff_matrix(d, 6) * points_in[i](1) +
-              coeff_matrix(d, 7) * points_in[i](1) * points_in[i](2);
+            const Point<3> grad_phi_alpha(
+              coeff_matrix_unit_cell(alpha, 1) +
+                coeff_matrix_unit_cell(alpha, 4) * points_in[i](1) +
+                coeff_matrix_unit_cell(alpha, 6) * points_in[i](2) +
+                coeff_matrix_unit_cell(alpha, 7) * points_in[i](1) *
+                  points_in[i](2),
+              coeff_matrix_unit_cell(alpha, 2) +
+                coeff_matrix_unit_cell(alpha, 4) * points_in[i](0) +
+                coeff_matrix_unit_cell(alpha, 5) * points_in[i](2) +
+                coeff_matrix_unit_cell(alpha, 7) * points_in[i](0) *
+                  points_in[i](2),
+              coeff_matrix_unit_cell(alpha, 3) +
+                coeff_matrix_unit_cell(alpha, 5) * points_in[i](1) +
+                coeff_matrix_unit_cell(alpha, 6) * points_in[i](0) +
+                coeff_matrix_unit_cell(alpha, 7) * points_in[i](0) *
+                  points_in[i](1));
+
+            for (unsigned int k = 0; k < 3; ++k)
+              for (unsigned int l = 0; l < 3; ++l)
+                jacobian_out[i](k, l) +=
+                  cell_vertex[alpha](k) * grad_phi_alpha(l);
           }
       }
   }
