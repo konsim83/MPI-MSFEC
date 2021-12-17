@@ -1,6 +1,9 @@
 # Ingnore generated documentation
 documentation/
 
+# IDE configs
+.vscode/
+
 # Prerequisites
 *.d
 
