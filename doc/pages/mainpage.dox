@@ -155,12 +155,12 @@
  	If you, for example, want to solve the multiscale Hodge-Laplace problem for 2-forms (i.e., with modified
  	Nedelec-Raviart-Thomas element pairings) you need to call
  	@code
- 		../your_build_dir> mpirun -n N source/MsFEC_Ned_RT -p my_paramter_file.in
+ 		../your_build_dir> mpirun -n N source/MsFEC_Ned_RT -p my_paramter_file.prm
  	@endcode
  	
  	An example parameter file can look like
  	@code
- 		# Example parameter file "my_paramter_file.in"
+ 		# Example parameter file "my_paramter_file.prm"
  	
  		subsection Standard method parameters
 			subsection Mesh

@@ -36,7 +36,7 @@ namespace Q
       }
 
     prm.parse_input(parameter_file,
-                    /* filename = */ "generated_parameter.in",
+                    /* filename = */ "generated_parameter.prm",
                     /* last_line = */ "",
                     /* skip_undefined = */ true);
     ParametersStd::parse_parameters(prm);
@@ -149,7 +149,7 @@ namespace Q
       }
 
     prm.parse_input(parameter_file,
-                    /* filename = */ "generated_parameter.in",
+                    /* filename = */ "generated_parameter.prm",
                     /* last_line = */ "",
                     /* skip_undefined = */ true);
     ParametersMs::parse_parameters(prm);

@@ -17,7 +17,7 @@ namespace EquationData
     std::ifstream parameter_file(parameter_filename);
 
     prm.parse_input(parameter_file,
-                    /* filename = */ "generated_parameter.in",
+                    /* filename = */ "generated_parameter.prm",
                     /* last_line = */ "",
                     /* skip_undefined = */ true);
     parse_parameters(prm);
