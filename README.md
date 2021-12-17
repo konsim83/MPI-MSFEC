@@ -74,7 +74,7 @@ make -jN
 To run the executable with an example parameter file run
 
 ```
-mpirun -n N source/MsFEC_Ned_RT -p ../MSFEC/example_parameters/parameter_ned_rt.in
+mpirun -n N source/MsFEC_Ned_RT -p ../MSFEC/example_parameters/parameter_ned_rt.prm
 ```
 where N is now the number of MPI processes. This will run the code for the multiscale (modified) 
 Nedelec-Raviart-Thomas pairing.
