@@ -11,7 +11,7 @@ For further information build the documentation of the project.
 **HINT**
 
 MsFEC is **MPI parallel** and can be used on clusters to compute fairly
-large problems - depending on your machine(s) up to **a few 100 milltion
+large problems - depending on your machine(s) up to **a few 100 million
 unknowns** in 3D. 
 ---
 
